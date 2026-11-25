@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.3.0] - 2026-11-26
+- Official government-style vouchers for every money document: receipts, payments, refunds, expenses, fund transfers, employee advances and salary payments
+- Double frame, logo and company details in Arabic and English, red serial number, date boxes, amount in rial/baisa boxes and in words (Arabic and English), payment method checkboxes, signature boxes, stamp circle and QR code
+- Paper: A5 landscape, or A4 with the original and a copy
+- Print voucher buttons on expenses, fund transfers, employee advances and paid payrolls
+
 ## [1.2.0] - 2026-11-26
 - Version number and build shown in the footer of the staff app, SaaS admin, customer portal and sign-in pages
 - `php artisan erp:release` bumps the version and records the change in this changelog; `php artisan erp:version` shows it

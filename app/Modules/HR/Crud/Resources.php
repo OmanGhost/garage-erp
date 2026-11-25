@@ -300,6 +300,7 @@ class EmployeeLoanResource extends HrResource
     }
 
     public function createUrl(): ?string { return route('hr.loans.create'); }
+    public function rowActions(Model $m): array { return [['label' => __('Print voucher'), 'url' => route('vouchers.loan', $m), 'icon' => 'bi-printer', 'blank' => true]]; }
     public function editUrl(Model $m): ?string { return null; }
     public function deleteBlocker(Model $m): ?string { return __('Loans are financial records and cannot be deleted.'); }
 }

@@ -2,7 +2,7 @@
 @section('title', $p->number)
 @section('content')
 <x-page-header :title="($p->direction === 'in' ? __('Receipt voucher') : __('Payment voucher')).' '.$p->number" icon="bi-wallet2" :breadcrumbs="[__('Payments') => route('crud.index', 'payments'), $p->number]" :subtitle="status_badge($p->status)">
-    <a href="{{ route('payments.show', [$p, 'print' => 1]) }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> {{ __('Print') }}</a>
+    <a href="{{ route('vouchers.payment', $p) }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> {{ __('Print') }}</a>
     @if($p->status === 'posted')
         @can('payments.approve')
         <form method="post" action="{{ route('payments.cancel', $p) }}" class="d-flex gap-2" data-confirm="{{ __('Cancel and reverse this payment?') }}">@csrf <x-idem/>

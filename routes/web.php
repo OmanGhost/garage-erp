@@ -8,6 +8,7 @@ use App\Http\Controllers\LookupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SiteController;
 use App\Http\Controllers\SystemController;
+use App\Http\Controllers\VoucherController;
 use App\Modules\Accounting\Http\Controllers\AccountingController;
 use App\Modules\Appointments\Http\Controllers\AppointmentController;
 use App\Modules\CRM\Http\Controllers\CustomerController;
@@ -180,6 +181,15 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/{id}/edit', [CrudController::class, 'edit'])->name('edit')->whereNumber('id');
         Route::put('/{id}', [CrudController::class, 'update'])->name('update')->whereNumber('id');
         Route::delete('/{id}', [CrudController::class, 'destroy'])->name('destroy')->whereNumber('id');
+    });
+
+    // official printable vouchers (receipt / payment / transfer)
+    Route::prefix('vouchers')->name('vouchers.')->group(function () {
+        Route::get('/payments/{payment}', [VoucherController::class, 'payment'])->name('payment');
+        Route::get('/expenses/{expense}', [VoucherController::class, 'expense'])->name('expense');
+        Route::get('/transfers/{transfer}', [VoucherController::class, 'transfer'])->name('transfer');
+        Route::get('/loans/{loan}', [VoucherController::class, 'loan'])->name('loan');
+        Route::get('/payroll/{payroll}', [VoucherController::class, 'payroll'])->name('payroll');
     });
 
     // administration

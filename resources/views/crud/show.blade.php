@@ -4,7 +4,7 @@
 <x-page-header :title="$resource->singular().' #'.$model->getKey()" :icon="$resource::$icon" :breadcrumbs="[$resource->title() => $resource->indexUrl(), '#'.$model->getKey()]">
     @foreach($resource->rowActions($model) as $a)
         @if(($a['method'] ?? 'get') === 'get')
-            <a href="{{ $a['url'] }}" class="btn {{ $a['class'] ?? 'btn-outline-secondary' }}"><i class="bi {{ $a['icon'] ?? 'bi-lightning' }}"></i> {{ $a['label'] }}</a>
+            <a href="{{ $a['url'] }}" class="btn {{ $a['class'] ?? 'btn-outline-secondary' }}" @if(!empty($a['blank'])) target="_blank" rel="noopener" @endif><i class="bi {{ $a['icon'] ?? 'bi-lightning' }}"></i> {{ $a['label'] }}</a>
         @else
             <form method="post" action="{{ $a['url'] }}" @if(!empty($a['confirm'])) data-confirm="{{ $a['confirm'] }}" @endif>@csrf <x-idem/>
                 <button class="btn {{ $a['class'] ?? 'btn-outline-secondary' }}"><i class="bi {{ $a['icon'] ?? 'bi-lightning' }}"></i> {{ $a['label'] }}</button>

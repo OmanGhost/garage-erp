@@ -181,8 +181,12 @@ class ExpenseResource extends AccountingResource
 
     public function rowActions(Model $m): array
     {
-        return $m->status === 'draft' && auth()->user()->can('expenses.approve')
-            ? [['label' => __('Post'), 'url' => route('accounting.expenses.post', $m), 'icon' => 'bi-check2-circle', 'method' => 'post', 'class' => 'btn-success', 'confirm' => __('Post this expense?')]] : [];
+        if ($m->status === 'draft') {
+            return auth()->user()->can('expenses.approve')
+                ? [['label' => __('Post'), 'url' => route('accounting.expenses.post', $m), 'icon' => 'bi-check2-circle', 'method' => 'post', 'class' => 'btn-success', 'confirm' => __('Post this expense?')]] : [];
+        }
+
+        return [['label' => __('Print voucher'), 'url' => route('vouchers.expense', $m), 'icon' => 'bi-printer', 'blank' => true]];
     }
 }
 
@@ -227,8 +231,12 @@ class FundTransferResource extends AccountingResource
 
     public function rowActions(Model $m): array
     {
-        return $m->status === 'draft' && auth()->user()->can('fund_transfers.approve')
-            ? [['label' => __('Post'), 'url' => route('accounting.transfers.post', $m), 'icon' => 'bi-check2-circle', 'method' => 'post', 'class' => 'btn-success', 'confirm' => __('Post this transfer?')]] : [];
+        if ($m->status === 'draft') {
+            return auth()->user()->can('fund_transfers.approve')
+                ? [['label' => __('Post'), 'url' => route('accounting.transfers.post', $m), 'icon' => 'bi-check2-circle', 'method' => 'post', 'class' => 'btn-success', 'confirm' => __('Post this transfer?')]] : [];
+        }
+
+        return [['label' => __('Print voucher'), 'url' => route('vouchers.transfer', $m), 'icon' => 'bi-printer', 'blank' => true]];
     }
 }
 

@@ -101,7 +101,7 @@
                     <td class="table-actions">
                         @foreach($resource->rowActions($row) as $a)
                             @if(($a['method'] ?? 'get') === 'get')
-                                <a href="{{ $a['url'] }}" class="btn btn-sm {{ $a['class'] ?? 'btn-light' }}" title="{{ $a['label'] }}"><i class="bi {{ $a['icon'] ?? 'bi-lightning' }}"></i></a>
+                                <a href="{{ $a['url'] }}" class="btn btn-sm {{ $a['class'] ?? 'btn-light' }}" title="{{ $a['label'] }}" @if(!empty($a['blank'])) target="_blank" rel="noopener" @endif><i class="bi {{ $a['icon'] ?? 'bi-lightning' }}"></i></a>
                             @else
                                 <form method="post" action="{{ $a['url'] }}" class="d-inline" @if(!empty($a['confirm'])) data-confirm="{{ $a['confirm'] }}" @endif>@csrf <x-idem/>
                                     <button class="btn btn-sm {{ $a['class'] ?? 'btn-light' }}" title="{{ $a['label'] }}"><i class="bi {{ $a['icon'] ?? 'bi-lightning' }}"></i></button>

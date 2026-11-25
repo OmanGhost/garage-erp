@@ -263,7 +263,7 @@ class SalesController extends Controller
         $this->can('payments.view');
         $payment->load('allocations.allocatable', 'bankAccount', 'party', 'journal.lines.account', 'creator');
         if (request('print')) {
-            return view('sales::print.voucher', ['p' => $payment]);
+            return redirect()->route('vouchers.payment', $payment);
         }
 
         return view('sales::payment', ['p' => $payment]);

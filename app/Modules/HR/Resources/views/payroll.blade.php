@@ -5,6 +5,7 @@
     @can('payroll.approve')
         @if($p->status === 'draft')<form method="post" action="{{ route('hr.payroll.action', [$p, 'approve']) }}">@csrf <x-idem/><button class="btn btn-primary">{{ __('Approve') }}</button></form>@endif
         @if($p->status === 'approved')<form method="post" action="{{ route('hr.payroll.action', [$p, 'post']) }}" data-confirm="{{ __('Post payroll to accounts?') }}">@csrf <x-idem/><button class="btn btn-success">{{ __('Post to accounts') }}</button></form>@endif
+        @if($p->status === 'paid')<a href="{{ route('vouchers.payroll', $p) }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> {{ __('Print voucher') }}</a>@endif
         @if($p->status === 'posted')<form method="post" action="{{ route('hr.payroll.action', [$p, 'pay']) }}" class="d-flex gap-1">@csrf <x-idem/><select name="bank_account_id" class="form-select">@foreach($banks as $id => $n)<option value="{{ $id }}">{{ $n }}</option>@endforeach</select><button class="btn btn-success text-nowrap">{{ __('Pay salaries') }}</button></form>@endif
     @endcan
     @if($p->status === 'draft')<a href="{{ route('hr.payroll.create') }}" class="btn btn-outline-secondary">{{ __('Recalculate') }}</a>@endif
