@@ -60,6 +60,11 @@ class FinanceOperations
             if ($t->from_bank_account_id === $t->to_bank_account_id) {
                 throw new BusinessException(__('Source and destination accounts must differ.'));
             }
+            // a cash box / bank account cannot be transferred below zero
+            $available = Ledger::accountBalance($t->fromAccount->account_id);
+            if (Money::cmp($t->amount, $available) > 0) {
+                throw new BusinessException(__('Insufficient balance in :a. Available: :b', ['a' => $t->fromAccount->name, 'b' => money($available)]));
+            }
             $je = $this->posting->post([
                 'date' => $t->date->toDateString(), 'description' => __('Fund transfer').' '.$t->number, 'source' => $t,
                 'lines' => [['account' => $t->toAccount->account_id, 'debit' => $t->amount], ['account' => $t->fromAccount->account_id, 'credit' => $t->amount]],

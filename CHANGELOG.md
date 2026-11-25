@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.4.0] - 2026-11-26
+- Fund transfers: new screen showing the current balance of both accounts as soon as they are selected, and each balance after the transfer
+- Live checks: same account cannot be chosen twice and an amount above the available balance is flagged; swap button and quick amounts (full balance, 50%, 25%)
+- Save as draft or save & post in one step, with a print voucher button right after posting
+- Posting a transfer is refused if it exceeds the source account balance
+
 ## [1.3.0] - 2026-11-26
 - Official government-style vouchers for every money document: receipts, payments, refunds, expenses, fund transfers, employee advances and salary payments
 - Double frame, logo and company details in Arabic and English, red serial number, date boxes, amount in rial/baisa boxes and in words (Arabic and English), payment method checkboxes, signature boxes, stamp circle and QR code

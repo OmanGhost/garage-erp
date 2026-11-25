@@ -201,6 +201,10 @@ class FundTransferResource extends AccountingResource
 
     public function title(): string { return __('Fund Transfers'); }
 
+    // dedicated screen showing the live balance of both accounts
+    public function createUrl(): ?string { return route('accounting.transfers.create'); }
+    public function editUrl(Model $m): ?string { return $m->status === 'draft' ? route('accounting.transfers.edit', $m) : null; }
+
     public function fields(): array
     {
         return [

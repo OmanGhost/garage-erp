@@ -391,6 +391,10 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/journal/{entry}', [AccountingController::class, 'journal'])->name('journal.show');
         Route::post('/journal/{entry}/reverse', [AccountingController::class, 'reverse'])->name('journal.reverse');
         Route::post('/expenses/{expense}/post', [AccountingController::class, 'postExpense'])->name('accounting.expenses.post');
+        Route::get('/transfers/create', [AccountingController::class, 'transferForm'])->name('accounting.transfers.create');
+        Route::post('/transfers', [AccountingController::class, 'saveTransfer'])->name('accounting.transfers.store');
+        Route::get('/transfers/{transfer}/edit', [AccountingController::class, 'transferForm'])->name('accounting.transfers.edit');
+        Route::put('/transfers/{transfer}', [AccountingController::class, 'saveTransfer'])->name('accounting.transfers.update');
         Route::post('/transfers/{transfer}/post', [AccountingController::class, 'postTransfer'])->name('accounting.transfers.post');
         Route::get('/reconciliations/{rec}', [AccountingController::class, 'reconciliation'])->name('accounting.reconciliations.show');
         Route::put('/reconciliations/{rec}', [AccountingController::class, 'reconcile']);

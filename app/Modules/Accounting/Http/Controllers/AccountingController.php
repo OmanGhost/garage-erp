@@ -25,6 +25,7 @@ use App\Support\Money;
 use App\Support\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class AccountingController extends Controller
@@ -165,6 +166,58 @@ class AccountingController extends Controller
         $this->ops->postExpense($expense);
 
         return back()->with('success', __('Expense posted.'));
+    }
+
+    // ------------------------------------------------------- fund transfers (cash box ⇄ bank)
+
+    /** Active cash / bank accounts with their current ledger balance, for the transfer screen. */
+    protected function accountsWithBalances(): array
+    {
+        return \App\Modules\Accounting\Models\BankAccount::query()->where('is_active', true)->orderBy('type')->orderBy('name')->get()
+            ->map(fn ($b) => [
+                'id' => $b->id, 'name' => $b->name, 'type' => $b->type, 'bank' => $b->bank_name, 'number' => $b->account_number,
+                'balance' => Ledger::accountBalance($b->account_id),
+            ])->values()->all();
+    }
+
+    public function transferForm(?FundTransfer $transfer = null)
+    {
+        $this->can($transfer?->exists ? 'fund_transfers.update' : 'fund_transfers.create');
+        abort_if($transfer?->exists && $transfer->status !== 'draft', 403, __('This record can no longer be edited.'));
+
+        return view('accounting::transfer-form', ['t' => $transfer?->exists ? $transfer : null, 'accounts' => $this->accountsWithBalances()]);
+    }
+
+    public function saveTransfer(Request $request, ?FundTransfer $transfer = null)
+    {
+        $editing = $transfer?->exists;
+        $this->can($editing ? 'fund_transfers.update' : 'fund_transfers.create');
+        abort_if($editing && $transfer->status !== 'draft', 403);
+        $c = tenant()->id();
+        $data = $request->validate([
+            'date' => ['required', 'date', 'before_or_equal:today'],
+            'from_bank_account_id' => ['required', 'integer', Rule::exists('bank_accounts', 'id')->where('company_id', $c)->where('is_active', true)],
+            'to_bank_account_id' => ['required', 'integer', 'different:from_bank_account_id', Rule::exists('bank_accounts', 'id')->where('company_id', $c)->where('is_active', true)],
+            'amount' => ['required', 'numeric', 'gt:0', 'max:9999999999'],
+            'reference' => ['nullable', 'string', 'max:100'],
+            'notes' => ['nullable', 'string', 'max:255'],
+        ], ['to_bank_account_id.different' => __('Source and destination accounts must differ.')]);
+
+        $postNow = $request->boolean('post_now') && auth()->user()->can('fund_transfers.approve');
+        $t = DB::transaction(function () use ($data, $transfer, $editing, $postNow) {
+            $t = $editing ? $transfer : new FundTransfer(['number' => \App\Support\DocumentNumber::next('fund_transfer'), 'status' => 'draft', 'created_by' => auth()->id()]);
+            $t->fill($data)->save();
+            if ($postNow) {
+                $this->ops->postTransfer($t->fresh());
+            }
+
+            return $t->fresh();
+        });
+
+        $msg = $postNow ? __('Transfer posted.') : __('Transfer saved.');
+
+        return redirect()->route('crud.index', 'fund-transfers')->with('success', $msg)
+            ->with('print_voucher', $t->status === 'posted' ? route('vouchers.transfer', $t) : null);
     }
 
     public function postTransfer(FundTransfer $transfer)

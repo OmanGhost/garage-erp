@@ -30,7 +30,7 @@ class VoucherTest extends TestCase
             'amount' => 120, 'tax_amount' => 6, 'total' => 126, 'description' => 'A/C maintenance']);
         $ops->postExpense($expense);
         $transfer = FundTransfer::create(['number' => DocumentNumber::next('fund_transfer'), 'date' => now()->toDateString(), 'status' => 'draft',
-            'from_bank_account_id' => $cash->id, 'to_bank_account_id' => $bank->id, 'amount' => 2500, 'reference' => 'DEP-1']);
+            'from_bank_account_id' => $cash->id, 'to_bank_account_id' => $bank->id, 'amount' => 500, 'reference' => 'DEP-1']);
         $ops->postTransfer($transfer);
         $employee = Employee::create(['code' => 'E-1', 'name' => 'Khalid', 'hire_date' => now()->subYear()->toDateString(), 'basic_salary' => 400]);
         $loan = app(PayrollService::class)->giveLoan($employee, 300, 50, $cash->id);
