@@ -19,6 +19,7 @@ use App\Modules\Portal\Http\Controllers\PortalController;
 use App\Modules\Purchasing\Http\Controllers\PurchasingController;
 use App\Modules\Reports\Http\Controllers\ReportController;
 use App\Modules\Saas\Http\Controllers\AdminController;
+use App\Modules\Saas\Http\Controllers\ClientController;
 use App\Modules\Sales\Http\Controllers\SalesController;
 use App\Modules\Store\Http\Controllers\StorefrontController;
 use App\Modules\Workshop\Http\Controllers\PublicController;
@@ -132,7 +133,18 @@ Route::prefix('admin')->middleware(['auth', 'usertype:super'])->name('admin.')->
     Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/companies/create', [AdminController::class, 'createCompany'])->name('companies.create');
     Route::post('/companies', [AdminController::class, 'storeCompany'])->name('companies.store');
-    Route::get('/companies/{company}', [AdminController::class, 'showCompany'])->name('companies.show');
+    Route::get('/companies/{company}', fn ($company) => redirect()->route('admin.clients.show', $company))->name('companies.show');
+    // clients (tenant companies)
+    Route::get('/clients', [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
+    Route::put('/clients/{company}/profile', [ClientController::class, 'updateProfile'])->name('clients.profile');
+    Route::post('/clients/{company}/toggle', [ClientController::class, 'toggle'])->name('clients.toggle');
+    Route::post('/clients/{company}/extend-trial', [ClientController::class, 'extendTrial'])->name('clients.extend-trial');
+    Route::post('/clients/{company}/users/{user}/reset-password', [ClientController::class, 'resetPassword'])->name('clients.users.reset');
+    Route::post('/clients/{company}/users/{user}/toggle', [ClientController::class, 'toggleUser'])->name('clients.users.toggle');
+    Route::post('/clients/{company}/invoices/{invoice}/paid', [ClientController::class, 'markInvoicePaid'])->name('clients.invoices.paid');
+    Route::delete('/clients/{company}', [ClientController::class, 'archive'])->name('clients.archive');
+    Route::post('/clients/{client}/restore', [ClientController::class, 'restore'])->whereNumber('client')->name('clients.restore');
     Route::put('/companies/{company}', [AdminController::class, 'updateCompany'])->name('companies.update');
     Route::post('/companies/{company}/enter', [AdminController::class, 'enter'])->name('companies.enter');
     Route::post('/companies/{company}/renew', [AdminController::class, 'renew'])->name('companies.renew');

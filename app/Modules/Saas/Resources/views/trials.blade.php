@@ -51,7 +51,7 @@
                     @if($t->status === 'provisioned')
                         <div class="alert alert-success small mb-0">
                             <i class="bi bi-check-circle"></i> {{ __('Provisioned') }}
-                            @if($t->company) — <a href="{{ route('admin.companies.show', $t->company) }}">{{ $t->company->name }}</a>@endif
+                            @if($t->company) — <a href="{{ route('admin.clients.show', $t->company->id) }}">{{ $t->company->name }}</a>@endif
                             <div class="text-body-secondary">{{ $t->handler?->name }} · {{ $t->handled_at?->format('Y-m-d H:i') }}</div>
                         </div>
                     @else

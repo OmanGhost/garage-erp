@@ -70,6 +70,7 @@ return [
     'inactive' => 'غير نشط',
     'trial' => 'تجريبي',
     'suspended' => 'موقوف',
+    'archived' => 'مؤرشف',
     'blacklisted' => 'قائمة سوداء',
     'in_transit' => 'قيد النقل',
     'transit' => 'عبور',

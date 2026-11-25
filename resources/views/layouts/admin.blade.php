@@ -11,7 +11,7 @@
 <body class="app-body">
 <nav class="navbar navbar-expand bg-dark" data-bs-theme="dark"><div class="container-fluid">
     <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="bi bi-buildings"></i> {{ config('app.name') }} — SaaS</a>
-    <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="{{ route('admin.dashboard') }}">{{ __('Tenants') }}</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.plans') }}">{{ __('Plans') }}</a></li>
+    <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">{{ __('Dashboard') }}</a></li><li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.clients.*', 'admin.companies.*') ? 'active' : '' }}" href="{{ route('admin.clients.index') }}"><i class="bi bi-people"></i> {{ __('Clients') }}</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.plans') }}">{{ __('Plans') }}</a></li>
         @php($newTrials = \App\Modules\Saas\Models\TrialRequest::query()->where('status', 'new')->count())
         <li class="nav-item"><a class="nav-link" href="{{ route('admin.trials.index') }}">{{ __('Trial requests') }} @if($newTrials)<span class="badge text-bg-warning">{{ $newTrials }}</span>@endif</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ route('admin.site.edit') }}">{{ __('Website & SEO') }}</a></li></ul>

@@ -27,16 +27,19 @@ class AdminController extends Controller
     public function dashboard()
     {
         tenant()->forget();
-        $companies = Company::query()->with('plan')->withCount(['users', 'branches'])->latest()->get();
+        $companies = Company::query()->with('plan')->withCount(['users', 'branches'])->latest()->limit(10)->get();
         $mrr = Money::sum(Subscription::query()->whereIn('status', ['active'])->get()->map(fn ($s) => $s->billing_cycle === 'yearly' ? Money::div($s->amount, 12) : $s->amount));
 
         return view('saas::dashboard', [
             'companies' => $companies, 'plans' => Plan::query()->orderBy('sort')->get(), 'mrr' => $mrr,
             'stats' => [
-                'tenants' => $companies->count(), 'active' => $companies->where('is_active', true)->count(),
-                'trial' => $companies->where('subscription_status', 'trial')->count(),
-                'expiring' => $companies->filter(fn ($c) => $c->subscription_ends_at && $c->subscription_ends_at->between(now(), now()->addDays(14)))->count(),
-                'users' => User::query()->count(),
+                // KPIs over all clients (the table shows the latest 10 only)
+                'tenants' => Company::query()->count(),
+                'active' => Company::query()->where('is_active', true)->count(),
+                'trial' => Company::query()->where('subscription_status', 'trial')->count(),
+                'expiring' => Company::query()->where('is_active', true)->where(fn ($q) => $q->whereBetween('subscription_ends_at', [now(), now()->addDays(14)])
+                    ->orWhere(fn ($t) => $t->where('subscription_status', 'trial')->whereBetween('trial_ends_at', [now(), now()->addDays(14)])))->count(),
+                'users' => User::query()->whereNull('customer_id')->where('is_super_admin', false)->count(),
             ],
         ]);
     }
@@ -58,22 +61,7 @@ class AdminController extends Controller
         $company = $provisioner->provision($data);
         AuditLogger::log('saas.tenant_created', $company, ['plan' => $data['plan_id'] ?? null]);
 
-        return redirect()->route('admin.companies.show', $company)->with('success', __('Tenant created and provisioned.'));
-    }
-
-    public function showCompany(Company $company)
-    {
-        return view('saas::company', [
-            'c' => $company->load('plan', 'subscriptions.plan'), 'plans' => Plan::query()->orderBy('sort')->get(),
-            'usage' => [
-                'users' => User::query()->where('company_id', $company->id)->whereNull('customer_id')->count(),
-                'branches' => DB::table('branches')->where('company_id', $company->id)->whereNull('deleted_at')->count(),
-                'storage_mb' => round(DB::table('attachments')->where('company_id', $company->id)->sum('size') / 1048576, 1),
-                'invoices' => DB::table('invoices')->where('company_id', $company->id)->count(),
-                'job_cards' => DB::table('job_cards')->where('company_id', $company->id)->count(),
-            ],
-            'invoices' => SubscriptionInvoice::query()->where('company_id', $company->id)->latest()->get(),
-        ]);
+        return redirect()->route('admin.clients.show', $company->id)->with('success', __('Tenant created and provisioned.'));
     }
 
     public function updateCompany(Request $request, Company $company)
@@ -196,10 +184,12 @@ class AdminController extends Controller
             'admin_name' => $trial->name, 'admin_email' => $trial->email, 'admin_password' => $password,
         ]);
         tenant()->forget();
+        $company->update(['source' => 'trial_request', 'contact_name' => $trial->name, 'contact_phone' => $trial->phone,
+            'admin_notes' => $trial->message ? __('Trial request').': '.$trial->message : null]);
         $trial->update(['status' => 'provisioned', 'company_id' => $company->id, 'plan_id' => $data['plan_id'], 'handled_at' => now(), 'handled_by' => auth()->id()]);
         AuditLogger::log('saas.trial_provisioned', $company, ['trial_request' => $trial->id]);
 
-        return redirect()->route('admin.companies.show', $company)
+        return redirect()->route('admin.clients.show', $company->id)
             ->with('success', __('Trial company created. Login: :e / temporary password: :p', ['e' => $trial->email, 'p' => $password]));
     }
 
