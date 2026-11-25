@@ -5,6 +5,9 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.4.1] - 2026-11-26
+- Release command writes the VERSION file with Unix line endings
+
 ## [1.4.0] - 2026-11-26
 - Fund transfers: new screen showing the current balance of both accounts as soon as they are selected, and each balance after the transfer
 - Live checks: same account cannot be chosen twice and an amount above the available balance is flagged; swap button and quick amounts (full balance, 50%, 25%)

@@ -37,8 +37,7 @@ class ErpRelease extends Command
 
         $old = AppVersion::version();
         $new = AppVersion::bump($old, $level);
-        file_put_contents(base_path('VERSION'), $new."
-");
+        file_put_contents(base_path('VERSION'), $new."\n"); // LF only, independent of the OS
 
         $file = base_path('CHANGELOG.md');
         $log = is_file($file) ? file_get_contents($file) : "# Changelog\n";
