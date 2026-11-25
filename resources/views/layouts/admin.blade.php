@@ -20,7 +20,8 @@
         <form method="post" action="{{ route('logout') }}">@csrf<button class="btn btn-sm btn-outline-light">{{ __('Logout') }}</button></form>
     </div>
 </div></nav>
-<main class="container-fluid py-3 px-4">@include('partials.flash')@yield('content')</main>
+<main class="container-fluid py-3 px-4" style="min-height: calc(100vh - 100px)">@include('partials.flash')@yield('content')</main>
+@include('partials.version-footer', ['owner' => config('app.name').' — SaaS', 'class' => 'border-top'])
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 @livewireScripts
 <script src="{{ asset('js/app.js') }}"></script>

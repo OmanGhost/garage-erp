@@ -36,9 +36,7 @@
             @yield('content')
             {{ $slot ?? '' }}
         </main>
-        <footer class="app-footer text-body-secondary small px-4 py-2 d-print-none">
-            © {{ date('Y') }} {{ $company?->displayName() ?? config('app.name') }} · {{ __('Garage ERP') }} v1.0
-        </footer>
+        @include('partials.version-footer', ['owner' => $company?->displayName() ?? config('app.name')])
     </div>
 </div>
 <div class="toast-container position-fixed bottom-0 {{ $rtl ? 'start-0' : 'end-0' }} p-3" id="toastContainer"></div>

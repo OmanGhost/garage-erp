@@ -77,3 +77,17 @@ php tests/smoke.php admin@alnoor-auto.om # requests every page against the demo 
 ## Requirements
 
 PHP 8.3+, MySQL 8 / MariaDB 10.6+, Composer 2. Optional: Redis (cache/queue), Supervisor, Laravel Reverb (bundled). No paid external services are required.
+
+## Versions & releases
+
+The current version is in [`VERSION`](VERSION) ([semantic versioning](https://semver.org)) and is shown, with the build (git commit), in the footer of every page. Changes are listed in [CHANGELOG.md](CHANGELOG.md).
+
+```bash
+php artisan erp:version                                   # Garage ERP 1.2.0 (a1b2c3d)
+php artisan erp:release patch "Fixed ..."                 # fixes          1.2.0 → 1.2.1
+php artisan erp:release minor "New feature ..."           # new features   1.2.0 → 1.3.0
+php artisan erp:release major "Breaking change ..."       # breaking       1.2.0 → 2.0.0
+git commit -am "Release v1.3.0" && git tag v1.3.0 && git push --follow-tags
+```
+
+On servers deployed without the `.git` folder, set `APP_BUILD` (for example the CI build number) to show a build identifier.

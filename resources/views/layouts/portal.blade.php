@@ -30,6 +30,7 @@
     @include('partials.flash')
     @yield('content')
 </main>
+@include('partials.version-footer', ['owner' => $company?->displayName() ?? config('app.name'), 'class' => 'container portal-footer'])
 <nav class="portal-tabbar">
     @foreach([['portal.dashboard', 'bi-house', __('Home')], ['portal.vehicles', 'bi-car-front', __('Vehicles')], ['portal.appointments.create', 'bi-calendar-plus', __('Book')], ['portal.invoices', 'bi-receipt', __('Invoices')], ['portal.warranties', 'bi-patch-check', __('Warranty')]] as [$r, $i, $l])
         <a href="{{ route($r) }}" class="{{ request()->routeIs($r) ? 'active' : '' }}"><i class="bi {{ $i }}"></i>{{ $l }}</a>

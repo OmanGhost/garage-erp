@@ -25,6 +25,7 @@
         @include('partials.flash')
         @yield('content')
         <form method="post" action="{{ route('locale.switch') }}" class="text-center mt-3">@csrf<input type="hidden" name="locale" value="{{ app()->getLocale() === 'ar' ? 'en' : 'ar' }}"><button class="btn btn-link btn-sm">{{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}</button></form>
+        <div class="text-center text-body-tertiary small" dir="ltr">v{{ \App\Support\AppVersion::version() }}</div>
     </div>
 </div>
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});</script>
