@@ -22,6 +22,7 @@
         <ul class="navbar-nav me-auto">
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2"></i> {{ __('Dashboard') }}</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.clients.*', 'admin.companies.*') ? 'active' : '' }}" href="{{ route('admin.clients.index') }}"><i class="bi bi-people"></i> {{ __('Clients') }}</a></li>
+            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.billing.*') ? 'active' : '' }}" href="{{ route('admin.billing.index') }}"><i class="bi bi-receipt"></i> {{ __('Billing') }}</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.plans*') ? 'active' : '' }}" href="{{ route('admin.plans') }}"><i class="bi bi-stars"></i> {{ __('Plans') }}</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.domains.*') ? 'active' : '' }}" href="{{ route('admin.domains.index') }}"><i class="bi bi-globe2"></i> {{ __('Domains & e-mail') }} @if($newDomains)<span class="badge text-bg-warning">{{ $newDomains }}</span>@endif</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.trials.*') ? 'active' : '' }}" href="{{ route('admin.trials.index') }}"><i class="bi bi-rocket-takeoff"></i> {{ __('Trial requests') }} @if($newTrials)<span class="badge text-bg-warning">{{ $newTrials }}</span>@endif</a></li>

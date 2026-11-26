@@ -5,6 +5,9 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.15.0] - 2026-11-27
+- SaaS billing: issue tax invoices to clients (subscription renewals and custom charges), discount and VAT, due dates and overdue tracking, record payments, cancel with reason, bilingual A4/PDF print with paid/cancelled/overdue stamp, billing header settings; clients view and print their own invoices from the Subscription page|POS on phones: stacked cart lines with qty stepper, price and discount fields, fixed bottom bar with total and jump to cart
+
 ## [1.14.1] - 2026-11-26
 - Phones: search in the top bar opens as a full-width row from a search button instead of a squeezed box
 - Phones: dashboard and summary cards show full numbers and labels (no more cut values), smaller icons

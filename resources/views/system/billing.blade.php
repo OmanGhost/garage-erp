@@ -21,6 +21,24 @@
             @forelse($subscriptions as $s)<li class="list-group-item d-flex">{{ $s->plan->name }} · {{ status_label($s->billing_cycle) }} · {{ $s->starts_at->format('Y-m-d') }} → {{ $s->ends_at?->format('Y-m-d') }}<span class="ms-auto">{{ money($s->amount) }}</span></li>
             @empty<li class="list-group-item text-body-secondary">—</li>@endforelse
         </ul><div class="card-footer small text-body-secondary">{{ __('To upgrade or renew, contact the platform administrator.') }}</div></div>
+        <div class="card mt-3"><div class="card-header"><i class="bi bi-receipt"></i> {{ __('Invoices') }}</div>
+            <div class="table-responsive"><table class="table align-middle mb-0 small">
+                <thead class="table-light"><tr><th>{{ __('Invoice') }}</th><th>{{ __('Date') }}</th><th>{{ __('Due') }}</th><th class="text-end">{{ __('Total') }}</th><th>{{ __('Status') }}</th><th></th></tr></thead>
+                <tbody>
+                @forelse($invoices as $i)
+                    @php($ist = $i->stage())
+                    <tr><td class="font-monospace">{{ $i->number }}</td><td>{{ $i->issue_date?->format('Y-m-d') }}</td>
+                        <td class="{{ $ist === 'overdue' ? 'text-danger fw-semibold' : '' }}">{{ $i->due_date?->format('Y-m-d') }}</td>
+                        <td class="text-end font-monospace">{{ money($i->amount) }}</td>
+                        <td><span class="badge text-bg-{{ ['paid' => 'success', 'overdue' => 'danger'][$ist] ?? 'warning' }}">{{ status_label($ist) }}</span></td>
+                        <td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-secondary" href="{{ route('billing.invoice', $i->id) }}" target="_blank" rel="noopener" aria-label="{{ __('Print') }}" title="{{ __('Print') }}"><i class="bi bi-printer"></i></a>
+                            <a class="btn btn-sm btn-outline-danger" href="{{ route('billing.invoice', [$i->id, 'pdf']) }}" target="_blank" rel="noopener">PDF</a></td></tr>
+                @empty
+                    <tr><td colspan="6" class="text-center text-body-secondary py-3">{{ __('No invoices.') }}</td></tr>
+                @endforelse
+                </tbody>
+            </table></div>
+        </div>
         @include('system.partials.domain')
     </div>
 </div>

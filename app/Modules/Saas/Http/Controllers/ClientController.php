@@ -193,9 +193,8 @@ class ClientController extends Controller
     public function markInvoicePaid(Company $company, int $invoice)
     {
         $inv = SubscriptionInvoice::query()->withoutGlobalScopes()->where('company_id', $company->id)->findOrFail($invoice);
-        if ($inv->status !== 'paid') {
-            $inv->forceFill(['status' => 'paid', 'paid_at' => now()])->save();
-            AuditLogger::log('saas.subscription_invoice_paid', $company, ['invoice' => $inv->number, 'amount' => (string) $inv->amount]);
+        if ($inv->status === 'unpaid') {
+            app(\App\Modules\Saas\Services\BillingService::class)->markPaid($inv, null, null);
         }
 
         return back()->with('success', __('Payment recorded.'));

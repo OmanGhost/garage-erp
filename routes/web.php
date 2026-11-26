@@ -151,6 +151,14 @@ Route::prefix('admin')->middleware(['auth', 'usertype:super'])->name('admin.')->
     Route::post('/companies/{company}/renew', [AdminController::class, 'renew'])->name('companies.renew');
     Route::post('/leave', [AdminController::class, 'leave'])->name('leave');
     Route::get('/plans', [AdminController::class, 'plans'])->name('plans');
+    Route::get('/billing', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'index'])->name('billing.index');
+    Route::get('/billing/create', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'create'])->name('billing.create');
+    Route::post('/billing', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'store'])->name('billing.store');
+    Route::post('/billing/settings', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'settings'])->name('billing.settings');
+    Route::get('/billing/{invoice}', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'show'])->name('billing.show');
+    Route::post('/billing/{invoice}/pay', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'pay'])->name('billing.pay');
+    Route::post('/billing/{invoice}/cancel', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'cancel'])->name('billing.cancel');
+    Route::get('/billing/{invoice}/print/{format?}', [\App\Modules\Saas\Http\Controllers\BillingController::class, 'print'])->name('billing.print')->whereIn('format', ['a4', 'pdf']);
     Route::get('/domains', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'index'])->name('domains.index');
     Route::post('/domains/assign', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'assign'])->name('domains.assign');
     Route::post('/domains/{company}/verify', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'verify'])->name('domains.verify');
@@ -221,6 +229,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     Route::post('/backups', [SystemController::class, 'runBackup'])->name('backups.run');
     Route::get('/backups/{file}', [SystemController::class, 'downloadBackup'])->name('backups.download')->where('file', '[A-Za-z0-9_\-\.]+');
     Route::get('/billing', [SystemController::class, 'billing'])->name('billing.index');
+    Route::get('/billing/invoices/{invoice}/{format?}', [SystemController::class, 'billingInvoice'])->name('billing.invoice')->whereIn('format', ['a4', 'pdf']);
     Route::post('/domain-requests', [\App\Http\Controllers\DomainRequestController::class, 'store'])->name('domain-requests.store');
     Route::post('/domain-requests/{domainRequest}/cancel', [\App\Http\Controllers\DomainRequestController::class, 'cancel'])->name('domain-requests.cancel');
 

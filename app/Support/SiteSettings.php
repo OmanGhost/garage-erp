@@ -41,6 +41,17 @@ class SiteSettings
             'google_analytics_id' => '',
             'indexing_enabled' => '1',
             'trial_notify_email' => '',
+            // platform billing (header of the subscription invoices)
+            'billing_name' => '',
+            'billing_vat_number' => '',
+            'billing_cr_number' => '',
+            'billing_address' => '',
+            'billing_email' => '',
+            'billing_phone' => '',
+            'billing_tax_rate' => '5',
+            'billing_due_days' => '7',
+            'billing_bank_details' => '',
+            'billing_terms' => '',
         ];
     }
 

@@ -149,7 +149,8 @@ a { color: var(--brand); }
 .pos-product { cursor: pointer; transition: transform .1s; }
 .pos-product:hover { transform: translateY(-2px); border-color: var(--brand); }
 .pos-cart { display: flex; flex-direction: column; }
-.pos-cart .cart-lines { flex: 1; overflow-y: auto; max-height: 50vh; }
+.pos-cart > .card-body, .pos-cart > .card-header { flex: 0 0 auto; } /* only the lines area grows */
+.pos-cart .cart-lines { flex: 1 1 auto; overflow-y: auto; min-height: 220px; max-height: 55vh; }
 .pos-total { font-size: 1.8rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 
 /* plate badge */
@@ -323,4 +324,31 @@ a { color: var(--brand); }
 @media (max-width: 400px) {
     .app-topbar .btn-icon { width: 34px; }
     .topbar-brand .brand-mark { width: 32px; height: 32px; font-size: 1rem; }
+}
+
+/* POS: cart lines as stacked rows, touch friendly */
+.pos-line { padding: .6rem .85rem; border-bottom: 1px solid var(--border-soft); }
+.pos-line-controls { display: grid; grid-template-columns: 7.5rem 1fr 1fr; gap: .4rem; margin-top: .45rem; }
+.pos-qty .btn { width: 2rem; font-weight: 700; }
+.pos-qty .form-control { padding-inline: .2rem; }
+.pos-mobile-bar { display: none; }
+@media (max-width: 1199.98px) {
+    .pos-wrap { min-height: 0; align-items: start; }
+    .pos-cart { display: block; }
+    .pos-cart .cart-lines { max-height: none; overflow: visible; flex: none; }
+    .pos-mobile-bar {
+        display: flex; align-items: center; gap: .6rem; position: fixed; inset-inline: 0; bottom: 0; z-index: 1020;
+        padding: .6rem .9rem calc(.6rem + env(safe-area-inset-bottom)); background: var(--surface);
+        border-top: 1px solid var(--border-soft); box-shadow: 0 -6px 18px rgba(0, 0, 0, .08);
+    }
+    .pos-wrap { padding-bottom: 4.5rem; }
+    #posCart { scroll-margin-top: .5rem; }
+}
+@media (max-width: 575.98px) {
+    .pos-line-controls { grid-template-columns: 1fr 1fr; }
+    .pos-line-controls .pos-qty { grid-column: 1 / -1; }
+    .pos-qty { max-width: 12rem; }
+    .pos-product .card-body { padding: .5rem !important; }
+    .pos-total { font-size: 1.5rem; }
+    .pos-cart .btn-lg { padding: .7rem; }
 }

@@ -86,20 +86,11 @@ class AdminController extends Controller
     public function renew(Request $request, Company $company)
     {
         $data = $request->validate(['plan_id' => ['required', 'exists:plans,id'], 'billing_cycle' => ['required', 'in:monthly,yearly'], 'paid' => ['nullable', 'boolean']]);
-        DB::transaction(function () use ($company, $data, $request) {
-            $plan = Plan::query()->findOrFail($data['plan_id']);
-            $start = $company->subscription_ends_at && $company->subscription_ends_at->isFuture() ? $company->subscription_ends_at->copy() : now();
-            $end = $data['billing_cycle'] === 'yearly' ? $start->copy()->addYear() : $start->copy()->addMonth();
-            $amount = $data['billing_cycle'] === 'yearly' ? $plan->price_yearly : $plan->price_monthly;
-            $sub = Subscription::create(['company_id' => $company->id, 'plan_id' => $plan->id, 'billing_cycle' => $data['billing_cycle'], 'status' => 'active',
-                'starts_at' => $start->toDateString(), 'ends_at' => $end->toDateString(), 'amount' => $amount]);
-            SubscriptionInvoice::create(['company_id' => $company->id, 'subscription_id' => $sub->id, 'number' => 'SUB-'.now()->format('Ymd').'-'.$sub->id,
-                'period_start' => $start->toDateString(), 'period_end' => $end->toDateString(), 'amount' => $amount,
-                'status' => $request->boolean('paid') ? 'paid' : 'unpaid', 'paid_at' => $request->boolean('paid') ? now() : null]);
-            $company->update(['plan_id' => $plan->id, 'subscription_status' => 'active', 'subscription_ends_at' => $end, 'is_active' => true]);
-        });
+        $inv = app(\App\Modules\Saas\Services\BillingService::class)->renew($company, Plan::query()->findOrFail($data['plan_id']), $data['billing_cycle'],
+            ['paid' => $request->boolean('paid')]);
 
-        return back()->with('success', __('Subscription renewed.'));
+        return back()->with('success', __('Subscription renewed. Invoice :n issued.', ['n' => $inv->number]))
+            ->with('print_voucher', route('admin.billing.print', $inv))->with('print_label', __('Print invoice'));
     }
 
     /** Super admin enters a tenant (support access, audited). */

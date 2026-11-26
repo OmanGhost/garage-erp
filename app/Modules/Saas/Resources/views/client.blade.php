@@ -192,17 +192,19 @@
     </ul>
 
 @elseif($tab === 'invoices')
+    @unless($c->trashed())<div class="p-2 border-bottom text-end"><a class="btn btn-sm btn-primary" href="{{ route('admin.billing.create', ['company_id' => $c->id]) }}"><i class="bi bi-plus-lg"></i> {{ __('New invoice') }}</a></div>@endunless
     <div class="table-responsive"><table class="table table-erp align-middle mb-0">
         <thead><tr><th>{{ __('Number') }}</th><th>{{ __('Period') }}</th><th class="text-end">{{ __('Amount') }}</th><th>{{ __('Status') }}</th><th></th></tr></thead>
         <tbody>
         @forelse($invoices as $i)
             <tr>
-                <td class="font-monospace">{{ $i->number }}</td>
-                <td>{{ $i->period_start?->format('Y-m-d') }} → {{ $i->period_end?->format('Y-m-d') }}</td>
+                <td><a class="font-monospace fw-semibold" href="{{ route('admin.billing.show', $i->id) }}">{{ $i->number }}</a><div class="small text-body-secondary">{{ $i->issue_date?->format('Y-m-d') }}</div></td>
+                <td>@if($i->period_start){{ $i->period_start->format('Y-m-d') }} → {{ $i->period_end?->format('Y-m-d') }}@else — @endif</td>
                 <td class="text-end font-monospace">{{ money($i->amount) }}</td>
-                <td>{!! status_badge($i->status === 'paid' ? 'paid' : 'unpaid') !!} @if($i->paid_at)<span class="small text-body-secondary">{{ $i->paid_at->format('Y-m-d') }}</span>@endif</td>
-                <td class="text-end">
-                    @if($i->status !== 'paid' && ! $c->trashed())
+                <td>@php($ist = $i->stage())<span class="badge text-bg-{{ ['paid' => 'success', 'overdue' => 'danger', 'cancelled' => 'secondary'][$ist] ?? 'warning' }}">{{ status_label($ist) }}</span> @if($i->paid_at)<span class="small text-body-secondary">{{ $i->paid_at->format('Y-m-d') }}</span>@endif</td>
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ route('admin.billing.print', $i->id) }}" target="_blank" rel="noopener" aria-label="{{ __('Print') }}" title="{{ __('Print') }}"><i class="bi bi-printer"></i></a>
+                    @if($i->status === 'unpaid' && ! $c->trashed())
                         <form method="post" action="{{ route('admin.clients.invoices.paid', [$c, $i->id]) }}" data-confirm="{{ __('Mark this invoice as paid?') }}">@csrf<button class="btn btn-sm btn-outline-success"><i class="bi bi-cash-coin"></i> {{ __('Mark paid') }}</button></form>
                     @endif
                 </td>

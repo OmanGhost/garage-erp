@@ -287,6 +287,7 @@ class SystemController extends Controller
             'company' => $company, 'plans' => \App\Modules\Core\Models\Plan::query()->where('is_active', true)->orderBy('sort')->get(),
             'subscriptions' => $company->subscriptions()->with('plan')->latest()->get(),
             'domainRequests' => \App\Modules\Saas\Models\DomainRequest::query()->where('company_id', $company->id)->latest()->get(),
+            'invoices' => \App\Modules\Core\Models\SubscriptionInvoice::query()->where('company_id', $company->id)->where('status', '!=', 'cancelled')->latest('issue_date')->latest('id')->limit(24)->get(),
             'usage' => [
                 'users' => User::query()->where('company_id', $company->id)->whereNull('customer_id')->count(),
                 'branches' => Branch::query()->count(),
@@ -294,5 +295,14 @@ class SystemController extends Controller
                 'storage_mb' => round(\App\Modules\Core\Models\Attachment::query()->sum('size') / 1048576, 1),
             ],
         ]);
+    }
+
+    /** The client views / prints its own platform invoice. */
+    public function billingInvoice(int $invoice, string $format = 'a4')
+    {
+        abort_unless(auth()->user()->can('settings.view'), 403);
+        $inv = \App\Modules\Core\Models\SubscriptionInvoice::query()->where('company_id', tenant()->id())->where('status', '!=', 'cancelled')->findOrFail($invoice);
+
+        return \App\Modules\Saas\Http\Controllers\BillingController::render($inv, $format);
     }
 }

@@ -14,7 +14,7 @@
                     <div class="col-6 col-md-4 col-xxl-3">
                         <div class="card pos-product h-100" wire:click="add({{ $p->id }})">
                             <div class="card-body p-2">
-                                <div class="small text-body-secondary">{{ $p->sku }} @if($p->oem_number)· {{ $p->oem_number }}@endif</div>
+                                <div class="small text-body-secondary text-truncate"><bdi dir="ltr" class="font-monospace">{{ $p->sku }}</bdi>@if($p->oem_number) · <bdi dir="ltr" class="font-monospace">{{ $p->oem_number }}</bdi>@endif</div>
                                 <div class="fw-semibold small" style="min-height:2.4em">{{ \Illuminate\Support\Str::limit($p->displayName(), 60) }}</div>
                                 <div class="d-flex justify-content-between align-items-end mt-1">
                                     <span class="fw-bold text-brand">{{ money($p->priceFor($priceLevel), false) }}</span>
@@ -44,7 +44,7 @@
             @endif
         </div>
 
-        <div class="card pos-cart">
+        <div class="card pos-cart" id="posCart">
             <div class="card-header d-flex align-items-center gap-2">
                 <i class="bi bi-cart3"></i> {{ __('Cart') }}
                 @if($heldInvoiceId)<span class="badge text-bg-warning">{{ __('Resumed') }}</span>@endif
@@ -58,29 +58,34 @@
                     <x-lookup name="pos_customer" type="customers" size="sm" :placeholder="__('Change customer (name / phone)...')"/>
                 </div>
             </div>
+            {{-- cart lines as stacked rows: readable on phones and in the narrow desktop column --}}
             <div class="cart-lines">
-                <table class="table table-sm align-middle mb-0">
-                    <tbody>
-                    @forelse($cart as $i => $line)
-                        <tr wire:key="line-{{ $i }}-{{ $line['part_id'] }}">
-                            <td class="ps-3" style="min-width:140px">
-                                <div class="small fw-semibold">{{ \Illuminate\Support\Str::limit($line['name'], 40) }}</div>
-                                <div class="small text-body-secondary">{{ $line['sku'] }}</div>
-                                <div class="input-group input-group-sm mt-1">
-                                    <span class="input-group-text">{{ __('Disc.') }}</span>
-                                    <input type="number" step="0.001" min="0" class="form-control" wire:model.live.debounce.500ms="cart.{{ $i }}.discount">
-                                </div>
-                            </td>
-                            <td style="width:80px"><input type="number" step="1" min="0.001" class="form-control form-control-sm" wire:model.live.debounce.400ms="cart.{{ $i }}.qty"></td>
-                            <td style="width:100px"><input type="number" step="0.001" min="0" class="form-control form-control-sm" wire:model.live.debounce.500ms="cart.{{ $i }}.unit_price"></td>
-                            <td class="text-end font-monospace small" style="width:80px">{{ money($totals['lines'][$i]['net'] ?? 0, false) }}</td>
-                            <td><button class="btn btn-sm btn-link text-danger" wire:click="remove({{ $i }})"><i class="bi bi-x-lg"></i></button></td>
-                        </tr>
-                    @empty
-                        <tr><td colspan="5"><div class="empty-state py-4"><i class="bi bi-cart"></i>{{ __('Cart is empty') }}</div></td></tr>
-                    @endforelse
-                    </tbody>
-                </table>
+                @forelse($cart as $i => $line)
+                    @php $q = (float) $line['qty']; @endphp
+                    <div class="pos-line" wire:key="line-{{ $i }}-{{ $line['part_id'] }}">
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="flex-grow-1 min-w-0">
+                                <div class="fw-semibold small text-truncate">{{ $line['name'] }}</div>
+                                <div class="small text-body-secondary font-monospace" dir="ltr">{{ $line['sku'] }}</div>
+                            </div>
+                            <div class="fw-bold font-monospace">{{ money($totals['lines'][$i]['net'] ?? 0, false) }}</div>
+                            <button class="btn btn-sm btn-link text-danger p-0 ms-1" wire:click="remove({{ $i }})" aria-label="{{ __('Remove') }}" title="{{ __('Remove') }}"><i class="bi bi-x-circle fs-5"></i></button>
+                        </div>
+                        <div class="pos-line-controls">
+                            <div class="input-group input-group-sm pos-qty" role="group" aria-label="{{ __('Qty') }}">
+                                <button class="btn btn-outline-secondary" type="button" wire:click="$set('cart.{{ $i }}.qty', {{ max(1, $q - 1) }})" @disabled($q <= 1) aria-label="−">−</button>
+                                <input type="number" step="1" min="0.001" class="form-control text-center" wire:model.live.debounce.400ms="cart.{{ $i }}.qty" aria-label="{{ __('Qty') }}">
+                                <button class="btn btn-outline-secondary" type="button" wire:click="$set('cart.{{ $i }}.qty', {{ $q + 1 }})" aria-label="+">+</button>
+                            </div>
+                            <div class="input-group input-group-sm"><span class="input-group-text">{{ __('Price') }}</span>
+                                <input type="number" step="0.001" min="0" class="form-control" wire:model.live.debounce.500ms="cart.{{ $i }}.unit_price" aria-label="{{ __('Price') }}"></div>
+                            <div class="input-group input-group-sm"><span class="input-group-text">{{ __('Disc.') }}</span>
+                                <input type="number" step="0.001" min="0" class="form-control" wire:model.live.debounce.500ms="cart.{{ $i }}.discount" aria-label="{{ __('Discount') }}"></div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state py-4"><i class="bi bi-cart"></i>{{ __('Cart is empty') }}</div>
+                @endforelse
             </div>
             <div class="card-body border-top">
                 <div class="d-flex justify-content-between small"><span>{{ __('Subtotal') }}</span><span class="font-monospace">{{ money($totals['subtotal'], false) }}</span></div>
@@ -129,5 +134,14 @@
                 @endif
             </div>
         </div>
+    </div>
+
+    {{-- phones / tablets: the cart is below the products; this bar shows the total and jumps to it --}}
+    <div class="pos-mobile-bar d-xl-none">
+        <div class="min-w-0">
+            <div class="small text-body-secondary">{{ trans_choice('{0} Cart is empty|{1} 1 item|[2,*] :n items', count($cart), ['n' => count($cart)]) }}</div>
+            <div class="fw-bold fs-5 font-monospace">{{ money($totals['total']) }}</div>
+        </div>
+        <a href="#posCart" class="btn btn-primary ms-auto"><i class="bi bi-cart3"></i> {{ __('Cart') }} <span class="badge text-bg-light">{{ count($cart) }}</span></a>
     </div>
 </div>
