@@ -23,6 +23,20 @@ class CheckInRequest extends FormRequest
         ]);
     }
 
+    public function messages(): array
+    {
+        $tooBig = __('A photo is too large or could not be uploaded. Attach smaller photos (up to :mb MB each).', ['mb' => 8]);
+
+        return [
+            'photos.*.uploaded' => $tooBig, 'photos.*.max' => $tooBig,
+            'photos.*.image' => __('Only photos (JPG, PNG or WEBP) can be attached.'), 'photos.*.mimes' => __('Only photos (JPG, PNG or WEBP) can be attached.'),
+            'customer_name.required_without' => __('Select an existing customer or enter the new customer name.'),
+            'customer_phone.required_without' => __('Enter the new customer mobile number.'),
+            'plate_number.required_without' => __('Select a registered vehicle or enter the plate number of the new vehicle.'),
+            'expected_delivery_at.after' => __('The expected delivery must be a future date and time.'),
+        ];
+    }
+
     public function rules(): array
     {
         $company = tenant()->id();

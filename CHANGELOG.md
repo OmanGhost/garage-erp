@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.7.1] - 2026-11-26
+- Vehicle reception: when the form is refused, everything entered is kept (customer, vehicle, odometer, fuel, complaint, damages, belongings, checklist, job details and signature)
+- Vehicle reception: the selected customer and vehicle are shown again instead of empty search boxes
+- Vehicle reception: missing information is checked before sending, and each error is shown next to its field
+- Vehicle reception: phone photos are reduced in the browser before upload so they stay within the hosting limits; clear messages for photos that are too large
+- Uploads larger than the server limit return to the form with an explanation instead of an error page
+
 ## [1.7.0] - 2026-11-26
 - Trial requests redesigned: summary cards, country filter and a clear table with risk level for each request
 - New detail page for each trial request: contact details, request details, follow-up notes and trial company creation

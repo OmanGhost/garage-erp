@@ -45,4 +45,15 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontReport([App\Exceptions\BusinessException::class]);
+        // the whole request is bigger than PHP post_max_size (e.g. many large photos): PHP drops every field,
+        // so explain it on the previous page instead of an error screen
+        $exceptions->render(function (Illuminate\Http\Exceptions\PostTooLargeException $e, Illuminate\Http\Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => __('The attached files are too large.')], 413);
+            }
+
+            return redirect()->to(url()->previous() ?: '/')->with('error', __('The attached files are too large for the server (limit :mb MB in total). Attach fewer or smaller photos and try again.', [
+                'mb' => (int) ini_get('post_max_size'),
+            ]));
+        });
     })->create();

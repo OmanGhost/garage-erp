@@ -60,10 +60,16 @@ class WorkshopController extends Controller
         $customer = $request->query('customer_id') ? Customer::query()->find($request->query('customer_id')) : null;
         $appointment = $request->query('appointment_id') ? \App\Modules\Appointments\Models\Appointment::query()->with('customer', 'vehicle')->find($request->query('appointment_id')) : null;
 
+        // after a failed submit, show the customer / vehicle / model that were already chosen (not only their hidden ids)
+        $oldCustomer = old('customer_id') ? Customer::query()->find(old('customer_id')) : null;
+        $oldVehicle = old('vehicle_id') ? \App\Modules\Vehicles\Models\Vehicle::query()->with('make', 'vehicleModel')->find(old('vehicle_id')) : null;
+        $oldModel = old('vehicle_model_id') ? \App\Modules\Vehicles\Models\VehicleModel::query()->find(old('vehicle_model_id')) : null;
+
         return view('workshop::reception', [
             'makes' => VehicleMake::query()->orderBy('name')->get(),
             'departments' => Options::departments(), 'advisors' => Options::users(),
-            'customer' => $customer ?? $appointment?->customer, 'appointment' => $appointment,
+            'customer' => $oldCustomer ?? $customer ?? $appointment?->customer, 'appointment' => $appointment,
+            'vehicle' => $oldVehicle ?? $appointment?->vehicle, 'vehicleModel' => $oldModel,
         ]);
     }
 
