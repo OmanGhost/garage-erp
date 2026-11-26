@@ -14,7 +14,7 @@ class CreditNote extends TenantModel
 
     protected array $lockedStatuses = ['posted'];
 
-    protected array $mutableWhenLocked = ['journal_entry_id', 'posted_at', 'posted_by', 'number', 'refunded_amount'];
+    protected array $mutableWhenLocked = ['journal_entry_id', 'posted_at', 'posted_by', 'number', 'refunded_amount', 'refund_payment_id'];
 
     protected $casts = [
         'subtotal' => 'decimal:3',
@@ -45,5 +45,36 @@ class CreditNote extends TenantModel
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Inventory\Models\Warehouse::class);
+    }
+
+    public function journal(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Accounting\Models\JournalEntry::class, 'journal_entry_id');
+    }
+
+    public function refundPayment(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Sales\Models\Payment::class, 'refund_payment_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function poster(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'posted_by');
+    }
+
+    public function displayNumber(): string
+    {
+        return $this->number ?? 'DRAFT-'.$this->id;
+    }
+
+    /** Part of the credit that stays on the customer account (not paid back in cash / bank). */
+    public function creditedToAccount(): string
+    {
+        return \App\Support\Money::sub($this->total, $this->refunded_amount ?? 0);
     }
 }

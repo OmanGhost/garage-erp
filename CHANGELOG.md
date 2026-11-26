@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.8.0] - 2026-11-26
+- Credit notes: new page with summary, tracking timeline (created, posted, returned to stock, refunded or credited to the account), refund voucher link, original invoice balance and journal entry
+- Credit notes: official bilingual printout (A4 and PDF) with original invoice, returned items, VAT, settlement and signatures; print buttons on the credit note, the list and the invoice
+- Credit notes list: invoice link, reason and settlement status (awaiting posting, credited to account, partly refunded, refunded)
+- Refunds are now linked to their credit note (existing refunds are linked automatically)
+- Vehicle reception: a missing required value stays highlighted with its message next to the field and above the submit button until it is filled
+
 ## [1.7.2] - 2026-11-26
 - Search lists (parts, services, customers, vehicles…) float above tables and cards instead of being cut off inside invoice lines; they open upward when there is no room below
 - Search lists are wider, show long part names on two lines, and keep part numbers such as 04152-YZZA1 in the right direction on Arabic pages

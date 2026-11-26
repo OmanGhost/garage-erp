@@ -137,8 +137,8 @@ class CreditNoteService
             if ($refundBankAccountId) {
                 $refund = Money::min($cn->total, Money::max(0, Money::neg($cn->customer->balance())));
                 if (Money::isPositive($refund)) {
-                    $this->payments->refundCustomer($cn->customer, $refund, $refundBankAccountId, ['notes' => __('Refund for').' '.$cn->number]);
-                    $cn->forceFill(['refunded_amount' => $refund])->save();
+                    $payment = $this->payments->refundCustomer($cn->customer, $refund, $refundBankAccountId, ['notes' => __('Refund for').' '.$cn->number]);
+                    $cn->forceFill(['refunded_amount' => $refund, 'refund_payment_id' => $payment->id])->save();
                 }
             }
             AuditLogger::log('credit_note.posted', $cn, ['total' => (string) $cn->total]);

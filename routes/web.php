@@ -366,6 +366,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/invoices/{invoice}/return', [SalesController::class, 'createCreditNote'])->name('credit-notes.create');
         Route::post('/invoices/{invoice}/return', [SalesController::class, 'storeCreditNote'])->name('credit-notes.store');
         Route::get('/credit-notes/{creditNote}', [SalesController::class, 'creditNote'])->name('credit-notes.show');
+        Route::get('/credit-notes/{creditNote}/print/{format?}', [SalesController::class, 'printCreditNote'])->name('credit-notes.print')->whereIn('format', ['a4', 'pdf']);
         Route::post('/credit-notes/{creditNote}/post', [SalesController::class, 'postCreditNote'])->name('credit-notes.post');
         Route::get('/payments/receive', [SalesController::class, 'receiveForm'])->name('payments.receive');
         Route::post('/payments/receive', [SalesController::class, 'receive']);

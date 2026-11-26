@@ -191,7 +191,25 @@ class SalesController extends Controller
     {
         $this->can('credit_notes.view');
 
-        return view('sales::credit-note', ['cn' => $creditNote->load('items', 'invoice', 'customer', 'warehouse'), 'banks' => Options::bankAccounts()]);
+        $creditNote->load('items.part', 'invoice.creditNotes', 'customer', 'warehouse', 'journal.lines.account', 'refundPayment.bankAccount', 'creator', 'poster');
+
+        return view('sales::credit-note', [
+            'cn' => $creditNote,
+            'banks' => Options::bankAccounts(),
+            'others' => $creditNote->invoice->creditNotes->where('id', '!=', $creditNote->id)->sortByDesc('id'),
+        ]);
+    }
+
+    public function printCreditNote(CreditNote $creditNote, string $format = 'a4')
+    {
+        $this->can('credit_notes.print');
+        $creditNote->load('items', 'invoice', 'customer', 'warehouse', 'refundPayment.bankAccount', 'creator', 'poster');
+        $html = view('sales::print.credit-note', ['cn' => $creditNote])->render();
+        if ($format === 'pdf') {
+            return response(Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$creditNote->displayNumber().'.pdf"']);
+        }
+
+        return response($html);
     }
 
     public function postCreditNote(Request $request, CreditNote $creditNote, CreditNoteService $service)

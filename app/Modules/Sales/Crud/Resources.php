@@ -66,12 +66,32 @@ class CreditNoteResource extends CrudResource
         return [
             Field::text('number')->index()->searchable()->display(fn ($c) => e($c->number ?? 'DRAFT-'.$c->id)),
             Field::date('date')->index(),
-            Field::text('inv')->label(__('Invoice'))->display(fn ($c) => e($c->invoice?->number))->index(false),
+            Field::text('inv')->label(__('Invoice'))->display(fn ($c) => $c->invoice ? '<a href="'.e(route('invoices.show', $c->invoice)).'">'.e($c->invoice->displayNumber()).'</a>' : '—')->index(false),
             Field::text('cust')->label(__('Customer'))->display(fn ($c) => e($c->customer?->name))->index(false),
+            Field::text('reason')->label(__('Reason'))->searchable()->index(false),
             Field::checkbox('restock')->label(__('Restocked'))->index(),
             Field::select('status', ['draft', 'posted'])->index()->filterable(),
             Field::money('total')->index(),
+            Field::text('settlement')->label(__('Settlement'))->index(false)->display(function ($c) {
+                if ($c->status !== 'posted') {
+                    return '<span class="badge text-bg-warning">'.e(__('Awaiting posting')).'</span>';
+                }
+                $refunded = (float) $c->refunded_amount;
+
+                return match (true) {
+                    $refunded <= 0 => '<span class="badge text-bg-primary">'.e(__('Credited to account')).'</span>',
+                    $refunded < (float) $c->total => '<span class="badge text-bg-info">'.e(__('Partly refunded')).'</span> <span class="small font-monospace">'.e(money($refunded, false)).'</span>',
+                    default => '<span class="badge text-bg-success">'.e(__('Refunded')).'</span>',
+                };
+            }),
         ];
+    }
+
+    public function rowActions(Model $m): array
+    {
+        return auth()->user()?->can('credit_notes.print')
+            ? [['label' => __('Print'), 'url' => route('credit-notes.print', $m), 'icon' => 'bi-printer', 'blank' => true]]
+            : [];
     }
 
     public function createUrl(): ?string { return null; }

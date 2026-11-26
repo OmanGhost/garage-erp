@@ -63,7 +63,7 @@
         </ul></div>
         @if($inv->creditNotes->isNotEmpty())
             <div class="card"><div class="card-header">{{ __('Credit notes') }}</div><ul class="list-group list-group-flush">
-                @foreach($inv->creditNotes as $cn)<li class="list-group-item d-flex small"><a href="{{ route('credit-notes.show', $cn) }}">{{ $cn->number ?? 'DRAFT-'.$cn->id }}</a><span class="ms-auto font-monospace me-2">{{ money($cn->total, false) }}</span>{!! status_badge($cn->status) !!}</li>@endforeach
+                @foreach($inv->creditNotes as $cn)<li class="list-group-item d-flex align-items-center gap-2 small"><a href="{{ route('credit-notes.show', $cn) }}">{{ $cn->displayNumber() }}</a><span class="ms-auto font-monospace">{{ money($cn->total, false) }}</span>{!! status_badge($cn->status) !!}@can('credit_notes.print')<a href="{{ route('credit-notes.print', $cn) }}" target="_blank" rel="noopener" title="{{ __('Print') }}" aria-label="{{ __('Print') }}"><i class="bi bi-printer"></i></a>@endcan</li>@endforeach
             </ul></div>
         @endif
     </div>

@@ -182,6 +182,7 @@
                 </div>
             </div>
             <div class="card"><div class="card-body">
+                <div class="alert alert-warning small py-2 d-flex gap-2" x-show="missing" x-cloak role="alert"><i class="bi bi-exclamation-triangle"></i><span x-text="missing"></span></div>
                 <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="notify" value="1" id="notify" @checked($hasOld ? old('notify') : true)><label class="form-check-label" for="notify">{{ __('Send reception confirmation to the customer (SMS/WhatsApp)') }}</label></div>
                 <button class="btn btn-primary btn-lg w-100" :disabled="photoBusy || sending">
                     <span x-show="sending" class="spinner-border spinner-border-sm"></span>
@@ -209,7 +210,7 @@ function reception() {
         customerMode: @js($customerMode), vehicleMode: @js($vehicleMode),
         customerId: @js($customer?->id), odometer: @js((string) old('odometer', '')), fuel: @js((float) old('fuel_level', 50)),
         damages: @js($oldDamages), items: @js($oldItems), previews: [], vin: @js((string) old('vin', '')), vinInfo: '',
-        makeId: @js((string) old('vehicle_make_id', '')), year: @js((string) old('year', '')), pad: null, photoBusy: false, sending: false,
+        makeId: @js((string) old('vehicle_make_id', '')), year: @js((string) old('year', '')), pad: null, photoBusy: false, sending: false, missing: '',
         init() {
             this.$nextTick(() => {
                 this.pad = erpSignature('sigPad', 'sigInput');
@@ -264,11 +265,23 @@ function reception() {
                 img.src = url;
             });
         },
+        // a required value is missing: keep the field red with its message until the user fixes it
         stop(e, msg, selector) {
             e.preventDefault();
-            window.ERP?.toast ? ERP.toast(msg, 'warning', { title: T.title }) : alert(msg);
+            window.ERP?.toast ? ERP.toast(msg, 'warning', { title: T.title, timeout: 9000 }) : alert(msg);
             const el = selector && this.$el.querySelector(selector);
-            if (el) { el.scrollIntoView({ block: 'center' }); el.focus?.({ preventScroll: true }); el.classList.add('is-invalid'); setTimeout(() => el.classList.remove('is-invalid'), 4000); }
+            this.missing = msg;
+            if (el) {
+                el.classList.add('is-invalid');
+                const anchor = el.closest('.lookup, .input-group') || el;
+                let fb = anchor.parentElement.querySelector(':scope > .client-feedback');
+                if (!fb) { fb = document.createElement('div'); fb.className = 'invalid-feedback d-block client-feedback'; anchor.after(fb); }
+                fb.textContent = msg;
+                const clear = () => { el.classList.remove('is-invalid'); fb.remove(); if (this.missing === msg) this.missing = ''; };
+                el.addEventListener('input', clear, { once: true });
+                el.closest('.lookup')?.addEventListener('lookup-selected', clear, { once: true });
+                el.scrollIntoView({ block: 'center' }); el.focus?.({ preventScroll: true });
+            }
             return false;
         },
         beforeSubmit(e) {
