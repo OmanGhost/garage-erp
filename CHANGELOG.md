@@ -5,6 +5,10 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.7.2] - 2026-11-26
+- Search lists (parts, services, customers, vehicles…) float above tables and cards instead of being cut off inside invoice lines; they open upward when there is no room below
+- Search lists are wider, show long part names on two lines, and keep part numbers such as 04152-YZZA1 in the right direction on Arabic pages
+
 ## [1.7.1] - 2026-11-26
 - Vehicle reception: when the form is refused, everything entered is kept (customer, vehicle, odometer, fuel, complaint, damages, belongings, checklist, job details and signature)
 - Vehicle reception: the selected customer and vehicle are shown again instead of empty search boxes

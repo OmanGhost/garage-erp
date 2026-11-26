@@ -26,5 +26,5 @@
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 @livewireScripts
 <script src="{{ asset('js/ui.js') }}?v={{ config('app.asset_version', '1') }}"></script>
-<script src="{{ asset('js/app.js') }}"></script>
+<script src="{{ asset('js/app.js') }}?v={{ config('app.asset_version', '1') }}"></script>
 </body></html>

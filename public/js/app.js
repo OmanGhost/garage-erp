@@ -85,14 +85,38 @@
         const input = $('input[type=text]', root), hidden = $('input[type=hidden]', root), menu = $('.lookup-menu', root);
         const type = root.dataset.lookup; let timer, items = [], idx = -1;
         const params = () => { const p = new URLSearchParams({ q: input.value }); (root.dataset.params || '').split('&').filter(Boolean).forEach(kv => { const [k, sel] = kv.split('='); const el = sel.startsWith('#') ? $(sel) : null; p.set(k, el ? el.value : sel); }); return p; };
+        // the menu floats above everything (position: fixed), so tables with overflow (invoice lines…) never clip it;
+        // it opens below the input, or above when there is no room, and is at least 340px wide for long part names
+        const place = () => {
+            const r = input.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight;
+            const width = Math.min(Math.max(r.width, 340), vw - 16);
+            const rtl = getComputedStyle(root).direction === 'rtl';
+            const left = Math.max(8, Math.min(rtl ? r.right - width : r.left, vw - width - 8));
+            const below = vh - r.bottom - 8, above = r.top - 8, wanted = Math.min(300, menu.scrollHeight || 300);
+            Object.assign(menu.style, { position: 'fixed', width: width + 'px', left: left + 'px', right: 'auto' });
+            if (below < wanted && above > below) {
+                Object.assign(menu.style, { top: 'auto', bottom: (vh - r.top + 2) + 'px', maxHeight: Math.min(300, above) + 'px' });
+            } else {
+                Object.assign(menu.style, { bottom: 'auto', top: (r.bottom + 2) + 'px', maxHeight: Math.max(120, Math.min(300, below)) + 'px' });
+            }
+        };
+        const onMove = () => { if (menu.classList.contains('show')) place(); };
+        const hide = () => {
+            menu.classList.remove('show');
+            window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove);
+        };
         const render = () => {
             menu.innerHTML = '';
             if (!items.length) { menu.innerHTML = `<div class="lookup-item text-body-secondary">${ERP.t.noResults}</div>`; }
             items.forEach((it, i) => { const d = document.createElement('div'); d.className = 'lookup-item' + (i === idx ? ' active' : ''); d.textContent = it.text; d.addEventListener('mousedown', (ev) => { ev.preventDefault(); choose(it); }); menu.appendChild(d); });
+            if (document.activeElement !== input) return; // focus moved on while the search was running
             menu.classList.add('show');
+            place();
+            menu.querySelector('.lookup-item.active')?.scrollIntoView({ block: 'nearest' });
+            window.addEventListener('scroll', onMove, true); window.addEventListener('resize', onMove);
         };
         const choose = (it) => {
-            hidden.value = it.id; input.value = it.text; menu.classList.remove('show');
+            hidden.value = it.id; input.value = it.text; hide();
             hidden.dispatchEvent(new Event('input', { bubbles: true })); hidden.dispatchEvent(new Event('change', { bubbles: true }));
             root.dispatchEvent(new CustomEvent('lookup-selected', { bubbles: true, detail: it }));
         };
@@ -103,13 +127,13 @@
         };
         input.addEventListener('input', () => { if (!input.value) { hidden.value = ''; hidden.dispatchEvent(new Event('input', { bubbles: true })); } search(); });
         input.addEventListener('focus', search);
-        input.addEventListener('blur', () => setTimeout(() => menu.classList.remove('show'), 150));
+        input.addEventListener('blur', () => setTimeout(hide, 150));
         input.addEventListener('keydown', (e) => {
             if (!menu.classList.contains('show')) return;
             if (e.key === 'ArrowDown') { idx = Math.min(idx + 1, items.length - 1); render(); e.preventDefault(); }
             if (e.key === 'ArrowUp') { idx = Math.max(idx - 1, 0); render(); e.preventDefault(); }
             if (e.key === 'Enter' && idx >= 0 && items[idx]) { choose(items[idx]); e.preventDefault(); }
-            if (e.key === 'Escape') menu.classList.remove('show');
+            if (e.key === 'Escape') hide();
         });
     }
     window.erpInitLookups = (r = document) => $$('[data-lookup]', r).forEach(initLookup);

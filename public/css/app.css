@@ -111,9 +111,13 @@ a { color: var(--brand); }
 .form-label.required::after { content: " *"; color: var(--bs-danger); }
 .form-section-title { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--bs-secondary-color); border-bottom: 1px dashed var(--border-soft); padding-bottom: .35rem; margin: 1rem 0 .75rem; }
 .lookup { position: relative; }
-.lookup-menu { position: absolute; z-index: 1060; inset-inline: 0; top: 100%; max-height: 280px; overflow: auto; background: var(--surface); border: 1px solid var(--border-soft); border-radius: .5rem; box-shadow: 0 10px 24px rgba(0,0,0,.12); display: none; }
+.lookup-menu { position: absolute; z-index: 1085; inset-inline: 0; top: 100%; max-height: 280px; overflow: auto; background: var(--surface); border: 1px solid var(--border-soft); border-radius: .5rem; box-shadow: 0 10px 24px rgba(0,0,0,.12); display: none; }
 .lookup-menu.show { display: block; }
-.lookup-menu .lookup-item { padding: .45rem .75rem; cursor: pointer; font-size: .9rem; }
+.lookup-menu .lookup-item { padding: .5rem .75rem; cursor: pointer; font-size: .9rem; line-height: 1.45; white-space: normal; border-bottom: 1px solid var(--border-soft); }
+.lookup-menu .lookup-item:last-child { border-bottom: 0; }
+/* part numbers / plates such as "04152-YZZA1" keep their own direction inside Arabic pages */
+.lookup-menu .lookup-item { unicode-bidi: plaintext; text-align: start; }
+[dir="rtl"] .lookup-menu .lookup-item { text-align: right; }
 .lookup-menu .lookup-item:hover, .lookup-menu .lookup-item.active { background: color-mix(in srgb, var(--brand) 12%, transparent); }
 .line-items td { padding: .3rem; }
 .line-items .form-control, .line-items .form-select { min-width: 80px; }
