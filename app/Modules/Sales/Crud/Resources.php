@@ -42,6 +42,22 @@ class InvoiceResource extends CrudResource
         ];
     }
 
+    public function rowActions(Model $m): array
+    {
+        if (! auth()->user()?->can('invoices.print')) {
+            return [];
+        }
+        $actions = [
+            ['label' => __('Print'), 'url' => route('invoices.print', [$m, 'a4']), 'icon' => 'bi-printer', 'blank' => true],
+            ['label' => __('Delivery note'), 'url' => route('invoices.delivery-note', $m), 'icon' => 'bi-truck', 'blank' => true],
+        ];
+        if ($m->job_card_id && auth()->user()->can('job_cards.print')) {
+            $actions[] = ['label' => __('Gate pass'), 'url' => route('job-cards.gate-pass', $m->job_card_id), 'icon' => 'bi-door-open', 'blank' => true];
+        }
+
+        return $actions;
+    }
+
     public function createUrl(): ?string { return route('invoices.create'); }
     public function editUrl(Model $m): ?string { return in_array($m->status, ['draft', 'held'], true) ? route('invoices.edit', $m) : null; }
     public function canEditRecord(Model $m): bool { return in_array($m->status, ['draft', 'held'], true); }

@@ -118,6 +118,27 @@ class WorkshopController extends Controller
             ->with('warning', $notifyFailed);
     }
 
+    /** Vehicle gate pass: authorises the vehicle to leave the workshop (shows payment status for the gate guard). */
+    public function gatePass(JobCard $jobCard, string $format = 'a5')
+    {
+        $this->can('job_cards.print');
+        $jobCard->load('customer', 'vehicle.make', 'vehicle.vehicleModel', 'advisor', 'checkIn', 'invoices.creditNotes');
+        $exit = \App\Modules\Workshop\Models\VehicleGateLog::query()->with('user')
+            ->where('job_card_id', $jobCard->id)->where('direction', 'out')->latest('logged_at')->first();
+        $invoices = $jobCard->invoices->filter(fn ($i) => $i->isPosted());
+        $balance = $invoices->reduce(fn ($c, $i) => \App\Support\Money::add($c, $i->balanceDue()), '0');
+        $released = in_array($jobCard->status, [JobCard::DELIVERED, JobCard::COMPLETED], true);
+        $html = view('workshop::print.gate-pass', [
+            'jc' => $jobCard, 'exit' => $exit, 'invoices' => $invoices, 'balance' => $balance, 'released' => $released,
+            'paper' => $format === 'a4' ? 'A4' : 'A5',
+        ])->render();
+        if ($format === 'pdf') {
+            return response(\App\Support\Export\Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="gate-pass-'.$jobCard->number.'.pdf"']);
+        }
+
+        return response($html);
+    }
+
     public function receipt(JobCard $jobCard)
     {
         $this->can('job_cards.print');

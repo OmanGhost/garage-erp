@@ -2638,5 +2638,8 @@
     "The confirmation message to the customer could not be sent: :m": "تعذر إرسال رسالة التأكيد للعميل: :m",
     "Your account cannot receive vehicles (missing permission “:p”). Roles: :r. Ask the company administrator to grant it.": "حسابك لا يملك صلاحية استلام المركبات (الصلاحية الناقصة «:p»). الأدوار: :r. اطلب من مدير الشركة منحها.",
     "You do not have permission to perform this action.": "ليست لديك صلاحية لتنفيذ هذا الإجراء.",
-    "Your data was kept. For security, browsers do not keep selected photos or the signature: please attach the photos and sign again.": "تم الاحتفاظ ببياناتك. لأسباب أمنية لا يحتفظ المتصفح بالصور ولا بالتوقيع: يرجى إرفاق الصور والتوقيع مرة أخرى."
+    "Your data was kept. For security, browsers do not keep selected photos or the signature: please attach the photos and sign again.": "تم الاحتفاظ ببياناتك. لأسباب أمنية لا يحتفظ المتصفح بالصور ولا بالتوقيع: يرجى إرفاق الصور والتوقيع مرة أخرى.",
+    "Print gate pass": "طباعة تصريح الخروج",
+    "Gate pass": "تصريح خروج",
+    "Delivery note": "إشعار تسليم"
 }

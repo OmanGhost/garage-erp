@@ -10,6 +10,9 @@
 <x-page-header :title="$jc->number" icon="bi-clipboard-check" :breadcrumbs="[__('Job Cards') => route('crud.index', 'job-cards'), $jc->number]"
     :subtitle="'<span class=\'plate-badge\'><span class=\'flag\'>'.e($jc->vehicle->plate_country).'</span>'.e($jc->vehicle->plate()).'</span> '.e($jc->vehicle->title()).' · '.e($jc->customer->name).' '.e($jc->customer->phone).' · '.status_badge($jc->status).' '.status_badge($jc->priority)">
     @if(session('print_receipt'))<a href="{{ session('print_receipt') }}" target="_blank" class="btn btn-warning"><i class="bi bi-printer"></i> {{ __('Print reception receipt') }}</a>@endif
+    @if(in_array($jc->status, ['delivered', 'completed'], true))
+        @can('job_cards.print')<a href="{{ route('job-cards.gate-pass', $jc) }}" target="_blank" rel="noopener" class="btn btn-success"><i class="bi bi-door-open"></i> {{ __('Print gate pass') }}</a>@endcan
+    @endif
     @can('job_cards.change_status')
         @if($next)
         <div class="dropdown">
@@ -30,6 +33,7 @@
         <ul class="dropdown-menu dropdown-menu-end shadow">
             <li><a class="dropdown-item" href="{{ route('job-cards.print', $jc) }}" target="_blank"><i class="bi bi-printer me-2"></i>{{ __('Print job card') }}</a></li>
             <li><a class="dropdown-item" href="{{ route('reception.receipt', $jc) }}" target="_blank"><i class="bi bi-qr-code me-2"></i>{{ __('Reception receipt') }}</a></li>
+            @can('job_cards.print')<li><a class="dropdown-item" href="{{ route('job-cards.gate-pass', $jc) }}" target="_blank" rel="noopener"><i class="bi bi-door-open me-2"></i>{{ __('Gate pass') }}</a></li>@endcan
             @can('quotations.create')<li><a class="dropdown-item" href="{{ route('quotations.sales.create', ['job_card_id' => $jc->id]) }}"><i class="bi bi-file-earmark-plus me-2"></i>{{ __('New quotation') }}</a></li>@endcan
             @can('purchase_requests.create')<li><form method="post" action="{{ route('job-cards.purchase-request', $jc) }}">@csrf <x-idem/><button class="dropdown-item"><i class="bi bi-cart-plus me-2"></i>{{ __('Request missing parts (purchase)') }}</button></form></li>@endcan
             @can('invoices.create')@unless($closed)<li><form method="post" action="{{ route('job-cards.invoice', $jc) }}">@csrf <x-idem/><button class="dropdown-item"><i class="bi bi-receipt me-2"></i>{{ __('Prepare invoice') }}</button></form></li>@endunless @endcan

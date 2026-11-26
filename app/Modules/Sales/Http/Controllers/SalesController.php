@@ -162,6 +162,20 @@ class SalesController extends Controller
         return response($html);
     }
 
+    /** Delivery note: goods handed over for an invoice (quantities only, no prices), signed by the receiver. */
+    public function deliveryNote(Invoice $invoice, string $format = 'a4')
+    {
+        $this->can('invoices.print');
+        $invoice->load('items.part', 'items.warehouse', 'customer', 'warehouse', 'jobCard.vehicle.make', 'jobCard.vehicle.vehicleModel', 'creator');
+        $goods = $invoice->items->filter(fn ($it) => ! in_array($it->item_type, ['service', 'labor'], true) && ! $it->part?->is_service_item);
+        $html = view('sales::print.delivery-note', ['inv' => $invoice, 'goods' => $goods, 'services' => $invoice->items->count() - $goods->count()])->render();
+        if ($format === 'pdf') {
+            return response(Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="delivery-note-'.$invoice->displayNumber().'.pdf"']);
+        }
+
+        return response($html);
+    }
+
     // ---------------------------------------------------------- credit notes
 
     public function createCreditNote(Invoice $invoice)

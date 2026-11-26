@@ -5,6 +5,10 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.10.0] - 2026-11-26
+- Vehicle gate pass (A5 / A4 / PDF): release and payment status, plate, vehicle, invoices, QR to verify and signatures; printed from the job card, the invoice, the invoice list and the gate log
+- Delivery note for sales invoices: goods and delivered quantities without prices, returned quantities, receiver signature; printed from the invoice page and the invoice list
+
 ## [1.9.1] - 2026-11-26
 - Vehicle reception: the customer signature is uploaded as a PNG file instead of a long base64 text field, which hosting firewalls (ModSecurity) were refusing with 403
 

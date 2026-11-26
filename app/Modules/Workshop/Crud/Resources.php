@@ -384,6 +384,13 @@ class GateLogResource extends CrudResource
             Field::text('by')->label(__('By'))->display(fn ($g) => e($g->user?->name))->index(false),
         ];
     }
+
+    public function rowActions(Model $m): array
+    {
+        return $m->direction === 'out' && $m->job_card_id && auth()->user()?->can('job_cards.print')
+            ? [['label' => __('Gate pass'), 'url' => route('job-cards.gate-pass', $m->job_card_id), 'icon' => 'bi-door-open', 'blank' => true]]
+            : [];
+    }
 }
 
 class CommissionResource extends CrudResource

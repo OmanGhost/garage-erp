@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title')</title>
     <style>
-        @page { size: {{ $paper ?? 'A4' }}; margin: {{ ($paper ?? 'A4') === '80mm' ? '2mm' : '10mm' }}; }
+        @page { size: {{ $paper ?? 'A4' }}; margin: {{ ['80mm' => '2mm', 'A5' => '6mm'][$paper ?? 'A4'] ?? '10mm' }}; }
         * { box-sizing: border-box; }
         body { font-family: dejavusans, "Segoe UI", Tahoma, Arial, sans-serif; color: #111; font-size: 12px; margin: 0; background: #e9ecef; }
-        .paper { background: #fff; max-width: {{ ($paper ?? 'A4') === '80mm' ? '80mm' : '210mm' }}; margin: 10px auto; padding: {{ ($paper ?? 'A4') === '80mm' ? '3mm' : '12mm' }}; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+        .paper { background: #fff; max-width: {{ ['80mm' => '80mm', 'A5' => '148mm'][$paper ?? 'A4'] ?? '210mm' }}; margin: 10px auto; padding: {{ ['80mm' => '3mm', 'A5' => '8mm'][$paper ?? 'A4'] ?? '12mm' }}; box-shadow: 0 4px 20px rgba(0,0,0,.08); }
         table { width: 100%; border-collapse: collapse; }
         .head td { vertical-align: top; }
         .company-name { font-size: 18px; font-weight: bold; }

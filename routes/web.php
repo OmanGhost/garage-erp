@@ -229,6 +229,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/reception/{jobCard}/receipt', [WorkshopController::class, 'receipt'])->name('reception.receipt');
         Route::get('/job-cards/{jobCard}', [WorkshopController::class, 'show'])->name('job-cards.show');
         Route::get('/job-cards/{jobCard}/print', [WorkshopController::class, 'print'])->name('job-cards.print');
+        Route::get('/job-cards/{jobCard}/gate-pass/{format?}', [WorkshopController::class, 'gatePass'])->name('job-cards.gate-pass')->whereIn('format', ['a5', 'a4', 'pdf']);
         Route::post('/job-cards/{jobCard}/status', [WorkshopController::class, 'status'])->name('job-cards.status');
         Route::put('/job-cards/{jobCard}', [WorkshopController::class, 'update'])->name('job-cards.update');
         Route::post('/job-cards/{jobCard}/tasks', [WorkshopController::class, 'addTask'])->name('job-cards.tasks.store');
@@ -365,6 +366,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/invoices/{invoice}/print/{format?}', [SalesController::class, 'printInvoice'])->name('invoices.print')->whereIn('format', ['a4', '80mm', 'pdf']);
         Route::get('/invoices/{invoice}/return', [SalesController::class, 'createCreditNote'])->name('credit-notes.create');
         Route::post('/invoices/{invoice}/return', [SalesController::class, 'storeCreditNote'])->name('credit-notes.store');
+        Route::get('/invoices/{invoice}/delivery-note/{format?}', [SalesController::class, 'deliveryNote'])->name('invoices.delivery-note')->whereIn('format', ['a4', 'pdf']);
         Route::get('/credit-notes/{creditNote}', [SalesController::class, 'creditNote'])->name('credit-notes.show');
         Route::get('/credit-notes/{creditNote}/print/{format?}', [SalesController::class, 'printCreditNote'])->name('credit-notes.print')->whereIn('format', ['a4', 'pdf']);
         Route::post('/credit-notes/{creditNote}/post', [SalesController::class, 'postCreditNote'])->name('credit-notes.post');

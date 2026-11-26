@@ -8,6 +8,8 @@
         <a href="{{ route('invoices.print', [$inv, '80mm']) }}" target="_blank" class="btn btn-outline-secondary">80mm</a>
         <a href="{{ route('invoices.print', [$inv, 'pdf']) }}" target="_blank" class="btn btn-outline-secondary">PDF</a>
     </div>
+    @can('invoices.print')<a href="{{ route('invoices.delivery-note', $inv) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="bi bi-truck"></i> {{ __('Delivery note') }}</a>@endcan
+    @if($inv->jobCard)@can('job_cards.print')<a href="{{ route('job-cards.gate-pass', $inv->jobCard) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="bi bi-door-open"></i> {{ __('Gate pass') }}</a>@endcan @endif
     @if(in_array($inv->status, ['draft', 'held']))
         @can('invoices.update')<a href="{{ route('invoices.edit', $inv) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> {{ __('Edit') }}</a>@endcan
         @can('invoices.post')<form method="post" action="{{ route('invoices.post', $inv) }}" data-confirm="{{ __('Post the invoice? Stock and accounts will be updated and it can no longer be edited.') }}">@csrf <x-idem/><button class="btn btn-success"><i class="bi bi-check2-circle"></i> {{ __('Post invoice') }}</button></form>@endcan
