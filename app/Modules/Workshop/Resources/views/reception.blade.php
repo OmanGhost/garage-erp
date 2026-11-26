@@ -172,6 +172,19 @@
                         <input type="datetime-local" name="expected_delivery_at" class="form-control @error('expected_delivery_at') is-invalid @enderror" value="{{ old('expected_delivery_at', now()->addDay()->setTime(17, 0)->format('Y-m-d\TH:i')) }}">
                         @error('expected_delivery_at')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
                     <div class="col-12"><label class="form-label">{{ __('Internal notes') }}</label><textarea name="notes" class="form-control" rows="2">{{ old('notes') }}</textarea></div>
+                    <div class="col-12" x-data="{ by: '{{ old('brought_by', 'owner') }}' }">
+                        <label class="form-label">{{ __('Vehicle brought by') }}</label>
+                        <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                            <input type="radio" class="btn-check" name="brought_by" id="bb_owner" value="owner" x-model="by"><label class="btn btn-outline-secondary" for="bb_owner">{{ __('The owner') }}</label>
+                            <input type="radio" class="btn-check" name="brought_by" id="bb_other" value="other" x-model="by"><label class="btn btn-outline-secondary" for="bb_other">{{ __('Another person (driver, employee…)') }}</label>
+                        </div>
+                        <div class="row g-2" x-show="by === 'other'" x-cloak>
+                            <div class="col-7"><input name="brought_by_name" class="form-control form-control-sm @error('brought_by_name') is-invalid @enderror" placeholder="{{ __('Full name') }}" aria-label="{{ __('Full name') }}" value="{{ old('brought_by_name') }}" :disabled="by !== 'other'">
+                                @error('brought_by_name')<div class="invalid-feedback">{{ $message }}</div>@enderror</div>
+                            <div class="col-5"><input name="brought_by_id_number" class="form-control form-control-sm" dir="ltr" placeholder="{{ __('ID number') }}" aria-label="{{ __('ID number') }}" value="{{ old('brought_by_id_number') }}" :disabled="by !== 'other'"></div>
+                            <div class="col-12 form-text">{{ __('If the owner gave this person a drop-off authorization, it is matched by the ID number and recorded.') }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card mb-3">

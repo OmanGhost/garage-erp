@@ -95,6 +95,9 @@ class CheckInRequest extends FormRequest
             'photo_captions' => ['nullable', 'array'],
             'photo_captions.*' => ['nullable', 'string', 'max:60'],
             'allow_duplicate' => ['nullable', 'boolean'],
+            'brought_by' => ['nullable', 'in:owner,other'],
+            'brought_by_name' => ['nullable', 'required_if:brought_by,other', 'string', 'max:150'],
+            'brought_by_id_number' => ['nullable', 'string', 'max:40'],
             'notify' => ['nullable', 'boolean'],
         ];
     }

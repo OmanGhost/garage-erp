@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.12.0] - 2026-11-26
+- Vehicle page: new table of compatible parts in the system (make / model / year / engine / VIN pattern) with fitment, price, available stock and a quick filter
+- Vehicle gate log redesigned: daily entries / exits, vehicles in the workshop, filters, manual movements (road test, towing…) and a printable movement slip (A5 / A4 / PDF) for each entry
+- Vehicle handover authorizations: the owner authorises a person (name, ID, phone, relationship) to drop off / pick up the vehicle, approved by a code sent to the owner or a signed letter; printable authorization letter; revoke; history of use
+- Delivery asks who collects the vehicle: the owner, or an authorized person whose ID must match an active pick-up authorization; recorded on the job card, the gate log and the gate pass
+- Reception records who brought the vehicle and matches drop-off authorizations by ID number
+
 ## [1.11.0] - 2026-11-26
 - Goods received note (GRN) printout (A4 / PDF) with supplier, PO, warehouse, items, locations, batches, serial numbers and signatures; print buttons on the receipt and the list
 - Complaints: automatic reference number (CMP-YYYY-000001), new complaint page with tracking history (registration, status changes, assignment, notes, resolution), follow-up form (a resolution is required to close) and printout (A4 / PDF)

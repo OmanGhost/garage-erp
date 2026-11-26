@@ -95,6 +95,11 @@ class JobCard extends TenantModel
         return $this->hasMany(\App\Modules\Workshop\Models\JobCardPart::class);
     }
 
+    public function authorization(): BelongsTo
+    {
+        return $this->belongsTo(HandoverAuthorization::class, 'handover_authorization_id');
+    }
+
     public function checkIn(): HasOne
     {
         return $this->hasOne(\App\Modules\Workshop\Models\VehicleCheckIn::class);

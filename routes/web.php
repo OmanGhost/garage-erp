@@ -238,6 +238,17 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/reception/{jobCard}/receipt', [WorkshopController::class, 'receipt'])->name('reception.receipt');
         Route::get('/job-cards/{jobCard}', [WorkshopController::class, 'show'])->name('job-cards.show');
         Route::get('/job-cards/{jobCard}/print', [WorkshopController::class, 'print'])->name('job-cards.print');
+        Route::get('/handover-authorizations', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'index'])->name('handover-authorizations.index');
+        Route::get('/handover-authorizations/new', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'create'])->name('handover-authorizations.create');
+        Route::post('/handover-authorizations', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'store'])->name('handover-authorizations.store');
+        Route::get('/handover-authorizations/{authorization}', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'show'])->name('handover-authorizations.show');
+        Route::post('/handover-authorizations/{authorization}/send-code', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'sendCode'])->name('handover-authorizations.send-code');
+        Route::post('/handover-authorizations/{authorization}/approve', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'approve'])->name('handover-authorizations.approve');
+        Route::post('/handover-authorizations/{authorization}/revoke', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'revoke'])->name('handover-authorizations.revoke');
+        Route::get('/handover-authorizations/{authorization}/print/{format?}', [\App\Modules\Workshop\Http\Controllers\HandoverAuthorizationController::class, 'print'])->name('handover-authorizations.print')->whereIn('format', ['a4', 'pdf']);
+        Route::get('/gate-log', [\App\Modules\Workshop\Http\Controllers\GateLogController::class, 'index'])->name('gate-logs.index');
+        Route::post('/gate-log', [\App\Modules\Workshop\Http\Controllers\GateLogController::class, 'store'])->name('gate-logs.store');
+        Route::get('/gate-log/{gateLog}/print/{format?}', [\App\Modules\Workshop\Http\Controllers\GateLogController::class, 'print'])->name('gate-logs.print')->whereIn('format', ['a5', 'a4', 'pdf']);
         Route::get('/job-cards/{jobCard}/gate-pass/{format?}', [WorkshopController::class, 'gatePass'])->name('job-cards.gate-pass')->whereIn('format', ['a5', 'a4', 'pdf']);
         Route::post('/job-cards/{jobCard}/status', [WorkshopController::class, 'status'])->name('job-cards.status');
         Route::put('/job-cards/{jobCard}', [WorkshopController::class, 'update'])->name('job-cards.update');

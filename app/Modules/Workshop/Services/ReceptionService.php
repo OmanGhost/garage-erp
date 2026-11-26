@@ -9,6 +9,7 @@ use App\Modules\Core\Services\FileStorage;
 use App\Modules\Vehicles\Models\Vehicle;
 use App\Modules\Workshop\Models\JobCard;
 use App\Modules\Workshop\Models\VehicleCheckIn;
+use App\Modules\Workshop\Models\HandoverAuthorization;
 use App\Modules\Workshop\Models\VehicleGateLog;
 use App\Support\DocumentNumber;
 use Illuminate\Support\Facades\DB;
@@ -82,8 +83,23 @@ class ReceptionService
                 Storage::disk('local')->put($signaturePath, $png);
             }
 
+            // who brought the vehicle: the owner, or another person (linked to an active drop-off authorization when the ID matches)
+            $brought = ['type' => 'owner', 'name' => $customer->name, 'id' => null, 'auth' => null];
+            if (($data['brought_by'] ?? 'owner') === 'other' && filled($data['brought_by_name'] ?? null)) {
+                $brought = ['type' => 'other', 'name' => trim($data['brought_by_name']), 'id' => $data['brought_by_id_number'] ?? null, 'auth' => null];
+                if ($brought['id']) {
+                    $handover = app(HandoverService::class);
+                    $match = HandoverAuthorization::query()->usableFor($jc, 'in')->where('id_number', $handover->normalizeId($brought['id']))->first();
+                    if ($match) {
+                        $auth = $handover->use($match->id, $jc, 'in', $brought['id']);
+                        $brought = ['type' => 'authorized', 'name' => $auth->person_name, 'id' => $auth->id_number, 'auth' => $auth->id];
+                    }
+                }
+            }
+
             $checkIn = VehicleCheckIn::create([
                 'branch_id' => $jc->branch_id, 'job_card_id' => $jc->id, 'vehicle_id' => $vehicle->id, 'customer_id' => $customer->id,
+                'brought_by_type' => $brought['type'], 'brought_by_name' => $brought['name'], 'brought_by_id_number' => $brought['id'], 'handover_authorization_id' => $brought['auth'],
                 'received_at' => now(), 'received_by' => auth()->id(), 'odometer' => $data['odometer'] ?? null,
                 'fuel_level' => $data['fuel_level'] ?? null, 'reported_issues' => $data['reported_issues'] ?? null,
                 'existing_damages' => array_values(array_filter($data['damages'] ?? [], fn ($d) => ! empty($d['area']) || ! empty($d['description']))),
@@ -101,6 +117,7 @@ class ReceptionService
             VehicleGateLog::create([
                 'branch_id' => $jc->branch_id, 'vehicle_id' => $vehicle->id, 'job_card_id' => $jc->id, 'direction' => 'in',
                 'logged_at' => now(), 'user_id' => auth()->id(), 'odometer' => $data['odometer'] ?? null,
+                'person_name' => $brought['name'], 'person_id_number' => $brought['id'], 'handover_authorization_id' => $brought['auth'],
             ]);
 
             if (! empty($data['appointment_id'])) {

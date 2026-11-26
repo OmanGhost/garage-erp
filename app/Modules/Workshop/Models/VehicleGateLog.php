@@ -28,4 +28,15 @@ class VehicleGateLog extends TenantModel
     {
         return $this->belongsTo(\App\Models\User::class);
     }
+
+    public function authorization(): BelongsTo
+    {
+        return $this->belongsTo(HandoverAuthorization::class, 'handover_authorization_id');
+    }
+
+    /** GI-000123 (entry) / GO-000123 (exit). */
+    public function reference(): string
+    {
+        return ($this->direction === 'in' ? 'GI-' : 'GO-').str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
 }

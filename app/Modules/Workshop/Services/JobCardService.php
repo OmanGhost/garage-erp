@@ -56,9 +56,13 @@ class JobCardService
 
     // ------------------------------------------------------------ workflow
 
-    public function changeStatus(JobCard $jc, string $to, ?string $notes = null, bool $force = false): JobCard
+    /**
+     * @param  array{receiver?: string, receiver_name?: ?string, receiver_id_number?: ?string, handover_authorization_id?: ?int}  $handover
+     *         who collects the vehicle when moving to "delivered": the owner (default) or a person holding an active pick-up authorization
+     */
+    public function changeStatus(JobCard $jc, string $to, ?string $notes = null, bool $force = false, array $handover = []): JobCard
     {
-        return DB::transaction(function () use ($jc, $to, $notes, $force) {
+        return DB::transaction(function () use ($jc, $to, $notes, $force, $handover) {
             $jc = JobCard::query()->whereKey($jc->id)->lockForUpdate()->firstOrFail();
             $from = $jc->status;
             if ($from === $to) {
@@ -78,7 +82,7 @@ class JobCardService
             match ($to) {
                 JobCard::IN_PROGRESS => $jc->started_at ??= now(),
                 JobCard::READY => $jc->completed_at = now(),
-                JobCard::DELIVERED => $this->deliver($jc),
+                JobCard::DELIVERED => $this->deliver($jc, $handover),
                 JobCard::COMPLETED => $jc->closed_at = now(),
                 JobCard::CANCELLED => $this->cancelEffects($jc, $notes),
                 default => null,
@@ -155,13 +159,23 @@ class JobCardService
         }
     }
 
-    protected function deliver(JobCard $jc): void
+    protected function deliver(JobCard $jc, array $handover = []): void
     {
         $jc->delivered_at = now();
         $jc->odometer_out ??= $jc->odometer_in;
+        // who collects the vehicle: the owner, or an authorized person whose ID must match an active pick-up authorization
+        if (($handover['receiver'] ?? 'owner') === 'authorized') {
+            $auth = app(HandoverService::class)->use((int) ($handover['handover_authorization_id'] ?? 0), $jc, 'out', (string) ($handover['receiver_id_number'] ?? ''));
+            $jc->forceFill(['delivered_to_type' => 'authorized', 'delivered_to_name' => $auth->person_name, 'delivered_to_id_number' => $auth->id_number, 'handover_authorization_id' => $auth->id]);
+        } else {
+            $jc->loadMissing('customer');
+            $jc->forceFill(['delivered_to_type' => 'owner', 'delivered_to_name' => ($handover['receiver_name'] ?? null) ?: $jc->customer?->name,
+                'delivered_to_id_number' => $handover['receiver_id_number'] ?? null, 'handover_authorization_id' => null]);
+        }
         VehicleGateLog::create([
             'branch_id' => $jc->branch_id, 'vehicle_id' => $jc->vehicle_id, 'job_card_id' => $jc->id,
             'direction' => 'out', 'logged_at' => now(), 'user_id' => auth()->id(), 'odometer' => $jc->odometer_out,
+            'person_name' => $jc->delivered_to_name, 'person_id_number' => $jc->delivered_to_id_number, 'handover_authorization_id' => $jc->handover_authorization_id,
         ]);
         if ($jc->odometer_out) {
             Vehicle::query()->whereKey($jc->vehicle_id)->where('odometer', '<', $jc->odometer_out)->update(['odometer' => $jc->odometer_out]);

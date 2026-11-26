@@ -19,6 +19,11 @@
             <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-arrow-right-circle"></i> {{ __('Change status') }}</button>
             <div class="dropdown-menu dropdown-menu-end p-2 shadow" style="min-width:280px">
                 @foreach($next as $s)
+                    @if($s === 'delivered')
+                        {{-- delivery asks who collects the vehicle (owner or authorized person) --}}
+                        <button type="button" class="dropdown-item rounded mb-1" data-bs-toggle="modal" data-bs-target="#deliverModal"><span class="badge-dot me-2" style="background:{{ \App\Modules\Workshop\Services\JobCardWorkflow::COLORS[$s] }}"></span>{{ status_label($s) }}</button>
+                        @continue
+                    @endif
                     <form method="post" action="{{ route('job-cards.status', $jc) }}" class="mb-1" @if($s === 'cancelled') data-confirm="{{ __('Cancel this job card?') }}" @endif>@csrf <x-idem/>
                         <input type="hidden" name="status" value="{{ $s }}">
                         <button class="dropdown-item rounded {{ $s === 'cancelled' ? 'text-danger' : '' }}"><span class="badge-dot me-2" style="background:{{ \App\Modules\Workshop\Services\JobCardWorkflow::COLORS[$s] }}"></span>{{ status_label($s) }}</button>
@@ -34,6 +39,7 @@
             <li><a class="dropdown-item" href="{{ route('job-cards.print', $jc) }}" target="_blank"><i class="bi bi-printer me-2"></i>{{ __('Print job card') }}</a></li>
             <li><a class="dropdown-item" href="{{ route('reception.receipt', $jc) }}" target="_blank"><i class="bi bi-qr-code me-2"></i>{{ __('Reception receipt') }}</a></li>
             @can('job_cards.print')<li><a class="dropdown-item" href="{{ route('job-cards.gate-pass', $jc) }}" target="_blank" rel="noopener"><i class="bi bi-door-open me-2"></i>{{ __('Gate pass') }}</a></li>@endcan
+            @can('handover_authorizations.create')<li><a class="dropdown-item" href="{{ route('handover-authorizations.create', ['job_card_id' => $jc->id]) }}"><i class="bi bi-person-badge me-2"></i>{{ __('Authorize someone to collect the vehicle') }}</a></li>@endcan
             @can('quotations.create')<li><a class="dropdown-item" href="{{ route('quotations.sales.create', ['job_card_id' => $jc->id]) }}"><i class="bi bi-file-earmark-plus me-2"></i>{{ __('New quotation') }}</a></li>@endcan
             @can('purchase_requests.create')<li><form method="post" action="{{ route('job-cards.purchase-request', $jc) }}">@csrf <x-idem/><button class="dropdown-item"><i class="bi bi-cart-plus me-2"></i>{{ __('Request missing parts (purchase)') }}</button></form></li>@endcan
             @can('invoices.create')@unless($closed)<li><form method="post" action="{{ route('job-cards.invoice', $jc) }}">@csrf <x-idem/><button class="dropdown-item"><i class="bi bi-receipt me-2"></i>{{ __('Prepare invoice') }}</button></form></li>@endunless @endcan
@@ -41,6 +47,48 @@
         </ul>
     </div>
 </x-page-header>
+
+{{-- delivery: who collects the vehicle --}}
+@if(in_array('delivered', $next ?? [], true))
+<div class="modal fade" id="deliverModal" tabindex="-1" aria-labelledby="deliverModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <form method="post" action="{{ route('job-cards.status', $jc) }}" x-data="{ receiver: '{{ old('receiver', 'owner') }}' }">@csrf <x-idem/>
+            <input type="hidden" name="status" value="delivered">
+            <div class="modal-header"><h5 class="modal-title" id="deliverModalTitle"><i class="bi bi-key"></i> {{ __('Deliver the vehicle') }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button></div>
+            <div class="modal-body">
+                <div class="small text-body-secondary mb-2">{{ __('Who is collecting the vehicle?') }}</div>
+                <div class="btn-group w-100 mb-3" role="group">
+                    <input type="radio" class="btn-check" name="receiver" id="rcv_owner" value="owner" x-model="receiver"><label class="btn btn-outline-primary" for="rcv_owner"><i class="bi bi-person"></i> {{ __('The owner') }}</label>
+                    <input type="radio" class="btn-check" name="receiver" id="rcv_auth" value="authorized" x-model="receiver"><label class="btn btn-outline-primary" for="rcv_auth"><i class="bi bi-person-badge"></i> {{ __('Authorized person') }}</label>
+                </div>
+                <div x-show="receiver === 'owner'">
+                    <div class="row g-2">
+                        <div class="col-7"><label class="form-label small mb-0" for="rcv_name">{{ __('Name') }}</label><input id="rcv_name" name="receiver_name" class="form-control" value="{{ $jc->customer->name }}" :disabled="receiver !== 'owner'"></div>
+                        <div class="col-5"><label class="form-label small mb-0" for="rcv_oid">{{ __('ID number (optional)') }}</label><input id="rcv_oid" name="receiver_id_number" class="form-control" dir="ltr" :disabled="receiver !== 'owner'"></div>
+                    </div>
+                </div>
+                <div x-show="receiver === 'authorized'" x-cloak>
+                    @if($pickupAuths->isEmpty())
+                        <div class="alert alert-warning small mb-2"><i class="bi bi-exclamation-triangle"></i> {{ __('There is no active pick-up authorization for this vehicle. The vehicle can only be handed to the owner.') }}</div>
+                    @else
+                        <label class="form-label small mb-0" for="rcv_auth_id">{{ __('Authorization') }}</label>
+                        <select id="rcv_auth_id" name="handover_authorization_id" class="form-select mb-2" :disabled="receiver !== 'authorized'">
+                            @foreach($pickupAuths as $pa)<option value="{{ $pa->id }}">{{ $pa->number }} — {{ $pa->person_name }} ({{ status_label((string) $pa->relationship ?: 'other') }})</option>@endforeach
+                        </select>
+                        <label class="form-label small mb-0 required" for="rcv_aid">{{ __('ID number shown by the person') }}</label>
+                        <input id="rcv_aid" name="receiver_id_number" class="form-control font-monospace" dir="ltr" autocomplete="off" :disabled="receiver !== 'authorized'" :required="receiver === 'authorized'">
+                        <div class="form-text">{{ __('Type the number from the original ID card. It must match the authorization, otherwise the delivery is refused.') }}</div>
+                    @endif
+                    @can('handover_authorizations.create')<a class="small" href="{{ route('handover-authorizations.create', ['job_card_id' => $jc->id]) }}"><i class="bi bi-plus"></i> {{ __('New authorization') }}</a>@endcan
+                </div>
+                <label class="form-label small mb-0 mt-3" for="rcv_notes">{{ __('Notes') }}</label><input id="rcv_notes" name="notes" class="form-control" maxlength="250">
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light border" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                <button class="btn btn-success"><i class="bi bi-check2-circle"></i> {{ __('Confirm delivery') }}</button></div>
+        </form>
+    </div></div>
+</div>
+@endif
 
 @include('workshop::partials.guide')
 

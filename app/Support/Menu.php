@@ -32,7 +32,8 @@ class Menu
                 ['label' => __('Promotions'), 'icon' => 'bi-percent', 'url' => self::crud('promotions'), 'perm' => 'promotions.view'],
                 ['label' => __('Workshop Bays'), 'icon' => 'bi-grid-3x3-gap', 'url' => self::crud('workshop-bays'), 'perm' => 'workshop_bays.view'],
                 ['label' => __('Inspection Checklists'), 'icon' => 'bi-list-check', 'url' => self::crud('inspection-templates'), 'perm' => 'inspection_templates.view'],
-                ['label' => __('Gate Log'), 'icon' => 'bi-signpost-split', 'url' => self::crud('gate-logs'), 'perm' => 'reception.view'],
+                ['label' => __('Gate Log'), 'icon' => 'bi-signpost-split', 'url' => route('gate-logs.index'), 'perm' => 'reception.view'],
+                ['label' => __('Handover Authorizations'), 'icon' => 'bi-person-badge', 'url' => route('handover-authorizations.index'), 'perm' => 'handover_authorizations.view'],
                 ['label' => __('Commissions'), 'icon' => 'bi-cash-coin', 'url' => self::crud('commissions'), 'perm' => 'commissions.view'],
             ]],
             ['label' => __('Customers & Vehicles'), 'items' => [

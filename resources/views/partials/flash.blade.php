@@ -8,7 +8,7 @@
         if (session($key)) {
             $item = ['type' => $type, 'message' => (string) session($key), 'title' => session($key.'_title')];
             if ($key === 'success' && session('print_voucher')) {
-                $item['action'] = ['label' => __('Print voucher'), 'url' => session('print_voucher'), 'blank' => true, 'icon' => 'bi-printer'];
+                $item['action'] = ['label' => session('print_label') ?: __('Print voucher'), 'url' => session('print_voucher'), 'blank' => true, 'icon' => 'bi-printer'];
                 $item['timeout'] = 15000;
             }
             // messages that carry a one-time secret (temporary passwords) stay until closed

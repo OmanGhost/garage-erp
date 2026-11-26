@@ -373,6 +373,8 @@ class GateLogResource extends CrudResource
 
     public function title(): string { return __('Vehicle Gate Log'); }
 
+    public function indexUrl(): string { return route('gate-logs.index'); }
+
     public function fields(): array
     {
         return [

@@ -84,7 +84,55 @@ class CustomerController extends Controller
             ->select('pt.sku', 'pt.name_ar', 'pt.name_en', 'p.qty_issued', 'p.qty_returned', 'p.part_condition', 'j.number', 'j.odometer_in', 'p.issued_at')
             ->orderByDesc('p.issued_at')->get();
 
-        return view('crm::vehicle', ['v' => $vehicle, 'jobs' => $jobs, 'replaced' => $replaced]);
+        return view('crm::vehicle', ['v' => $vehicle, 'jobs' => $jobs, 'replaced' => $replaced, 'compatible' => $this->compatibleParts($vehicle)]);
+    }
+
+    /**
+     * Active parts whose compatibility list matches this vehicle: same make, model (or any model of the make),
+     * year inside the range, engine and VIN pattern when given. With stock on hand and the fitment note.
+     */
+    protected function compatibleParts(Vehicle $vehicle): \Illuminate\Support\Collection
+    {
+        if (! $vehicle->vehicle_make_id || ! auth()->user()->can('parts.view')) {
+            return collect();
+        }
+        $year = $vehicle->year ? (int) $vehicle->year : null;
+        $fits = \App\Modules\Inventory\Models\PartCompatibility::query()
+            ->where('vehicle_make_id', $vehicle->vehicle_make_id)
+            ->where(fn ($q) => $q->whereNull('vehicle_model_id')->orWhere('vehicle_model_id', $vehicle->vehicle_model_id))
+            ->when($year, fn ($q) => $q->where(fn ($w) => $w->whereNull('year_from')->orWhere('year_from', '<=', $year))
+                ->where(fn ($w) => $w->whereNull('year_to')->orWhere('year_to', '>=', $year)))
+            ->get()
+            ->filter(function ($c) use ($vehicle) {
+                if ($c->engine && $vehicle->engine_type && stripos((string) $vehicle->engine_type, (string) $c->engine) === false
+                    && stripos((string) $vehicle->engine_capacity, (string) $c->engine) === false) {
+                    return false;
+                }
+                if ($c->vin_pattern && $vehicle->vin) {
+                    $re = '/^'.str_replace(['\*', '\?'], ['.*', '.'], preg_quote(strtoupper($c->vin_pattern), '/')).'/';
+
+                    return (bool) preg_match($re, strtoupper($vehicle->vin));
+                }
+
+                return true;
+            });
+        if ($fits->isEmpty()) {
+            return collect();
+        }
+        $parts = \App\Modules\Inventory\Models\Part::query()->with('category', 'brand')
+            ->whereIn('id', $fits->pluck('part_id')->unique())->where('is_active', true)->orderBy('name_ar')->get();
+        $stock = DB::table('stock_levels')->where('company_id', tenant()->id())->whereIn('part_id', $parts->pluck('id'))
+            ->selectRaw('part_id, sum(qty_on_hand - qty_reserved) as available')->groupBy('part_id')->pluck('available', 'part_id');
+
+        return $parts->map(function ($p) use ($fits, $stock) {
+            $f = $fits->firstWhere('part_id', $p->id);
+            $years = $f->year_from || $f->year_to ? trim(($f->year_from ?: '…').'–'.($f->year_to ?: '…')) : null;
+
+            return (object) [
+                'part' => $p, 'available' => (float) ($stock[$p->id] ?? 0),
+                'fit' => trim(implode(' · ', array_filter([$f->vehicle_model_id ? null : __('All models'), $years, $f->engine, $f->notes]))),
+            ];
+        })->sortByDesc('available')->values();
     }
 
     public function transferVehicle(Request $request, Vehicle $vehicle)

@@ -51,6 +51,11 @@
         @forelse($invoices as $inv){{ $inv->displayNumber() }} ({{ money($inv->total) }})@if(! $loop->last), @endif @empty — @endforelse
     </td></tr>
     <tr><th>حالة الدفع / Payment</th><td><b>{{ $paid ? 'مدفوع بالكامل / Fully paid' : 'غير مدفوع بالكامل / Not fully paid' }}</b></td></tr>
+    @if($jc->delivered_to_name)
+        <tr><th>المستلم / Collected by</th><td><b>{{ $jc->delivered_to_name }}</b>
+            @if($jc->delivered_to_id_number) · <span dir="ltr">{{ $jc->delivered_to_id_number }}</span>@endif
+            — {{ $jc->delivered_to_type === 'authorized' ? 'شخص مفوَّض / Authorized person'.($jc->authorization ? ' ('.$jc->authorization->number.')' : '') : 'المالك / Owner' }}</td></tr>
+    @endif
     <tr><th>سلّمها / Released by</th><td>{{ $exit?->user?->name ?? $jc->advisor?->name ?? '—' }}</td></tr>
 </table>
 

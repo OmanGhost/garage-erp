@@ -166,6 +166,9 @@ class WorkshopController extends Controller
             'bays' => \App\Modules\Workshop\Models\WorkshopBay::query()->where('is_active', true)->pluck('name', 'id'),
             'templates' => InspectionTemplate::query()->where('is_active', true)->pluck('name', 'id'),
             'users' => Options::users(),
+            // handover: active pick-up authorizations usable now, and the vehicle's recent authorizations
+            'pickupAuths' => \App\Modules\Workshop\Models\HandoverAuthorization::query()->usableFor($jobCard, 'out')->get(),
+            'authorizations' => \App\Modules\Workshop\Models\HandoverAuthorization::query()->where('vehicle_id', $jobCard->vehicle_id)->latest('id')->limit(5)->get(),
         ]);
     }
 
@@ -180,10 +183,24 @@ class WorkshopController extends Controller
     public function status(Request $request, JobCard $jobCard)
     {
         $this->can('job_cards.change_status');
-        $data = $request->validate(['status' => ['required', 'in:'.implode(',', JobCard::STATUSES)], 'notes' => ['nullable', 'string', 'max:250']]);
-        $this->jobs->changeStatus($jobCard, $data['status'], $data['notes'] ?? null);
+        $data = $request->validate([
+            'status' => ['required', 'in:'.implode(',', JobCard::STATUSES)], 'notes' => ['nullable', 'string', 'max:250'],
+            // delivery: who collects the vehicle
+            'receiver' => ['nullable', 'in:owner,authorized'],
+            'receiver_name' => ['nullable', 'string', 'max:150'],
+            'receiver_id_number' => ['nullable', 'required_if:receiver,authorized', 'string', 'max:40'],
+            'handover_authorization_id' => ['nullable', 'required_if:receiver,authorized', 'integer'],
+        ], ['handover_authorization_id.required_if' => __('Choose the authorization of the person collecting the vehicle.'),
+            'receiver_id_number.required_if' => __('Enter the ID number shown by the person collecting the vehicle.')]);
+        $handover = array_intersect_key($data, array_flip(['receiver', 'receiver_name', 'receiver_id_number', 'handover_authorization_id']));
+        $jc = $this->jobs->changeStatus($jobCard, $data['status'], $data['notes'] ?? null, false, $handover);
 
-        return back()->with('success', __('Status updated to :s.', ['s' => status_label($data['status'])]));
+        $back = back()->with('success', __('Status updated to :s.', ['s' => status_label($data['status'])]));
+        if ($data['status'] === JobCard::DELIVERED && auth()->user()->can('job_cards.print')) {
+            $back->with('success', __('Vehicle delivered to :n.', ['n' => $jc->delivered_to_name ?? '—']))->with('print_voucher', route('job-cards.gate-pass', $jc))->with('print_label', __('Print gate pass'));
+        }
+
+        return $back;
     }
 
     public function update(Request $request, JobCard $jobCard)

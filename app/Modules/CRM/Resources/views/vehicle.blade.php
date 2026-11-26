@@ -23,6 +23,38 @@
                 <tbody>@forelse($replaced as $r)<tr><td>{{ $r->sku }}</td><td>{{ app()->getLocale() === 'en' && $r->name_en ? $r->name_en : $r->name_ar }}</td><td>{{ qty($r->qty_issued - $r->qty_returned) }}</td><td>{{ status_label($r->part_condition) }}</td><td>{{ $r->number }}</td><td>{{ number_format($r->odometer_in) }}</td><td>{{ $r->issued_at ? substr($r->issued_at, 0, 10) : '' }}</td></tr>
                 @empty<tr><td colspan="7" class="text-body-secondary">—</td></tr>@endforelse</tbody>
             </table></div></div>
+        @can('parts.view')
+        <div class="card mb-3" id="compatible-parts">
+            <div class="card-header d-flex align-items-center gap-2">
+                <span><i class="bi bi-puzzle me-1"></i>{{ __('Compatible parts in the system') }}</span>
+                <span class="badge text-bg-light border">{{ $compatible->count() }}</span>
+                @if($compatible->isNotEmpty())<span class="small text-body-secondary ms-auto">{{ __(':n in stock', ['n' => $compatible->where('available', '>', 0)->count()]) }}</span>@endif
+            </div>
+            @if($compatible->isNotEmpty())
+                <div class="px-3 pt-2"><input type="search" class="form-control form-control-sm" placeholder="{{ __('Filter by name, code or brand...') }}" aria-label="{{ __('Filter by name, code or brand...') }}"
+                    oninput="const q=this.value.toLowerCase();document.querySelectorAll('#compatible-parts tbody tr').forEach(r=>r.hidden=q&&!r.textContent.toLowerCase().includes(q))"></div>
+            @endif
+            <div class="table-responsive" style="max-height:420px"><table class="table table-sm table-erp table-hover mb-0 align-middle">
+                <thead class="sticky-top"><tr><th>{{ __('Code') }}</th><th>{{ __('Part') }}</th><th>{{ __('Brand') }}</th><th>{{ __('Fitment') }}</th><th class="text-end">{{ __('Price') }}</th><th class="text-end">{{ __('Available') }}</th></tr></thead>
+                <tbody>
+                @forelse($compatible as $c)
+                    <tr>
+                        <td class="font-monospace small" dir="ltr">{{ $c->part->sku }}@if($c->part->oem_number)<div class="text-body-secondary">{{ $c->part->oem_number }}</div>@endif</td>
+                        <td><a href="{{ route('crud.show', ['parts', $c->part->id]) }}">{{ $c->part->displayName() }}</a><div class="small text-body-secondary">{{ $c->part->category?->displayName() }}</div></td>
+                        <td class="small">{{ $c->part->brand?->name ?? '—' }}</td>
+                        <td class="small text-body-secondary">{{ $c->fit ?: __('Exact match') }}</td>
+                        <td class="text-end font-monospace small">{{ money($c->part->sale_price, false) }}</td>
+                        <td class="text-end">@if($c->available > 0)<span class="badge text-bg-success">{{ qty($c->available) }}</span>@else<span class="badge text-bg-light border text-body-secondary">{{ __('Out of stock') }}</span>@endif</td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="text-body-secondary small p-3">
+                        {{ $v->vehicle_make_id ? __('No parts are linked to this make / model / year yet. Add vehicle compatibility on the part form.') : __('Set the vehicle make and model to see compatible parts.') }}
+                    </td></tr>
+                @endforelse
+                </tbody>
+            </table></div>
+        </div>
+        @endcan
         <x-attachments :model="$v" :title="__('Vehicle photos & documents')"/>
     </div>
     <div class="col-xl-4">
