@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.14.0] - 2026-11-26
+- Warranty claims: activity log (opened, status changes with inspection result, supplier claim updates, notes), progress bar and a redesigned claim page
+- Printing of warranty claims (A4 / PDF) with warranty details, inspection, resolution, costs, supplier recovery and tracking history
+- Printable warranty card (A4 / PDF): covered item, serial, customer, vehicle, invoice, period, km limit, terms, QR to verify and signatures; from the warranty list and the claim page
+- Section bar under the main menu: every page shows the links of its section (e.g. Warranty & Assets) with the current page highlighted, including detail pages
+
 ## [1.13.0] - 2026-11-26
 - Company settings: e-mail (SMTP) setup with encrypted password and a test e-mail; customer messages are sent from the company's own address
 - SaaS: platform SMTP (used for system e-mails and companies without their own server), new 'Domains & e-mail' page

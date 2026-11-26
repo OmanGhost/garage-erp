@@ -212,8 +212,13 @@ class WarrantyResource extends CrudResource
 
     public function rowActions(Model $m): array
     {
-        return $m->status === 'active' && auth()->user()->can('warranty_claims.create')
-            ? [['label' => __('Open claim'), 'url' => route('warranty.claims.create', ['warranty_id' => $m->id]), 'icon' => 'bi-patch-exclamation', 'class' => 'btn-outline-warning']] : [];
+        $actions = auth()->user()->can('warranties.print')
+            ? [['label' => __('Warranty card'), 'url' => route('warranties.print', $m), 'icon' => 'bi-printer', 'blank' => true]] : [];
+        if ($m->status === 'active' && auth()->user()->can('warranty_claims.create')) {
+            $actions[] = ['label' => __('Open claim'), 'url' => route('warranty.claims.create', ['warranty_id' => $m->id]), 'icon' => 'bi-patch-exclamation', 'class' => 'btn-outline-warning'];
+        }
+
+        return $actions;
     }
 }
 
@@ -251,6 +256,12 @@ class WarrantyClaimResource extends CrudResource
     public function createUrl(): ?string { return route('crud.index', 'warranties'); }
     public function editUrl(Model $m): ?string { return null; }
     public function showUrl(Model $m): ?string { return route('warranty.claims.show', $m); }
+
+    public function rowActions(Model $m): array
+    {
+        return auth()->user()->can('warranty_claims.print')
+            ? [['label' => __('Print claim'), 'url' => route('warranty.claims.print', $m), 'icon' => 'bi-printer', 'blank' => true]] : [];
+    }
 }
 
 class EquipmentResource extends CrudResource

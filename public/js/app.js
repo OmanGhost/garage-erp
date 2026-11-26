@@ -229,3 +229,9 @@
         window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
     }
 })();
+
+/* section bar: keep the active page visible when the bar scrolls horizontally (mobile) */
+document.addEventListener('DOMContentLoaded', () => {
+    const a = document.querySelector('[data-subnav] .app-subnav-link.active');
+    if (a) a.scrollIntoView({ block: 'nearest', inline: 'center' });
+});

@@ -2911,5 +2911,15 @@
     "Cancel this transfer request?": "إلغاء طلب النقل هذا؟",
     "Cancellation reason": "سبب الإلغاء",
     "Cancel transfer": "إلغاء النقل",
-    "Only transfers that were not dispatched can be cancelled.": "يمكن إلغاء النقل فقط قبل إرساله."
+    "Only transfers that were not dispatched can be cancelled.": "يمكن إلغاء النقل فقط قبل إرساله.",
+    "Inspecting": "قيد الفحص",
+    "Approved — rework": "معتمدة — إعادة إصلاح",
+    "Print claim": "طباعة المطالبة",
+    "Warranty card": "بطاقة الضمان",
+    "Claim rejected": "المطالبة مرفوضة",
+    "Claim details": "تفاصيل المطالبة",
+    "Problem reported": "المشكلة المبلغ عنها",
+    "Opened by": "فتحها",
+    "Claim opened": "تم فتح المطالبة",
+    "Supplier claim: :s": "مطالبة المورد: :s"
 }

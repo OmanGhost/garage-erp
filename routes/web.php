@@ -473,6 +473,9 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     Route::get('/warranty/claims/create', [AdvancedController::class, 'createWarrantyClaim'])->name('warranty.claims.create')->middleware('module:warranty');
     Route::post('/warranty/claims', [AdvancedController::class, 'storeWarrantyClaim'])->name('warranty.claims.store')->middleware('module:warranty');
     Route::get('/warranty/claims/{claim}', [AdvancedController::class, 'warrantyClaim'])->name('warranty.claims.show')->middleware('module:warranty');
+    Route::post('/warranty/claims/{claim}/note', [AdvancedController::class, 'warrantyNote'])->name('warranty.claims.note')->middleware('module:warranty');
+    Route::get('/warranty/claims/{claim}/print/{format?}', [AdvancedController::class, 'printWarrantyClaim'])->name('warranty.claims.print')->whereIn('format', ['a4', 'pdf'])->middleware('module:warranty');
+    Route::get('/warranties/{warranty}/print/{format?}', [AdvancedController::class, 'printWarranty'])->name('warranties.print')->whereIn('format', ['a4', 'pdf'])->middleware('module:warranty');
     Route::post('/warranty/claims/{claim}/{action}', [AdvancedController::class, 'warrantyAction'])->name('warranty.claims.action')->whereIn('action', ['approve', 'reject', 'complete', 'supplier'])->middleware('module:warranty');
 
     // reports

@@ -29,6 +29,7 @@
         <div class="app-header d-print-none">
             @include('partials.topbar')
             @include('partials.topnav')
+            @include('partials.subnav')
         </div>
         <main class="app-content container-fluid py-3 px-3 px-lg-4">
             @include('partials.flash')

@@ -273,4 +273,7 @@ return [
     'processing' => 'قيد المعالجة',
     'register' => 'تسجيل نطاق',
     'connect' => 'ربط نطاق',
+    'inspecting' => 'قيد الفحص',
+    'accepted' => 'مقبولة',
+    'settled' => 'مسوّاة',
 ];

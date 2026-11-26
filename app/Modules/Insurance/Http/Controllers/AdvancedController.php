@@ -103,7 +103,48 @@ class AdvancedController extends Controller
     {
         $this->can('warranty_claims.view');
 
-        return view('insurance::warranty-claim', ['c' => $claim->load('warranty.customer', 'warranty.vehicle', 'warranty.part', 'warranty.invoice', 'warranty.supplier', 'reworkJobCard')]);
+        return view('insurance::warranty-claim', ['c' => $claim->load('warranty.customer', 'warranty.vehicle', 'warranty.part', 'warranty.invoice', 'warranty.supplier', 'reworkJobCard', 'events.user', 'creator'),
+            'label' => self::eventLabel(...)]);
+    }
+
+    public static function eventLabel(\App\Modules\Warranty\Models\WarrantyClaimEvent $e): string
+    {
+        return match ($e->event) {
+            'opened' => __('Claim opened'),
+            'status' => __('Status changed from :a to :b', ['a' => status_label((string) $e->from_status), 'b' => status_label((string) $e->to_status)]),
+            'supplier' => __('Supplier claim: :s', ['s' => status_label((string) $e->to_status)]),
+            default => __('Note'),
+        };
+    }
+
+    public function warrantyNote(Request $request, WarrantyClaim $claim)
+    {
+        $this->can('warranty_claims.update');
+        $claim->logEvent('note', null, null, $request->validate(['note' => ['required', 'string', 'max:1000']])['note']);
+
+        return back()->with('success', __('Note added.'));
+    }
+
+    public function printWarrantyClaim(WarrantyClaim $claim, string $format = 'a4')
+    {
+        $this->can('warranty_claims.print');
+        $claim->load('warranty.customer', 'warranty.vehicle', 'warranty.part', 'warranty.invoice', 'warranty.supplier', 'reworkJobCard', 'events.user', 'creator');
+        $html = view('insurance::print.warranty-claim', ['c' => $claim, 'labels' => self::eventLabel(...)])->render();
+
+        return $format === 'pdf'
+            ? response(\App\Support\Export\Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$claim->number.'.pdf"'])
+            : response($html);
+    }
+
+    public function printWarranty(Warranty $warranty, string $format = 'a4')
+    {
+        $this->can('warranties.print');
+        $warranty->load('customer', 'vehicle', 'part.brand', 'invoice', 'claims');
+        $html = view('insurance::print.warranty-card', ['w' => $warranty])->render();
+
+        return $format === 'pdf'
+            ? response(\App\Support\Export\Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="warranty-'.$warranty->id.'.pdf"'])
+            : response($html);
     }
 
     public function warrantyAction(Request $request, WarrantyClaim $claim, string $action, WarrantyService $service)

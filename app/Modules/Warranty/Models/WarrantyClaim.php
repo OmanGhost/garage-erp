@@ -17,6 +17,30 @@ class WarrantyClaim extends TenantModel
         'supplier_claim' => 'boolean',
     ];
 
+    protected static function booted(): void
+    {
+        // activity log: opened, status changes (with the inspection result) and supplier claim updates
+        static::created(fn (WarrantyClaim $c) => $c->logEvent('opened', null, $c->status, $c->description));
+        static::updated(function (WarrantyClaim $c) {
+            if ($c->wasChanged('status')) {
+                $c->logEvent('status', $c->getOriginal('status'), $c->status, $c->inspection_result);
+            }
+            if ($c->wasChanged(['supplier_claim_status', 'supplier_recovered_amount'])) {
+                $c->logEvent('supplier', null, $c->supplier_claim_status, __('Recovered from supplier').': '.money($c->supplier_recovered_amount));
+            }
+        });
+    }
+
+    public function logEvent(string $event, ?string $from = null, ?string $to = null, ?string $notes = null): WarrantyClaimEvent
+    {
+        return $this->events()->create(['event' => $event, 'from_status' => $from, 'to_status' => $to, 'notes' => $notes, 'user_id' => auth()->id()]);
+    }
+
+    public function events(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(WarrantyClaimEvent::class)->latest('id');
+    }
+
     public function warranty(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Warranty\Models\Warranty::class);
