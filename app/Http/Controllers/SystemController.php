@@ -64,7 +64,10 @@ class SystemController extends Controller
     {
         abort_unless(auth()->user()->can('settings.view'), 403);
 
-        return view('system.settings', ['company' => tenant()->company(), 'defaults' => config('erp.defaults')]);
+        $smtp = \App\Modules\Core\Models\Integration::query()->where('provider', 'smtp')->first();
+
+        return view('system.settings', ['company' => tenant()->company(), 'defaults' => config('erp.defaults'),
+            'smtp' => $smtp?->credentials ?? [], 'smtpActive' => (bool) ($smtp?->is_active ?? true), 'platformSmtp' => (bool) \App\Support\Mail\MailService::platformConfig()]);
     }
 
     public function updateSettings(Request $request)
@@ -278,11 +281,12 @@ class SystemController extends Controller
 
     public function billing()
     {
-        $company = tenant()->company();
+        $company = tenant()->company()->load('plan');
 
         return view('system.billing', [
             'company' => $company, 'plans' => \App\Modules\Core\Models\Plan::query()->where('is_active', true)->orderBy('sort')->get(),
             'subscriptions' => $company->subscriptions()->with('plan')->latest()->get(),
+            'domainRequests' => \App\Modules\Saas\Models\DomainRequest::query()->where('company_id', $company->id)->latest()->get(),
             'usage' => [
                 'users' => User::query()->where('company_id', $company->id)->whereNull('customer_id')->count(),
                 'branches' => Branch::query()->count(),

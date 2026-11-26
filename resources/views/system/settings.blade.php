@@ -57,4 +57,21 @@
 </div>
 @can('settings.update')<div class="text-end"><button class="btn btn-primary btn-lg">{{ __('Save settings') }}</button></div>@endcan
 </form>
+
+{{-- e-mail server used for this company's messages to customers (separate form) --}}
+<div class="card mt-4" id="smtp">
+    <div class="card-header d-flex align-items-center gap-2"><i class="bi bi-envelope-at"></i> {{ __('Email (SMTP)') }}
+        @if(! empty($smtp['host']) && $smtpActive)<span class="badge text-bg-success ms-auto">{{ __('Active') }}</span>
+        @elseif($platformSmtp)<span class="badge text-bg-light border ms-auto">{{ __('Using the platform e-mail server') }}</span>
+        @else<span class="badge text-bg-warning ms-auto">{{ __('Not configured') }}</span>@endif
+    </div>
+    <div class="card-body">
+        <p class="small text-body-secondary">{{ __('Invoices, reminders and notifications to your customers are sent from your own e-mail address through this server.') }}</p>
+        @can('settings.update')
+            @include('partials.smtp-form', ['action' => route('settings.smtp'), 'testAction' => route('settings.smtp.test'), 'c' => $smtp, 'active' => $smtpActive])
+        @else
+            <div class="small">{{ $smtp['host'] ?? '—' }}</div>
+        @endcan
+    </div>
+</div>
 @endsection

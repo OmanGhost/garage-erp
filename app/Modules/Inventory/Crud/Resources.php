@@ -327,10 +327,21 @@ class StockTransferResource extends CrudResource
     public static string $permission = 'stock_transfers';
     public static ?string $module = 'inventory';
     public static string $icon = 'bi-truck';
-    public static array $with = ['fromWarehouse', 'toWarehouse'];
+    public static array $with = ['fromWarehouse', 'toWarehouse', 'creator', 'receiver'];
     public static ?string $dateColumn = 'transfer_date';
 
     public function title(): string { return __('Stock Transfers'); }
+
+    public function rowActions(Model $m): array
+    {
+        if (! auth()->user()?->can('stock_transfers.print')) {
+            return [];
+        }
+
+        return $m->status === 'received'
+            ? [['label' => __('Print completed transfer'), 'url' => route('inventory.transfers.print', [$m, 'completed']), 'icon' => 'bi-printer', 'blank' => true]]
+            : [['label' => __('Print transfer request'), 'url' => route('inventory.transfers.print', [$m, 'request']), 'icon' => 'bi-printer', 'blank' => true]];
+    }
 
     public function fields(): array
     {
@@ -340,6 +351,8 @@ class StockTransferResource extends CrudResource
             Field::select('from_warehouse_id', fn () => Options::warehouses())->label(__('From'))->relation('fromWarehouse', 'displayName')->index()->filterable(),
             Field::select('to_warehouse_id', fn () => Options::warehouses())->label(__('To'))->relation('toWarehouse', 'displayName')->index()->filterable(),
             Field::select('status', ['draft', 'in_transit', 'received', 'cancelled'])->index()->filterable(),
+            Field::text('requested')->label(__('Requested by'))->hideOnForm()->index(false)->display(fn ($t) => e($t->creator?->name ?? '—')),
+            Field::text('received_by_name')->label(__('Received by'))->hideOnForm()->index(false)->display(fn ($t) => $t->receiver ? e($t->receiver->name).'<div class="small text-body-secondary">'.e($t->received_at?->format('Y-m-d H:i')).'</div>' : '<span class="text-body-tertiary">—</span>'),
         ];
     }
 

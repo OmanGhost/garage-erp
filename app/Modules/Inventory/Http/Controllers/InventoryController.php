@@ -206,7 +206,7 @@ class InventoryController extends Controller
     {
         $this->can('stock_transfers.view');
 
-        return view('inventory::transfer', ['t' => $transfer->load('items.part', 'fromWarehouse', 'toWarehouse', 'creator')]);
+        return view('inventory::transfer', ['t' => $transfer->load('items.part', 'fromWarehouse', 'toWarehouse', 'creator', 'sender', 'receiver', 'canceller', 'events.user')]);
     }
 
     public function transferAction(Request $request, StockTransfer $transfer, string $action)
@@ -214,11 +214,33 @@ class InventoryController extends Controller
         $this->can('stock_transfers.update');
         match ($action) {
             'send' => $this->docs->sendTransfer($transfer),
-            'receive' => $this->docs->receiveTransfer($transfer, (array) $request->input('received', [])),
-            'cancel' => $transfer->status === 'draft' ? $transfer->update(['status' => 'cancelled']) : abort(403),
+            'receive' => $this->docs->receiveTransfer($transfer, (array) $request->input('received', []), mb_substr((string) $request->input('notes'), 0, 500) ?: null),
+            'cancel' => $this->docs->cancelTransfer($transfer, mb_substr((string) $request->input('reason'), 0, 250) ?: null),
         };
 
         return back()->with('success', __('Transfer updated.'));
+    }
+
+    public function transferNote(Request $request, StockTransfer $transfer)
+    {
+        $this->can('stock_transfers.update');
+        $note = $request->validate(['note' => ['required', 'string', 'max:500']])['note'];
+        $transfer->logEvent('note', $note);
+
+        return back()->with('success', __('Note added.'));
+    }
+
+    /** $type: request (before dispatch) | completed (sent vs received). */
+    public function printTransfer(StockTransfer $transfer, string $type = 'request', string $format = 'a4')
+    {
+        $this->can('stock_transfers.print');
+        $transfer->load('items.part', 'fromWarehouse', 'toWarehouse', 'creator', 'sender', 'receiver', 'events.user');
+        $html = view('inventory::print.transfer', ['t' => $transfer, 'type' => $type])->render();
+        if ($format === 'pdf') {
+            return response(\App\Support\Export\Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$transfer->number.'-'.$type.'.pdf"']);
+        }
+
+        return response($html);
     }
 
     // ---------------------------------------------------------------- counts

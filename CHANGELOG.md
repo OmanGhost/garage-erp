@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.13.0] - 2026-11-26
+- Company settings: e-mail (SMTP) setup with encrypted password and a test e-mail; customer messages are sent from the company's own address
+- SaaS: platform SMTP (used for system e-mails and companies without their own server), new 'Domains & e-mail' page
+- Custom domains: plans can include a custom domain (with a yearly domain fee); clients order a new domain or connect their own from the Subscription page; the platform admin handles requests, assigns domains, shows the DNS records and verifies them
+- On a client's own domain the login shows the client's name and logo, and only that client's users can sign in
+- Stock transfers: who requested, dispatched, received or cancelled each transfer, an activity log with notes, receiving notes, variance per item, and printing of the transfer request and of the completed transfer (A4 / PDF)
+
 ## [1.12.0] - 2026-11-26
 - Vehicle page: new table of compatible parts in the system (make / model / year / engine / VIN pattern) with fitment, price, available stock and a quick filter
 - Vehicle gate log redesigned: daily entries / exits, vehicles in the workshop, filters, manual movements (road test, towing…) and a printable movement slip (A5 / A4 / PDF) for each entry

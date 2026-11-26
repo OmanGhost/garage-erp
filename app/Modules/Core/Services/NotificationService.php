@@ -93,7 +93,7 @@ class NotificationService
     public function channelEnabled(string $channel): bool
     {
         return match ($channel) {
-            'mail' => (bool) config('mail.default') && config('mail.default') !== 'array',
+            'mail' => \App\Support\Mail\MailService::available(),
             'sms' => (bool) IntegrationManager::active('sms'),
             'whatsapp' => (bool) IntegrationManager::active('whatsapp'),
             default => false,

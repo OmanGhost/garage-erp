@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            \App\Http\Middleware\ResolveCustomDomain::class,
             SetTenant::class,
             SetLocale::class,
             SecurityHeaders::class,

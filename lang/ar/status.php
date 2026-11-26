@@ -269,4 +269,8 @@ return [
     'company_rep' => 'مندوب شركة',
     'owner' => 'المالك',
     'authorized' => 'مفوَّض',
+    'disabled' => 'معطّل',
+    'processing' => 'قيد المعالجة',
+    'register' => 'تسجيل نطاق',
+    'connect' => 'ربط نطاق',
 ];

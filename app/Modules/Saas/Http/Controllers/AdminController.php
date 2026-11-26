@@ -132,7 +132,9 @@ class AdminController extends Controller
             'max_users' => ['nullable', 'integer', 'min:1'], 'max_branches' => ['nullable', 'integer', 'min:1'], 'max_warehouses' => ['nullable', 'integer', 'min:1'],
             'max_storage_mb' => ['nullable', 'integer', 'min:10'], 'modules' => ['nullable', 'array'], 'modules.*' => [Rule::in(array_keys(config('erp.modules')))],
             'is_active' => ['nullable', 'boolean'], 'sort' => ['nullable', 'integer'],
+            'allow_custom_domain' => ['nullable', 'boolean'], 'domain_fee' => ['nullable', 'numeric', 'min:0'],
         ]);
+        $data['allow_custom_domain'] = $request->boolean('allow_custom_domain');
         $plan = ! empty($data['id']) ? Plan::query()->findOrFail($data['id']) : new Plan;
         $plan->fill(collect($data)->except('id')->all() + ['is_active' => $request->boolean('is_active'), 'modules' => array_values($data['modules'] ?? [])])->save();
 

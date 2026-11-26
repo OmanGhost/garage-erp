@@ -34,6 +34,7 @@ class InventoryDocuments
             if ($t->items()->count() === 0) {
                 throw new BusinessException(__('Add at least one item.'));
             }
+            $t->logEvent('requested', $data['notes'] ?? null, ['items' => $t->items()->count()]);
 
             return $t;
         });
@@ -51,14 +52,15 @@ class InventoryDocuments
                 $r = $this->stock->issue($item->part_id, $t->from_warehouse_id, $item->qty, ['type' => 'transfer_out', 'reference' => $t]);
                 $item->update(['unit_cost' => $r['unit_cost']]);
             }
-            $t->update(['status' => 'in_transit', 'sent_at' => now()]);
+            $t->update(['status' => 'in_transit', 'sent_at' => now(), 'sent_by' => auth()->id()]);
+            $t->logEvent('dispatched');
         });
     }
 
     /** Receive at destination (full quantities unless $received given per item id). */
-    public function receiveTransfer(StockTransfer $t, array $received = []): void
+    public function receiveTransfer(StockTransfer $t, array $received = [], ?string $notes = null): void
     {
-        DB::transaction(function () use ($t, $received) {
+        DB::transaction(function () use ($t, $received, $notes) {
             $t = StockTransfer::query()->whereKey($t->id)->lockForUpdate()->firstOrFail();
             if ($t->status === 'draft') {
                 $this->sendTransfer($t);
@@ -87,7 +89,19 @@ class InventoryDocuments
                 $item->update(['received_qty' => $qty]);
             }
             $t->update(['status' => 'received', 'received_at' => now(), 'received_by' => auth()->id()]);
+            $short = $t->items->filter(fn ($i) => Money::cmp($i->received_qty, $i->qty) < 0)->count();
+            $t->logEvent('received', $notes, $short ? ['short_items' => $short] : []);
         });
+    }
+
+    /** Cancel a transfer that has not left the warehouse yet. */
+    public function cancelTransfer(StockTransfer $t, ?string $reason = null): void
+    {
+        if ($t->status !== 'draft') {
+            throw new BusinessException(__('Only transfers that were not dispatched can be cancelled.'));
+        }
+        $t->update(['status' => 'cancelled', 'cancelled_at' => now(), 'cancelled_by' => auth()->id(), 'cancel_reason' => $reason]);
+        $t->logEvent('cancelled', $reason);
     }
 
     // --------------------------------------------------------------- counts

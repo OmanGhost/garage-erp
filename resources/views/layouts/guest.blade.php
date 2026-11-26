@@ -19,9 +19,16 @@
 <div class="auth-card card">
     <div class="card-body p-4">
         <div class="text-center mb-3">
+            @isset($domainCompany)
+                {{-- the client's own domain: its name and logo --}}
+                @if($domainCompany->logoUrl())<img src="{{ $domainCompany->logoUrl() }}" alt="{{ $domainCompany->displayName() }}" class="mb-2" style="max-height:64px;max-width:200px">@else<span class="brand-mark mb-2" style="width:56px;height:56px;font-size:1.8rem"><i class="bi bi-car-front-fill"></i></span>@endif
+                <h1 class="h4 fw-bold mb-0">{{ $domainCompany->displayName() }}</h1>
+                <div class="text-body-secondary small">{{ __('Workshop & Spare Parts ERP') }}</div>
+            @else
             <span class="brand-mark mb-2" style="width:56px;height:56px;font-size:1.8rem"><i class="bi bi-car-front-fill"></i></span>
             <h1 class="h4 fw-bold mb-0">{{ config('app.name') }}</h1>
             <div class="text-body-secondary small">{{ __('Workshop & Spare Parts ERP') }}</div>
+            @endisset
         </div>
         @include('partials.flash')
         @yield('content')

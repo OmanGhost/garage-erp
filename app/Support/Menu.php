@@ -22,7 +22,7 @@ class Menu
                 ['label' => __('Point of Sale'), 'icon' => 'bi-upc-scan', 'route' => 'pos.index', 'perm' => 'pos.view', 'module' => 'sales'],
                 ['label' => __('Appointments'), 'icon' => 'bi-calendar-week', 'route' => 'appointments.calendar', 'perm' => 'appointments.view', 'module' => 'appointments'],
             ]],
-            ['label' => __('Workshop'), 'module' => 'workshop', 'items' => [
+            ['label' => __('Workshop'), 'module' => 'workshop', 'paths' => ['job-cards', 'inspections', 'quotations', 'gate-log', 'handover-authorizations', 'departments'], 'items' => [
                 ['label' => __('Job Cards'), 'icon' => 'bi-clipboard-check', 'url' => self::crud('job-cards'), 'perm' => 'job_cards.view'],
                 ['label' => __('Quotations'), 'icon' => 'bi-file-earmark-text', 'url' => self::crud('quotations'), 'perm' => 'quotations.view'],
                 ['label' => __('Inspections'), 'icon' => 'bi-search', 'url' => self::crud('inspections'), 'perm' => 'inspections.view'],
@@ -36,7 +36,7 @@ class Menu
                 ['label' => __('Handover Authorizations'), 'icon' => 'bi-person-badge', 'url' => route('handover-authorizations.index'), 'perm' => 'handover_authorizations.view'],
                 ['label' => __('Commissions'), 'icon' => 'bi-cash-coin', 'url' => self::crud('commissions'), 'perm' => 'commissions.view'],
             ]],
-            ['label' => __('Customers & Vehicles'), 'items' => [
+            ['label' => __('Customers & Vehicles'), 'paths' => ['customers', 'vehicles', 'complaints', 'reminders'], 'items' => [
                 ['label' => __('Customers'), 'icon' => 'bi-people', 'url' => self::crud('customers'), 'perm' => 'customers.view'],
                 ['label' => __('Vehicles'), 'icon' => 'bi-car-front', 'url' => self::crud('vehicles'), 'perm' => 'vehicles.view'],
                 ['label' => __('Customer Groups'), 'icon' => 'bi-collection', 'url' => self::crud('customer-groups'), 'perm' => 'customer_groups.view'],
@@ -44,7 +44,7 @@ class Menu
                 ['label' => __('Service Reminders'), 'icon' => 'bi-bell', 'url' => route('reminders.index'), 'perm' => 'service_reminders.view'],
                 ['label' => __('Vehicle Makes'), 'icon' => 'bi-tags', 'url' => self::crud('vehicle-makes'), 'perm' => 'vehicle_makes.view'],
             ]],
-            ['label' => __('Spare Parts & Inventory'), 'module' => 'inventory', 'items' => [
+            ['label' => __('Spare Parts & Inventory'), 'module' => 'inventory', 'paths' => ['inventory', 'parts'], 'items' => [
                 ['label' => __('Parts Catalog'), 'icon' => 'bi-gear-wide-connected', 'url' => self::crud('parts'), 'perm' => 'parts.view'],
                 ['label' => __('Advanced Part Search'), 'icon' => 'bi-binoculars', 'route' => 'parts.search', 'perm' => 'parts.view'],
                 ['label' => __('Stock Levels'), 'icon' => 'bi-boxes', 'url' => self::crud('stock-levels'), 'perm' => 'stock.view'],
@@ -58,10 +58,10 @@ class Menu
                 ['label' => __('Warehouses'), 'icon' => 'bi-building', 'url' => self::crud('warehouses'), 'perm' => 'warehouses.view'],
                 ['label' => __('Shelves & Locations'), 'icon' => 'bi-bookshelf', 'url' => self::crud('warehouse-locations'), 'perm' => 'warehouses.view'],
             ]],
-            ['label' => __('Dismantling'), 'module' => 'dismantling', 'items' => [
+            ['label' => __('Dismantling'), 'module' => 'dismantling', 'paths' => ['dismantling'], 'items' => [
                 ['label' => __('Dismantled Vehicles'), 'icon' => 'bi-car-front-fill', 'url' => self::crud('dismantled-vehicles'), 'perm' => 'dismantling.view'],
             ]],
-            ['label' => __('Purchasing'), 'module' => 'purchasing', 'items' => [
+            ['label' => __('Purchasing'), 'module' => 'purchasing', 'paths' => ['purchase-orders', 'goods-receipts', 'supplier-invoices', 'rfqs', 'purchase-returns', 'purchase-requests', 'landed-costs', 'suppliers'], 'items' => [
                 ['label' => __('Suppliers'), 'icon' => 'bi-shop', 'url' => self::crud('suppliers'), 'perm' => 'suppliers.view'],
                 ['label' => __('Purchase Requests'), 'icon' => 'bi-journal-plus', 'url' => self::crud('purchase-requests'), 'perm' => 'purchase_requests.view'],
                 ['label' => __('RFQs'), 'icon' => 'bi-envelope-paper', 'url' => self::crud('rfqs'), 'perm' => 'rfqs.view'],
@@ -72,7 +72,7 @@ class Menu
                 ['label' => __('Purchase Returns'), 'icon' => 'bi-arrow-return-left', 'url' => self::crud('purchase-returns'), 'perm' => 'purchase_returns.view'],
                 ['label' => __('Supplier Evaluations'), 'icon' => 'bi-star-half', 'url' => self::crud('supplier-evaluations'), 'perm' => 'supplier_evaluations.view'],
             ]],
-            ['label' => __('Sales'), 'module' => 'sales', 'items' => [
+            ['label' => __('Sales'), 'module' => 'sales', 'paths' => ['invoices', 'credit-notes', 'payments', 'sales-orders', 'quotations/sales'], 'items' => [
                 ['label' => __('Invoices'), 'icon' => 'bi-receipt-cutoff', 'url' => self::crud('invoices'), 'perm' => 'invoices.view'],
                 ['label' => __('Credit Notes'), 'icon' => 'bi-file-earmark-minus', 'url' => self::crud('credit-notes'), 'perm' => 'credit_notes.view'],
                 ['label' => __('Payments'), 'icon' => 'bi-wallet2', 'url' => self::crud('payments'), 'perm' => 'payments.view'],
@@ -81,7 +81,7 @@ class Menu
                 ['label' => __('POS Sessions'), 'icon' => 'bi-cash-stack', 'url' => self::crud('pos-sessions'), 'perm' => 'pos.view'],
                 ['label' => __('Cash Registers'), 'icon' => 'bi-pc-display-horizontal', 'url' => self::crud('cash-registers'), 'perm' => 'cash_registers.view'],
             ]],
-            ['label' => __('Accounting'), 'module' => 'accounting', 'items' => [
+            ['label' => __('Accounting'), 'module' => 'accounting', 'paths' => ['accounting', 'vouchers'], 'items' => [
                 ['label' => __('Chart of Accounts'), 'icon' => 'bi-diagram-2', 'url' => self::crud('accounts'), 'perm' => 'accounts.view'],
                 ['label' => __('Journal Entries'), 'icon' => 'bi-journal-text', 'url' => self::crud('journal-entries'), 'perm' => 'journal_entries.view'],
                 ['label' => __('Cash & Banks'), 'icon' => 'bi-bank', 'url' => self::crud('bank-accounts'), 'perm' => 'bank_accounts.view'],
@@ -95,7 +95,7 @@ class Menu
                 ['label' => __('Opening Balances'), 'icon' => 'bi-door-open', 'route' => 'accounting.opening', 'perm' => 'journal_entries.create'],
                 ['label' => __('Financial Statements'), 'icon' => 'bi-file-bar-graph', 'route' => 'accounting.statements', 'perm' => 'reports.view'],
             ]],
-            ['label' => __('HR & Payroll'), 'module' => 'hr', 'items' => [
+            ['label' => __('HR & Payroll'), 'module' => 'hr', 'paths' => ['hr'], 'items' => [
                 ['label' => __('Employees'), 'icon' => 'bi-person-badge', 'url' => self::crud('employees'), 'perm' => 'employees.view'],
                 ['label' => __('Attendance'), 'icon' => 'bi-fingerprint', 'url' => self::crud('attendances'), 'perm' => 'attendance.view'],
                 ['label' => __('Leave Requests'), 'icon' => 'bi-airplane-engines', 'url' => self::crud('leave-requests'), 'perm' => 'leaves.view'],
@@ -108,29 +108,29 @@ class Menu
                 ['label' => __('Job Titles'), 'icon' => 'bi-person-vcard', 'url' => self::crud('job-titles'), 'perm' => 'job_titles.view'],
                 ['label' => __('Leave Types'), 'icon' => 'bi-list-ul', 'url' => self::crud('leave-types'), 'perm' => 'leaves.view'],
             ]],
-            ['label' => __('Insurance & Fleet'), 'items' => [
+            ['label' => __('Insurance & Fleet'), 'paths' => ['insurance', 'fleets'], 'items' => [
                 ['label' => __('Insurance Claims'), 'icon' => 'bi-shield-check', 'url' => self::crud('insurance-claims'), 'perm' => 'insurance_claims.view', 'module' => 'insurance'],
                 ['label' => __('Insurance Companies'), 'icon' => 'bi-buildings', 'url' => self::crud('insurance-companies'), 'perm' => 'insurance_companies.view', 'module' => 'insurance'],
                 ['label' => __('Accidents'), 'icon' => 'bi-exclamation-octagon', 'url' => self::crud('vehicle-accidents'), 'perm' => 'insurance_claims.view', 'module' => 'insurance'],
                 ['label' => __('Fleets'), 'icon' => 'bi-truck-front', 'url' => self::crud('fleets'), 'perm' => 'fleets.view', 'module' => 'fleet'],
                 ['label' => __('Fleet Approvals'), 'icon' => 'bi-check2-circle', 'url' => self::crud('fleet-approvals'), 'perm' => 'fleets.view', 'module' => 'fleet'],
             ]],
-            ['label' => __('Warranty & Assets'), 'items' => [
+            ['label' => __('Warranty & Assets'), 'paths' => ['warranty'], 'items' => [
                 ['label' => __('Warranties'), 'icon' => 'bi-patch-check', 'url' => self::crud('warranties'), 'perm' => 'warranties.view', 'module' => 'warranty'],
                 ['label' => __('Warranty Claims'), 'icon' => 'bi-patch-exclamation', 'url' => self::crud('warranty-claims'), 'perm' => 'warranty_claims.view', 'module' => 'warranty'],
                 ['label' => __('Equipment & Tools'), 'icon' => 'bi-wrench-adjustable', 'url' => self::crud('equipment'), 'perm' => 'equipment.view', 'module' => 'assets'],
                 ['label' => __('Equipment Logs'), 'icon' => 'bi-journal-medical', 'url' => self::crud('equipment-logs'), 'perm' => 'equipment.view', 'module' => 'assets'],
             ]],
-            ['label' => __('Online Store'), 'module' => 'store', 'items' => [
+            ['label' => __('Online Store'), 'module' => 'store', 'paths' => ['store-orders'], 'items' => [
                 ['label' => __('Online Orders'), 'icon' => 'bi-globe2', 'url' => self::crud('store-orders'), 'perm' => 'store_orders.view'],
                 ['label' => __('Coupons'), 'icon' => 'bi-ticket-perforated', 'url' => self::crud('coupons'), 'perm' => 'coupons.view'],
                 ['label' => __('Open Store'), 'icon' => 'bi-box-arrow-up-right', 'route' => 'store.home.self', 'perm' => 'store_orders.view'],
             ]],
-            ['label' => __('Reports & Analytics'), 'module' => 'reports', 'items' => [
+            ['label' => __('Reports & Analytics'), 'module' => 'reports', 'paths' => ['reports', 'ai'], 'items' => [
                 ['label' => __('Reports Center'), 'icon' => 'bi-bar-chart-line', 'route' => 'reports.index', 'perm' => 'reports.view'],
                 ['label' => __('AI Assistant'), 'icon' => 'bi-stars', 'route' => 'ai.index', 'perm' => 'reports.view'],
             ]],
-            ['label' => __('Administration'), 'items' => [
+            ['label' => __('Administration'), 'paths' => ['settings', 'roles', 'users', 'integrations', 'backups', 'billing', 'api-tokens'], 'items' => [
                 ['label' => __('Company Settings'), 'icon' => 'bi-gear', 'route' => 'settings.edit', 'perm' => 'settings.view'],
                 ['label' => __('Branches'), 'icon' => 'bi-geo-alt', 'url' => self::crud('branches'), 'perm' => 'branches.view'],
                 ['label' => __('Users'), 'icon' => 'bi-person-gear', 'url' => self::crud('users'), 'perm' => 'users.view'],
@@ -151,6 +151,56 @@ class Menu
                 ['label' => __('Subscription'), 'icon' => 'bi-stars', 'route' => 'billing.index', 'perm' => 'settings.view'],
             ]],
         ];
+    }
+
+    /**
+     * The menu section of the current page (for the section bar under the main menu): the group whose item link
+     * or declared path prefix matches the URL path best. Returns null on the dashboard and pages of the "Main" group.
+     *
+     * @return array{label: string, items: array, active: ?string}|null
+     */
+    public static function section(?string $path = null): ?array
+    {
+        $path = trim($path ?? request()->path(), '/');
+        $best = null;
+        $bestLen = 0;
+        $activeHref = null;
+        foreach (array_slice(self::visible(), 1) as $g) {
+            $candidates = array_map(fn ($p) => [$p, null], $g['paths'] ?? []);
+            foreach ($g['items'] as $i) {
+                $candidates[] = [trim((string) parse_url($i['href'], PHP_URL_PATH), '/'), $i['href']];
+            }
+            foreach ($candidates as [$prefix, $href]) {
+                if ($prefix === '' || ($path !== $prefix && ! str_starts_with($path, $prefix.'/'))) {
+                    continue;
+                }
+                if (strlen($prefix) > $bestLen) {
+                    [$best, $bestLen, $activeHref] = [$g, strlen($prefix), $href];
+                }
+            }
+        }
+        if (! $best || count($best['items']) < 2) {
+            return null;
+        }
+        // detail pages (e.g. warranty/claims/5) highlight the list they belong to (m/warranty-claims)
+        if (! $activeHref) {
+            $seg = explode('/', $path);
+            $aliases = ['inventory/transfers' => 'stock-transfers', 'inventory/counts' => 'stock-counts', 'inventory/adjustments' => 'stock-adjustments',
+                'warranty/claims' => 'warranty-claims', 'hr/payroll' => 'payrolls', 'accounting/transfers' => 'fund-transfers', 'journal' => 'journal-entries',
+                'vouchers/transfers' => 'fund-transfers', 'vouchers/expenses' => 'expenses', 'vouchers/payments' => 'payments'];
+            $two = implode('/', array_slice($seg, 0, 2));
+            $slugs = array_filter([$aliases[$two] ?? null, $aliases[$seg[0]] ?? null, str_replace('/', '-', $two), $seg[0]]);
+            foreach ($slugs as $slug) {
+                foreach ($best['items'] as $i) {
+                    if (trim((string) parse_url($i['href'], PHP_URL_PATH), '/') === 'm/'.$slug) {
+                        $activeHref = $i['href'];
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        return ['label' => $best['label'], 'items' => $best['items'], 'active' => $activeHref];
     }
 
     /** Filtered by permission & module for the current user. */

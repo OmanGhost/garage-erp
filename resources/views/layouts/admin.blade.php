@@ -14,6 +14,8 @@
     <a class="navbar-brand" href="{{ route('admin.dashboard') }}"><i class="bi bi-buildings"></i> {{ config('app.name') }} — SaaS</a>
     <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">{{ __('Dashboard') }}</a></li><li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.clients.*', 'admin.companies.*') ? 'active' : '' }}" href="{{ route('admin.clients.index') }}"><i class="bi bi-people"></i> {{ __('Clients') }}</a></li><li class="nav-item"><a class="nav-link" href="{{ route('admin.plans') }}">{{ __('Plans') }}</a></li>
         @php($newTrials = \App\Modules\Saas\Models\TrialRequest::query()->where('status', 'new')->count())
+        @php($newDomains = \Illuminate\Support\Facades\Schema::hasTable('domain_requests') ? \App\Modules\Saas\Models\DomainRequest::query()->where('status', 'new')->count() : 0)
+        <li class="nav-item"><a class="nav-link" href="{{ route('admin.domains.index') }}"><i class="bi bi-globe2"></i> {{ __('Domains & e-mail') }} @if($newDomains)<span class="badge text-bg-warning">{{ $newDomains }}</span>@endif</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ route('admin.trials.index') }}">{{ __('Trial requests') }} @if($newTrials)<span class="badge text-bg-warning">{{ $newTrials }}</span>@endif</a></li>
         <li class="nav-item"><a class="nav-link" href="{{ route('admin.site.edit') }}">{{ __('Website & SEO') }}</a></li></ul>
     <div class="d-flex gap-2">

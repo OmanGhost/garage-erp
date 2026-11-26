@@ -41,6 +41,13 @@ class AuthController extends Controller
 
             return back()->withInput($request->only('email'))->withErrors(['email' => __('Your account is disabled.')]);
         }
+        // on a client's own domain only that client's users (and platform admins) can sign in
+        $domainCompany = app()->bound('domain.company') ? app('domain.company') : null;
+        if ($domainCompany && ! $user->is_super_admin && (int) $user->company_id !== (int) $domainCompany->id) {
+            $this->history($user, $email, false, 'wrong_domain');
+
+            return back()->withInput($request->only('email'))->withErrors(['email' => __('This account does not belong to :c.', ['c' => $domainCompany->displayName()])]);
+        }
         if ($user->hasTwoFactor()) {
             $request->session()->put('login.2fa', ['id' => $user->id, 'remember' => $request->boolean('remember'), 'at' => time()]);
 

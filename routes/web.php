@@ -151,6 +151,13 @@ Route::prefix('admin')->middleware(['auth', 'usertype:super'])->name('admin.')->
     Route::post('/companies/{company}/renew', [AdminController::class, 'renew'])->name('companies.renew');
     Route::post('/leave', [AdminController::class, 'leave'])->name('leave');
     Route::get('/plans', [AdminController::class, 'plans'])->name('plans');
+    Route::get('/domains', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'index'])->name('domains.index');
+    Route::post('/domains/assign', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'assign'])->name('domains.assign');
+    Route::post('/domains/{company}/verify', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'verify'])->name('domains.verify');
+    Route::post('/domains/{company}/status', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'status'])->name('domains.status');
+    Route::post('/domains/requests/{domainRequest}', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'handle'])->name('domains.requests.handle');
+    Route::post('/domains/smtp', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'saveSmtp'])->name('domains.smtp');
+    Route::post('/domains/smtp/test', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'testSmtp'])->name('domains.smtp.test');
     Route::post('/plans', [AdminController::class, 'savePlan'])->name('plans.save');
     Route::get('/trials', [AdminController::class, 'trials'])->name('trials.index');
     Route::get('/trials/{trial}', [AdminController::class, 'showTrial'])->name('trials.show');
@@ -197,6 +204,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     // administration
     Route::get('/settings', [SystemController::class, 'settings'])->name('settings.edit');
     Route::put('/settings', [SystemController::class, 'updateSettings'])->name('settings.update');
+    Route::post('/settings/smtp', [\App\Http\Controllers\MailSettingsController::class, 'save'])->name('settings.smtp');
+    Route::post('/settings/smtp/test', [\App\Http\Controllers\MailSettingsController::class, 'test'])->name('settings.smtp.test');
     Route::get('/roles', [SystemController::class, 'roles'])->name('roles.index');
     Route::get('/roles/{role}/edit', [SystemController::class, 'editRole'])->name('roles.edit');
     Route::post('/roles', [SystemController::class, 'storeRole'])->name('roles.store');
@@ -212,6 +221,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     Route::post('/backups', [SystemController::class, 'runBackup'])->name('backups.run');
     Route::get('/backups/{file}', [SystemController::class, 'downloadBackup'])->name('backups.download')->where('file', '[A-Za-z0-9_\-\.]+');
     Route::get('/billing', [SystemController::class, 'billing'])->name('billing.index');
+    Route::post('/domain-requests', [\App\Http\Controllers\DomainRequestController::class, 'store'])->name('domain-requests.store');
+    Route::post('/domain-requests/{domainRequest}/cancel', [\App\Http\Controllers\DomainRequestController::class, 'cancel'])->name('domain-requests.cancel');
 
     // CRM & vehicles
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
@@ -310,6 +321,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/inventory/transfers/create', [InventoryController::class, 'createTransfer'])->name('inventory.transfers.create');
         Route::post('/inventory/transfers', [InventoryController::class, 'storeTransfer'])->name('inventory.transfers.store');
         Route::get('/inventory/transfers/{transfer}', [InventoryController::class, 'transfer'])->name('inventory.transfers.show');
+        Route::post('/inventory/transfers/{transfer}/note', [InventoryController::class, 'transferNote'])->name('inventory.transfers.note');
+        Route::get('/inventory/transfers/{transfer}/print/{type}/{format?}', [InventoryController::class, 'printTransfer'])->name('inventory.transfers.print')->whereIn('type', ['request', 'completed'])->whereIn('format', ['a4', 'pdf']);
         Route::post('/inventory/transfers/{transfer}/{action}', [InventoryController::class, 'transferAction'])->name('inventory.transfers.action')->whereIn('action', ['send', 'receive', 'cancel']);
         Route::get('/inventory/counts/create', [InventoryController::class, 'createCount'])->name('inventory.counts.create');
         Route::post('/inventory/counts', [InventoryController::class, 'storeCount'])->name('inventory.counts.store');

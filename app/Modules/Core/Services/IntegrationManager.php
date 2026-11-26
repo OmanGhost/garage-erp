@@ -33,9 +33,10 @@ class IntegrationManager
         return self::active($provider)?->credentials[$key] ?? $default;
     }
 
+    /** E-mail through the company SMTP, else the platform SMTP, else .env (see MailService). */
     public static function sendMail(string $to, string $subject, string $body): void
     {
-        Mail::raw($body, fn ($m) => $m->to($to)->subject($subject));
+        \App\Support\Mail\MailService::send($to, $subject, $body);
     }
 
     /** Generic HTTP SMS gateway (works with most Omani/GCC providers). */

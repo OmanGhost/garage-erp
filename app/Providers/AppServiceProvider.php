@@ -102,6 +102,9 @@ class AppServiceProvider extends ServiceProvider
             'fleet' => \App\Modules\Fleet\Models\Fleet::class,
         ]);
 
+        // platform SMTP saved by the super admin becomes the default mailer
+        \App\Support\Mail\MailService::applyPlatformDefault();
+
         // Super admins and company admins bypass permission checks.
         Gate::before(function ($user, $ability) {
             if ($user->is_super_admin) {

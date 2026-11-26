@@ -26,6 +26,7 @@ class Company extends Model
         'trial_ends_at' => 'datetime',
         'subscription_ends_at' => 'datetime',
         'vat_rate' => 'decimal:3',
+        'domain_verified_at' => 'datetime',
     ];
 
     public function plan(): BelongsTo

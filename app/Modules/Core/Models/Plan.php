@@ -14,6 +14,8 @@ class Plan extends Model
         'price_yearly' => 'decimal:3',
         'is_active' => 'boolean',
         'modules' => 'array',
+        'allow_custom_domain' => 'boolean',
+        'domain_fee' => 'decimal:3',
     ];
 
     public function companies(): HasMany
