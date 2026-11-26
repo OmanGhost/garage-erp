@@ -276,4 +276,9 @@ return [
     'inspecting' => 'قيد الفحص',
     'accepted' => 'مقبولة',
     'settled' => 'مسوّاة',
+    'parking' => 'موقف',
+    'bay' => 'موقع إصلاح',
+    'waiting' => 'منطقة انتظار',
+    'road_test' => 'تجربة طريق',
+    'outside' => 'خارج الورشة',
 ];

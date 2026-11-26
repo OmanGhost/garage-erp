@@ -83,6 +83,8 @@ class AppointmentService
         if (! empty($data['bay_id']) && $overlap()->where('bay_id', $data['bay_id'])->exists()) {
             throw new BusinessException(__('The workshop bay is already booked at this time.'));
         }
+        // scheduled job-card work blocks the same technician / bay
+        app(\App\Modules\Workshop\Services\CapacityService::class)->assertNoTaskClash($data['technician_id'] ?? null, $data['bay_id'] ?? null, $start, $end);
         if (! empty($data['department_id'])) {
             $cap = Department::query()->find($data['department_id'])?->capacity ?? 0;
             if ($cap > 0 && $overlap()->where('department_id', $data['department_id'])->count() >= $cap) {

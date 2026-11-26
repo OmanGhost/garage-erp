@@ -20,8 +20,26 @@ class JobCardTask extends Model
         'tax_rate' => 'decimal:3',
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
+        'scheduled_start' => 'datetime',
+        'scheduled_end' => 'datetime',
         'is_additional' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(fn (self $t) => \App\Modules\Workshop\Events\WorkshopUpdated::notify(tenant()->id(), 'task'));
+    }
+
+    public function bay(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Workshop\Models\WorkshopBay::class, 'bay_id');
+    }
+
+    /** Planned minutes (estimate, at least 15). */
+    public function plannedMinutes(): int
+    {
+        return max(15, (int) $this->estimated_minutes ?: 60);
+    }
 
     public function jobCard(): BelongsTo
     {

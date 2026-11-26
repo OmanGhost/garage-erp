@@ -123,7 +123,8 @@
                     <tbody>
                     @forelse($jc->tasks as $t)
                         <tr class="{{ $t->approval_status === 'pending' ? 'table-warning' : ($t->status === 'cancelled' ? 'text-decoration-line-through text-body-tertiary' : '') }}">
-                            <td><div class="fw-semibold">{{ $t->description }}</div><div class="small text-body-secondary">{{ $t->department?->displayName() }} @if($t->is_additional)<span class="badge text-bg-warning">{{ __('Additional') }}</span>@endif @if($t->approval_status !== 'approved'){!! status_badge($t->approval_status) !!}@endif</div></td>
+                            <td><div class="fw-semibold">{{ $t->description }}</div><div class="small text-body-secondary">{{ $t->department?->displayName() }} @if($t->is_additional)<span class="badge text-bg-warning">{{ __('Additional') }}</span>@endif @if($t->approval_status !== 'approved'){!! status_badge($t->approval_status) !!}@endif</div>
+                                @if($t->scheduled_start && ! in_array($t->status, ['done', 'cancelled']))<div class="small {{ $t->scheduled_end->isPast() ? 'text-danger' : 'text-primary' }}"><i class="bi bi-calendar-range"></i> {{ $t->scheduled_start->format($t->scheduled_start->isToday() ? 'H:i' : 'd/m H:i') }}–{{ $t->scheduled_end->format('H:i') }}@if($t->bay) · {{ $t->bay->code }}@endif</div>@endif</td>
                             <td>
                                 @if(!$closed && $t->status !== 'done' && auth()->user()->can('job_cards.update'))
                                     <form method="post" action="{{ route('job-cards.tasks.action', [$t, 'assign']) }}">@csrf
@@ -296,6 +297,32 @@
     </div>
 
     <div class="col-xl-4">
+        @if(! $closed)
+        <div class="card mb-3">
+            <div class="card-header d-flex align-items-center"><i class="bi bi-calendar-range me-1"></i>{{ __('Planning & tracking') }}
+                @can('workshop_planning.view')<a href="{{ route('workshop.planner') }}" class="ms-auto small">{{ __('Planner') }}</a>@endcan</div>
+            <div class="card-body small">
+                @php $eta = $jc->estimated_completion_at ?? app(\App\Modules\Workshop\Services\CapacityService::class)->forecast($jc); @endphp
+                <div class="d-flex mb-1"><span class="text-body-secondary">{{ __('Estimated completion') }}</span><b class="ms-auto {{ $eta && $jc->promised_at && $eta->gt($jc->promised_at) ? 'text-danger' : '' }}">{{ $eta?->format('Y-m-d H:i') ?? '—' }}</b></div>
+                @if($eta && $jc->promised_at && $eta->gt($jc->promised_at))<div class="text-danger mb-1"><i class="bi bi-exclamation-triangle"></i> {{ __('Later than the promised delivery time.') }}</div>@endif
+                @can('workshop_planning.update')
+                    @if($jc->tasks->where('approval_status', 'approved')->whereIn('status', ['pending', 'paused'])->whereNull('scheduled_start')->isNotEmpty())
+                        <form method="post" action="{{ route('workshop.planner.auto', $jc) }}" class="d-grid mb-2">@csrf<button class="btn btn-sm btn-primary"><i class="bi bi-magic"></i> {{ __('Schedule technicians automatically') }}</button></form>
+                    @elseif($jc->tasks->whereIn('status', ['pending', 'paused'])->whereNotNull('scheduled_start')->isNotEmpty())
+                        <form method="post" action="{{ route('workshop.planner.auto', $jc) }}" class="d-grid mb-2">@csrf<input type="hidden" name="replan" value="1"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-repeat"></i> {{ __('Re-plan remaining tasks') }}</button></form>
+                    @endif
+                @endcan
+                <hr class="my-2">
+                <div class="d-flex mb-1"><span class="text-body-secondary"><i class="bi bi-geo-alt"></i> {{ __('Location') }}</span><span class="ms-auto">{{ $jc->yardLocation?->displayName() ?? '—' }}</span></div>
+                <div class="d-flex mb-2"><span class="text-body-secondary"><i class="bi bi-key"></i> {{ __('Key') }}</span><span class="ms-auto">@if($jc->keyHolder)<span class="text-warning">{{ $jc->keyHolder->name }}</span>@elseif($jc->key_hook){{ __('Hook') }} {{ $jc->key_hook }}@else — @endif</span></div>
+                <div class="d-flex flex-wrap gap-1">
+                    @can('vehicle_tracking.view')<a href="{{ route('tracking.card', $jc) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-key"></i> {{ __('Key & location') }}</a>
+                    <a href="{{ route('tracking.key-tag', $jc) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="bi bi-qr-code"></i> {{ __('Key tag') }}</a>@endcan
+                    @can('test_drives.view')<a href="{{ route('tracking.card', $jc) }}#test-drive" class="btn btn-sm btn-outline-secondary"><i class="bi bi-signpost-2"></i> {{ __('Test drive') }}</a>@endcan
+                </div>
+            </div>
+        </div>
+        @endif
         <div class="card mb-3">
             <div class="card-header"><i class="bi bi-info-circle me-1"></i>{{ __('Job details') }}</div>
             <form method="post" action="{{ route('job-cards.update', $jc) }}" class="card-body row g-2">@csrf @method('put')

@@ -5,6 +5,11 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.17.0] - 2026-11-27
+- Workshop resource planning: day planner per bay / technician, automatic technician and bay scheduling within working hours, no double booking (tasks and appointments), estimated completion on the job card, bay occupancy, technician load, productivity and efficiency
+- Live workshop screen for TVs: vehicles in progress, waiting, ready and late, today's appointments; real-time over Reverb with 30 s fallback and a secret TV link
+- Vehicle & key tracking: yard locations and map, key hooks and key holders with full history, key tags with QR / barcode / RFID, scan page, test-drive permits with odometer before / after and distance limit
+
 ## [1.16.0] - 2026-11-27
 - Dismantling: standard vehicle parts checklist in the new-vehicle form and the dismantling file, factory part numbers (OEM) suggested per make/model/year from earlier vehicles and the catalog, optional immediate move to stock, used stock grouped by OEM and grade
 - Fleets: add / remove vehicles from the fleet page (with new-vehicle option) and choose the fleet in the vehicle form

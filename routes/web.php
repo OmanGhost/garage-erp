@@ -67,6 +67,7 @@ Route::middleware('throttle:portal')->group(function () {
     Route::get('/r/{token}', [PublicController::class, 'receipt'])->name('public.receipt');
     Route::get('/i/{uuid}', [PublicController::class, 'invoice'])->name('public.invoice');
     Route::get('/track/{token}', [PublicController::class, 'track'])->name('public.track');
+    Route::get('/tv/{token}', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'tv'])->name('workshop.tv');
 });
 
 // online store (per company)
@@ -255,6 +256,24 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     // workshop
     Route::middleware('module:workshop')->group(function () {
         Route::get('/workshop/board', [WorkshopController::class, 'board'])->name('workshop.board');
+        // resource planning
+        Route::get('/workshop/planner', [\App\Modules\Workshop\Http\Controllers\PlanningController::class, 'index'])->name('workshop.planner');
+        Route::post('/workshop/planner/auto', [\App\Modules\Workshop\Http\Controllers\PlanningController::class, 'autoScheduleAll'])->name('workshop.planner.auto-all');
+        Route::post('/workshop/planner/{jobCard}/auto', [\App\Modules\Workshop\Http\Controllers\PlanningController::class, 'autoSchedule'])->name('workshop.planner.auto');
+        Route::post('/workshop/planner/tasks/{task}', [\App\Modules\Workshop\Http\Controllers\PlanningController::class, 'schedule'])->name('workshop.planner.schedule');
+        Route::delete('/workshop/planner/tasks/{task}', [\App\Modules\Workshop\Http\Controllers\PlanningController::class, 'unschedule'])->name('workshop.planner.unschedule');
+        // live screen
+        Route::get('/workshop/live', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'index'])->name('workshop.live');
+        Route::post('/workshop/live/token', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'rotateToken'])->name('workshop.live.token');
+        // vehicle & key tracking
+        Route::get('/workshop/tracking', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'index'])->name('tracking.index');
+        Route::post('/workshop/tracking/scan', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'scan'])->name('tracking.scan');
+        Route::get('/workshop/tracking/{jobCard}', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'card'])->name('tracking.card');
+        Route::post('/workshop/tracking/{jobCard}/{action}', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'action'])->name('tracking.action')->whereIn('action', ['move', 'key-out', 'key-in', 'tag']);
+        Route::get('/job-cards/{jobCard}/key-tag', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'keyTag'])->name('tracking.key-tag');
+        Route::post('/job-cards/{jobCard}/test-drives', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'storeDrive'])->name('test-drives.store');
+        Route::post('/test-drives/{drive}/{action}', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'driveAction'])->name('test-drives.action')->whereIn('action', ['start', 'finish', 'cancel']);
+        Route::get('/test-drives/{drive}/print', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'printDrive'])->name('test-drives.print');
         Route::get('/reception', [WorkshopController::class, 'reception'])->name('reception.create');
         Route::post('/reception', [WorkshopController::class, 'checkIn'])->name('reception.store');
         Route::get('/reception/{jobCard}/receipt', [WorkshopController::class, 'receipt'])->name('reception.receipt');

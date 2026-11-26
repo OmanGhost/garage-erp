@@ -125,5 +125,5 @@ return [
 
 
     // bump to force browsers to reload css/js after an update
-    'asset_version' => env('ASSET_VERSION', '13'),
+    'asset_version' => env('ASSET_VERSION', '14'),
 ];

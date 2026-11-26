@@ -24,6 +24,7 @@ class JobCard extends TenantModel
         'profit' => 'decimal:3',
         'received_at' => 'datetime',
         'promised_at' => 'datetime',
+        'estimated_completion_at' => 'datetime',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
         'delivered_at' => 'datetime',
@@ -33,6 +34,34 @@ class JobCard extends TenantModel
     public function customer(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\CRM\Models\Customer::class);
+    }
+
+    public function keyHolder(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'key_holder_id');
+    }
+
+    public function yardLocation(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Workshop\Models\YardLocation::class);
+    }
+
+    public function testDrives(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\Workshop\Models\TestDrive::class);
+    }
+
+    public function trackingEvents(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\Workshop\Models\VehicleTrackingEvent::class);
+    }
+
+    /** Running late: promised (or estimated) time passed and the vehicle is not ready yet. */
+    public function isLate(): bool
+    {
+        $due = $this->promised_at ?? $this->estimated_completion_at;
+
+        return $due && $due->isPast() && in_array($this->status, array_diff(self::OPEN_STATUSES, [self::READY]), true);
     }
 
     public function vehicle(): BelongsTo

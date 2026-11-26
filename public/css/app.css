@@ -389,3 +389,24 @@ details.card > summary::-webkit-details-marker { display: none; }
 .checklist-row.is-on { background: color-mix(in srgb, var(--brand) 6%, transparent); }
 .checklist-inputs { display: grid; grid-template-columns: 1.6fr .8fr 1fr 1fr; gap: .35rem; margin-top: .4rem; padding-inline-start: 1.6rem; }
 @media (max-width: 575.98px) { .checklist-inputs { grid-template-columns: 1fr 1fr; padding-inline-start: 0; } }
+/* workshop planner (timeline per bay / technician) */
+.plan-scroll { overflow-x: auto; }
+.plan-grid { min-width: 860px; }
+.plan-row { display: flex; border-bottom: 1px solid var(--border-soft); min-height: 3.6rem; }
+.plan-row.plan-head { min-height: 1.9rem; background: var(--bs-tertiary-bg); }
+.plan-label { flex: 0 0 11.5rem; padding: .45rem .75rem; border-inline-end: 1px solid var(--bs-border-color); min-width: 0; }
+.plan-track { position: relative; flex: 1 1 auto; }
+.plan-hour { position: absolute; top: .35rem; font-size: .72rem; color: var(--bs-secondary-color); transform: translateX(-50%); }
+[dir="rtl"] .plan-hour { transform: translateX(50%); }
+.plan-line { position: absolute; top: 0; bottom: 0; border-inline-start: 1px dashed var(--border-soft); }
+.plan-now { position: absolute; top: 0; bottom: 0; border-inline-start: 2px solid var(--bs-danger); z-index: 3; }
+.plan-block { position: absolute; top: .3rem; bottom: .3rem; border: 1px solid; border-inline-start-width: 4px; border-radius: .45rem; padding: .15rem .4rem; font-size: .75rem; line-height: 1.25; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-decoration: none; z-index: 2; }
+.plan-block:hover { z-index: 4; box-shadow: 0 .25rem .75rem rgba(0,0,0,.15); }
+.plan-appt { background: repeating-linear-gradient(135deg, var(--bs-purple-bg-subtle, #e8dff5), var(--bs-purple-bg-subtle, #e8dff5) 6px, transparent 6px, transparent 12px); border-color: #6f42c1 !important; color: var(--bs-body-color); }
+.plan-key { display: inline-block; width: 1rem; height: .7rem; border: 1px solid; border-inline-start-width: 3px; border-radius: .2rem; vertical-align: middle; }
+/* vehicle & key tracking: yard map */
+.yard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .5rem; }
+.yard-spot { border: 1px dashed var(--bs-border-color); border-radius: .6rem; padding: .45rem .55rem; min-height: 4.2rem; background: var(--bs-body-bg); }
+.yard-spot.busy { border-style: solid; border-color: color-mix(in srgb, var(--brand) 45%, transparent); background: color-mix(in srgb, var(--brand) 5%, var(--bs-body-bg)); }
+.yard-car { display: flex; align-items: center; gap: .3rem; margin-top: .3rem; padding: .2rem .4rem; border-radius: .4rem; background: var(--bs-tertiary-bg); text-decoration: none; color: inherit; }
+.yard-car:hover { background: color-mix(in srgb, var(--brand) 14%, transparent); }

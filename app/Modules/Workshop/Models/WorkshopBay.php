@@ -9,6 +9,7 @@ class WorkshopBay extends TenantModel
 {
     protected $casts = [
         'is_active' => 'boolean',
+        'has_lift' => 'boolean',
     ];
 
     public function branch(): BelongsTo

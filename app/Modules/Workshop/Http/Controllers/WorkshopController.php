@@ -154,7 +154,7 @@ class WorkshopController extends Controller
         $this->can('job_cards.view');
         $jobCard->load([
             'customer', 'vehicle.make', 'vehicle.vehicleModel', 'department', 'advisor', 'bay', 'fleet', 'insuranceClaim',
-            'tasks.technician', 'tasks.department', 'tasks.service', 'parts.part', 'parts.warehouse', 'parts.issuedTo', 'checkIn.receiver',
+            'tasks.technician', 'tasks.department', 'tasks.service', 'tasks.bay', 'yardLocation', 'keyHolder', 'parts.part', 'parts.warehouse', 'parts.issuedTo', 'checkIn.receiver',
             'inspections.technician', 'quotations', 'histories.user', 'notes.user', 'qualityChecks.inspector', 'invoices',
         ]);
 

@@ -303,8 +303,49 @@ class WorkshopBayResource extends CrudResource
             Field::select('type', ['general', 'lift', 'pit', 'wash', 'paint_booth', 'alignment'])->default('general')->index()->col(4),
             Field::select('branch_id', fn () => Options::branches())->label(__('Branch'))->relation('branch', 'displayName')->index(),
             Field::select('department_id', fn () => Options::departments())->label(__('Department'))->relation('department', 'displayName')->index(),
+            Field::checkbox('has_lift')->label(__('Has a lift'))->index()->col(4),
+            Field::number('lift_capacity_kg')->label(__('Lift capacity (kg)'))->col(4),
+            Field::number('sort')->label(__('Order on the planner'))->default(0)->col(4),
             Field::checkbox('is_active')->label(__('Active'))->default(true)->index(),
         ];
+    }
+
+    public function headerActions(): array
+    {
+        return auth()->user()?->can('workshop_planning.view') ? [['label' => __('Workshop planner'), 'url' => route('workshop.planner'), 'icon' => 'bi-calendar-range']] : [];
+    }
+}
+
+class YardLocationResource extends CrudResource
+{
+    public static string $model = \App\Modules\Workshop\Models\YardLocation::class;
+    public static string $slug = 'yard-locations';
+    public static string $permission = 'yard_locations';
+    public static ?string $module = 'workshop';
+    public static string $icon = 'bi-geo-alt';
+    public static array $with = ['bay', 'branch'];
+    public static string $defaultSort = 'code';
+    public static string $defaultDir = 'asc';
+
+    public function title(): string { return __('Yard locations'); }
+    public function singular(): string { return __('Yard location'); }
+
+    public function fields(): array
+    {
+        return [
+            Field::text('code')->required()->index()->searchable()->col(3)->help(__('Short code painted on the spot, e.g. P-01')),
+            Field::text('name')->required()->index()->searchable()->col(5),
+            Field::text('zone')->label(__('Zone'))->index()->filterable()->col(4),
+            Field::select('type', array_combine(\App\Modules\Workshop\Models\YardLocation::TYPES, array_map('status_label', \App\Modules\Workshop\Models\YardLocation::TYPES)))->default('parking')->index()->filterable()->col(4),
+            Field::select('bay_id', fn () => \App\Modules\Workshop\Models\WorkshopBay::query()->orderBy('code')->pluck('name', 'id')->all())->label(__('Workshop bay'))->relation('bay')->col(4),
+            Field::select('branch_id', fn () => Options::branches())->label(__('Branch'))->relation('branch', 'displayName')->col(4),
+            Field::checkbox('is_active')->label(__('Active'))->default(true)->index(),
+        ];
+    }
+
+    public function headerActions(): array
+    {
+        return auth()->user()?->can('vehicle_tracking.view') ? [['label' => __('Vehicle & key tracking'), 'url' => route('tracking.index'), 'icon' => 'bi-key']] : [];
     }
 }
 

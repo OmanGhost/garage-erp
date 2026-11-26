@@ -22,7 +22,11 @@ class Menu
                 ['label' => __('Point of Sale'), 'icon' => 'bi-upc-scan', 'route' => 'pos.index', 'perm' => 'pos.view', 'module' => 'sales'],
                 ['label' => __('Appointments'), 'icon' => 'bi-calendar-week', 'route' => 'appointments.calendar', 'perm' => 'appointments.view', 'module' => 'appointments'],
             ]],
-            ['label' => __('Workshop'), 'module' => 'workshop', 'paths' => ['job-cards', 'inspections', 'quotations', 'gate-log', 'handover-authorizations', 'departments'], 'items' => [
+            ['label' => __('Workshop'), 'module' => 'workshop', 'paths' => ['job-cards', 'inspections', 'quotations', 'gate-log', 'handover-authorizations', 'departments', 'workshop/planner', 'workshop/tracking', 'test-drives'], 'items' => [
+                ['label' => __('Workshop planner'), 'icon' => 'bi-calendar-range', 'route' => 'workshop.planner', 'perm' => 'workshop_planning.view'],
+                ['label' => __('Live workshop screen'), 'icon' => 'bi-tv', 'route' => 'workshop.live', 'perm' => 'job_cards.view'],
+                ['label' => __('Vehicle & key tracking'), 'icon' => 'bi-key', 'route' => 'tracking.index', 'perm' => 'vehicle_tracking.view'],
+                ['label' => __('Yard locations'), 'icon' => 'bi-geo-alt', 'url' => self::crud('yard-locations'), 'perm' => 'yard_locations.view'],
                 ['label' => __('Job Cards'), 'icon' => 'bi-clipboard-check', 'url' => self::crud('job-cards'), 'perm' => 'job_cards.view'],
                 ['label' => __('Quotations'), 'icon' => 'bi-file-earmark-text', 'url' => self::crud('quotations'), 'perm' => 'quotations.view'],
                 ['label' => __('Inspections'), 'icon' => 'bi-search', 'url' => self::crud('inspections'), 'perm' => 'inspections.view'],
