@@ -52,7 +52,7 @@ class ReceptionFormTest extends TestCase
             ->assertSee('Call before repair')
             ->assertSee('value="high" selected', false)
             ->assertSee('id="cl_keys" checked', false)
-            ->assertSee('يرجى إرفاقها مرة أخرى');                   // photos must be attached again
+            ->assertSee('يرجى إرفاق الصور والتوقيع مرة أخرى');      // photos and signature must be added again
         $this->assertSame(0, $this->inTenant(fn () => JobCard::query()->count()));
     }
 
@@ -160,6 +160,22 @@ class ReceptionFormTest extends TestCase
         $this->from('/job-cards')->post('/reception', ['customer_name' => 'Walk In', 'reported_issues' => 'Noise', '_idem' => 'pm-1'])
             ->assertRedirect('/job-cards')
             ->assertSessionHas('error', fn ($m) => str_contains($m, 'reception.create') && str_contains($m, 'Technician'));
+    }
+
+    public function test_signature_is_accepted_as_a_png_file(): void
+    {
+        Storage::fake('local');
+        $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=');
+        $file = UploadedFile::fake()->createWithContent('signature.png', $png);
+        $this->post('/reception', ['customer_name' => 'Signed Customer', 'customer_phone' => '92223344', 'plate_number' => '991',
+            'odometer' => 10, 'fuel_level' => 50, 'reported_issues' => 'Noise', 'signature_file' => $file, '_idem' => 'sg-1'])
+            ->assertSessionHasNoErrors()->assertRedirect();
+        $path = $this->inTenant(fn () => \App\Modules\Workshop\Models\VehicleCheckIn::query()->value('signature_path'));
+        $this->assertNotNull($path);
+        Storage::disk('local')->assertExists($path);
+
+        // the form no longer posts the signature as base64 text
+        $this->get('/reception')->assertOk()->assertSee('name="signature_file"', false)->assertDontSee('name="signature"', false);
     }
 
     public function test_request_larger_than_post_max_size_returns_to_the_form(): void

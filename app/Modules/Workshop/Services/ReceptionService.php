@@ -68,13 +68,18 @@ class ReceptionService
                 'appointment_id' => $data['appointment_id'] ?? null, 'insurance_claim_id' => $data['insurance_claim_id'] ?? null,
             ]);
 
+            // the signature arrives as a PNG file (browsers since 1.9.1: web application firewalls block long base64
+            // text fields) or, from older clients / the API, as a data URL
             $signaturePath = null;
-            if (! empty($data['signature']) && str_starts_with($data['signature'], 'data:image/png;base64,')) {
-                $png = base64_decode(substr($data['signature'], 22), true);
-                if ($png !== false && strlen($png) < 1024 * 1024 && str_starts_with($png, "\x89PNG")) {
-                    $signaturePath = 'signatures/'.tenant()->id().'/'.Str::uuid().'.png';
-                    Storage::disk('local')->put($signaturePath, $png);
-                }
+            $png = null;
+            if (($data['signature_file'] ?? null) instanceof \Illuminate\Http\UploadedFile && $data['signature_file']->isValid()) {
+                $png = (string) file_get_contents($data['signature_file']->getRealPath());
+            } elseif (! empty($data['signature']) && str_starts_with($data['signature'], 'data:image/png;base64,')) {
+                $png = base64_decode(substr($data['signature'], 22), true) ?: null;
+            }
+            if ($png !== null && strlen($png) < 1024 * 1024 && str_starts_with($png, "\x89PNG")) {
+                $signaturePath = 'signatures/'.tenant()->id().'/'.Str::uuid().'.png';
+                Storage::disk('local')->put($signaturePath, $png);
             }
 
             $checkIn = VehicleCheckIn::create([

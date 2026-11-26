@@ -5,6 +5,9 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.9.1] - 2026-11-26
+- Vehicle reception: the customer signature is uploaded as a PNG file instead of a long base64 text field, which hosting firewalls (ModSecurity) were refusing with 403
+
 ## [1.9.0] - 2026-11-26
 - New diagnostic command: php artisan erp:doctor checks PHP, extensions, upload limits, folders, database, drivers and permissions, with the fix for each problem
 - php artisan erp:doctor --user=email replays a vehicle reception as that user and prints exactly why it is accepted or refused (rolled back, nothing saved)

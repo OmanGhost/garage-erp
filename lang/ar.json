@@ -2637,5 +2637,6 @@
     "The vehicle could not be received because of a server error (reference :r).": "تعذر استلام المركبة بسبب خطأ في الخادم (الرقم المرجعي :r).",
     "The confirmation message to the customer could not be sent: :m": "تعذر إرسال رسالة التأكيد للعميل: :m",
     "Your account cannot receive vehicles (missing permission “:p”). Roles: :r. Ask the company administrator to grant it.": "حسابك لا يملك صلاحية استلام المركبات (الصلاحية الناقصة «:p»). الأدوار: :r. اطلب من مدير الشركة منحها.",
-    "You do not have permission to perform this action.": "ليست لديك صلاحية لتنفيذ هذا الإجراء."
+    "You do not have permission to perform this action.": "ليست لديك صلاحية لتنفيذ هذا الإجراء.",
+    "Your data was kept. For security, browsers do not keep selected photos or the signature: please attach the photos and sign again.": "تم الاحتفاظ ببياناتك. لأسباب أمنية لا يحتفظ المتصفح بالصور ولا بالتوقيع: يرجى إرفاق الصور والتوقيع مرة أخرى."
 }

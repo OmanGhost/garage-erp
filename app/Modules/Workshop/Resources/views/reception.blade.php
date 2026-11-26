@@ -177,7 +177,7 @@
             <div class="card mb-3">
                 <div class="card-header"><i class="bi bi-camera me-1"></i>5. {{ __('Photos (front, back, sides, interior, dashboard)') }}</div>
                 <div class="card-body">
-                    @if($hasOld)<div class="alert alert-warning small py-2"><i class="bi bi-info-circle"></i> {{ __('Your data was kept. For security, browsers do not keep selected photos: please attach them again.') }}</div>@endif
+                    @if($hasOld)<div class="alert alert-warning small py-2"><i class="bi bi-info-circle"></i> {{ __('Your data was kept. For security, browsers do not keep selected photos or the signature: please attach the photos and sign again.') }}</div>@endif
                     <input type="file" name="photos[]" class="form-control @if($errors->has('photos') || $errors->has('photos.*')) is-invalid @endif" accept="image/*" capture="environment" multiple @change="preparePhotos($event)">
                     @if($errors->has('photos') || $errors->has('photos.*'))<div class="invalid-feedback">{{ $errors->first('photos') ?: $errors->first('photos.*') }}</div>@endif
                     <div class="small text-body-secondary mt-1" x-show="photoBusy"><span class="spinner-border spinner-border-sm"></span> {{ __('Preparing photos...') }}</div>
@@ -189,7 +189,9 @@
                 <div class="card-header"><i class="bi bi-pen me-1"></i>6. {{ __('Customer signature') }}</div>
                 <div class="card-body">
                     <canvas id="sigPad" class="signature-pad"></canvas>
-                    <input type="hidden" name="signature" id="sigInput" value="{{ str_starts_with((string) old('signature'), 'data:image/png;base64,') ? old('signature') : '' }}">
+                    {{-- the drawing is sent as a PNG file (signature_file): hosting firewalls (ModSecurity) refuse long base64 text fields --}}
+                    <input type="hidden" id="sigInput">
+                    <input type="file" name="signature_file" id="sigFile" accept="image/png" class="d-none" tabindex="-1" aria-hidden="true">
                     <div class="d-flex gap-2 mt-2">
                         <input name="customer_signed_name" class="form-control form-control-sm" placeholder="{{ __('Signed by (name)') }}" value="{{ old('customer_signed_name') }}">
                         <button type="button" class="btn btn-sm btn-outline-secondary" @click="pad && pad.clear(); document.getElementById('sigInput').value=''">{{ __('Clear') }}</button>
@@ -245,9 +247,7 @@ function reception() {
         init() {
             this.$nextTick(() => {
                 this.pad = erpSignature('sigPad', 'sigInput');
-                const sig = document.getElementById('sigInput').value;
-                if (this.pad && sig) this.pad.fromDataURL(sig);
-                // after a failed submit: bring the first problem into view
+                                // after a failed submit: bring the first problem into view
                 const bad = this.$el.querySelector('#open-job-card-alert, #reception-server-errors, .is-invalid, .invalid-feedback.d-block');
                 if (bad) { bad.scrollIntoView({ block: 'center' }); bad.focus?.({ preventScroll: true }); }
             });
@@ -308,6 +308,18 @@ function reception() {
             el.addEventListener('input', clear, { once: true });
             el.closest('.lookup')?.addEventListener('lookup-selected', clear, { once: true });
         },
+        // signature pad -> PNG file in the multipart upload (no long base64 text in the request)
+        attachSignature() {
+            const data = document.getElementById('sigInput').value, input = document.getElementById('sigFile');
+            if (!input || !window.DataTransfer) return;
+            const dt = new DataTransfer();
+            if (data && data.startsWith('data:image/png;base64,')) {
+                const bin = atob(data.slice(22)), bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                dt.items.add(new File([bytes], 'signature.png', { type: 'image/png' }));
+            }
+            input.files = dt.files;
+        },
         goTo(selector) {
             const el = selector && this.$el.querySelector(selector);
             if (el) { el.scrollIntoView({ block: 'center' }); el.focus?.({ preventScroll: true }); }
@@ -340,6 +352,7 @@ function reception() {
                 return false;
             }
             if (this.photoBusy) { e.preventDefault(); window.ERP?.toast?.(T.photos, 'info'); return false; }
+            this.attachSignature();
             this.sending = true;
         }
     };

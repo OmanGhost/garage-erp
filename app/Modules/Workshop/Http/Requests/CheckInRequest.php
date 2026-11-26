@@ -87,6 +87,7 @@ class CheckInRequest extends FormRequest
             'service_advisor_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('company_id', $company)],
             'appointment_id' => ['nullable', 'integer', Rule::exists('appointments', 'id')->where('company_id', $company)],
             'signature' => ['nullable', 'string', 'max:1400000'],
+            'signature_file' => ['nullable', 'file', 'mimetypes:image/png', 'max:1024'],
             'customer_signed_name' => ['nullable', 'string', 'max:190'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'photos' => ['nullable', 'array', 'max:20'],
