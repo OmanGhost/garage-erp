@@ -152,6 +152,26 @@
 
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}" defer></script>
 <script>
+    // first referrer / landing page of the visit, and browser details for the trial form (verification)
+    (function () {
+        var store = null; try { store = window.sessionStorage; } catch (e) {}
+        var get = function (k) { try { return store && store.getItem(k); } catch (e) { return null; } };
+        var set = function (k, v) { try { store && store.setItem(k, v); } catch (e) {} };
+        if (!get('erp_landing')) {
+            var ref = document.referrer && document.referrer.indexOf(location.origin) !== 0 ? document.referrer : '';
+            set('erp_ref', ref); set('erp_landing', location.pathname + location.search);
+        }
+        var data = {
+            tz: (window.Intl && Intl.DateTimeFormat().resolvedOptions().timeZone) || '',
+            langs: (navigator.languages || [navigator.language]).join(', '),
+            screen: screen.width + 'x' + screen.height + '@' + (window.devicePixelRatio || 1),
+            platform: (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '',
+            touch: ('ontouchstart' in window || navigator.maxTouchPoints > 0) ? '1' : '0',
+            ref: get('erp_ref') || (document.referrer.indexOf(location.origin) !== 0 ? document.referrer : ''),
+            landing: get('erp_landing') || ''
+        };
+        document.querySelectorAll('[data-client]').forEach(function (el) { el.value = data[el.getAttribute('data-client')] || ''; });
+    })();
     // shrink header on scroll; monthly/yearly pricing toggle
     (function () {
         var header = document.querySelector('.site-header');

@@ -10,6 +10,7 @@ use App\Modules\Core\Models\Subscription;
 use App\Modules\Core\Models\SubscriptionInvoice;
 use App\Modules\Core\Services\TenantProvisioner;
 use App\Modules\Saas\Models\TrialRequest;
+use App\Modules\Saas\Services\TrialInspector;
 use App\Support\Audit\AuditLogger;
 use App\Support\SiteSettings;
 use App\Support\Money;
@@ -140,19 +141,58 @@ class AdminController extends Controller
 
     // ------------------------------------------------- public website: trial requests
 
-    public function trials(Request $request)
+    public function trials(Request $request, TrialInspector $inspector)
     {
         $status = $request->query('status');
+        $trials = TrialRequest::query()->with('plan', 'company')
+            ->when(in_array($status, TrialRequest::STATUSES, true), fn ($q) => $q->where('status', $status))
+            ->when($request->query('country'), fn ($q, $c) => $q->where('country_code', strtoupper((string) $c)))
+            ->when($request->query('q'), fn ($q, $t) => $q->where(fn ($w) => $w->where('company_name', 'like', "%$t%")->orWhere('name', 'like', "%$t%")
+                ->orWhere('email', 'like', "%$t%")->orWhere('phone', 'like', "%$t%")->orWhere('ip_address', 'like', "%$t%")))
+            ->latest()->paginate(25)->withQueryString();
+
+        // duplicate counters for the whole page in three queries
+        $dup = [];
+        foreach (['email' => 'email', 'phone' => 'phone', 'ip' => 'ip_address'] as $k => $col) {
+            $values = $trials->getCollection()->pluck($col)->filter()->unique()->values();
+            $dup[$k] = $values->isEmpty() ? collect() : TrialRequest::query()->whereIn($col, $values)->selectRaw("$col as v, count(*) as c")->groupBy($col)->pluck('c', 'v');
+        }
+        $assessments = $trials->getCollection()->mapWithKeys(fn (TrialRequest $t) => [$t->id => $inspector->assess($t, [
+            'email' => max(0, ($dup['email'][$t->email] ?? 1) - 1),
+            'phone' => max(0, ($dup['phone'][$t->phone] ?? 1) - 1),
+            'ip' => $t->ip_address ? max(0, ($dup['ip'][$t->ip_address] ?? 1) - 1) : 0,
+        ])]);
 
         return view('saas::trials', [
-            'trials' => TrialRequest::query()->with('plan', 'company', 'handler')
-                ->when(in_array($status, TrialRequest::STATUSES, true), fn ($q) => $q->where('status', $status))
-                ->when($request->query('q'), fn ($q, $t) => $q->where(fn ($w) => $w->where('company_name', 'like', "%$t%")->orWhere('name', 'like', "%$t%")
-                    ->orWhere('email', 'like', "%$t%")->orWhere('phone', 'like', "%$t%")))
-                ->latest()->paginate(25)->withQueryString(),
-            'counts' => TrialRequest::query()->selectRaw('status, count(*) c')->groupBy('status')->pluck('c', 'status'),
+            'trials' => $trials,
+            'assessments' => $assessments,
+            'counts' => TrialRequest::query()->selectRaw('status, count(*) as c')->groupBy('status')->pluck('c', 'status'),
+            'countries' => TrialRequest::query()->whereNotNull('country_code')->selectRaw('country_code, count(*) as c')->groupBy('country_code')->orderByDesc('c')->pluck('c', 'country_code'),
+        ]);
+    }
+
+    public function showTrial(TrialRequest $trial, TrialInspector $inspector)
+    {
+        $trial->load('plan', 'company', 'handler');
+        $related = TrialRequest::query()->whereKeyNot($trial->id)
+            ->where(fn ($q) => $q->where('email', $trial->email)->orWhere('phone', $trial->phone)
+                ->when($trial->ip_address, fn ($w) => $w->orWhere('ip_address', $trial->ip_address)))
+            ->latest()->limit(10)->get();
+
+        return view('saas::trial-show', [
+            't' => $trial,
+            'a' => $inspector->assess($trial, $trial->duplicates()),
+            'related' => $related,
             'plans' => Plan::query()->orderBy('sort')->get(),
         ]);
+    }
+
+    /** Run the network checks again (IP intelligence + email domain). */
+    public function recheckTrial(TrialRequest $trial, TrialInspector $inspector)
+    {
+        $inspector->enrich($trial);
+
+        return back()->with('success', __('Verification data updated.'));
     }
 
     public function updateTrial(Request $request, TrialRequest $trial)

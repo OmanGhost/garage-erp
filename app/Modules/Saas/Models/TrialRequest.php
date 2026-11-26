@@ -17,7 +17,7 @@ class TrialRequest extends Model
 
     protected $guarded = ['id'];
 
-    protected $casts = ['handled_at' => 'datetime'];
+    protected $casts = ['handled_at' => 'datetime', 'checked_at' => 'datetime', 'meta' => 'array'];
 
     public function plan(): BelongsTo
     {
@@ -32,5 +32,13 @@ class TrialRequest extends Model
     public function handler(): BelongsTo
     {
         return $this->belongsTo(User::class, 'handled_by');
+    }
+
+    /** Number of OTHER requests sharing this email, phone or IP address. */
+    public function duplicates(): array
+    {
+        $q = fn (string $col, ?string $v) => $v ? static::query()->whereKeyNot($this->getKey())->where($col, $v)->count() : 0;
+
+        return ['email' => $q('email', $this->email), 'phone' => $q('phone', $this->phone), 'ip' => $q('ip_address', $this->ip_address)];
     }
 }

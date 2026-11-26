@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    /*
+     | IP intelligence for website trial requests (country, ISP, VPN/proxy/hosting flags).
+     | Default: ip-api.com free endpoint (no key). {ip} is replaced with the visitor address.
+     | TRIAL_NETWORK_CHECKS=false disables the IP lookup and the email MX check.
+     */
+    'ip_lookup' => [
+        'enabled' => env('TRIAL_NETWORK_CHECKS', true),
+        'url' => env('IP_LOOKUP_URL', 'http://ip-api.com/json/{ip}?fields=status,message,country,countryCode,regionName,city,timezone,isp,org,as,mobile,proxy,hosting'),
+        'timeout' => 4,
+    ],
+
 ];

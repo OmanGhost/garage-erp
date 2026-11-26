@@ -63,6 +63,10 @@
                     <input type="hidden" name="locale" value="{{ $locale }}">
                     <input type="hidden" name="_ft" value="{{ $formToken }}">
                     <input type="hidden" name="utm_source" value="{{ request('utm_source') }}">
+                    <input type="hidden" name="utm_medium" value="{{ request('utm_medium') }}">
+                    <input type="hidden" name="utm_campaign" value="{{ request('utm_campaign') }}">
+                    {{-- filled by the browser (site layout script): used by the platform admin to verify the request --}}
+                    @foreach(['tz', 'langs', 'screen', 'platform', 'touch', 'ref', 'landing'] as $k)<input type="hidden" name="_client[{{ $k }}]" data-client="{{ $k }}">@endforeach
                     {{-- honeypot: hidden from people, filled in by bots --}}
                     <div class="site-hp" aria-hidden="true"><label for="website">Website</label><input type="text" id="website" name="website" tabindex="-1" autocomplete="off"></div>
 

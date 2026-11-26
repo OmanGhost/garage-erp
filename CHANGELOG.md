@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.7.0] - 2026-11-26
+- Trial requests redesigned: summary cards, country filter and a clear table with risk level for each request
+- New detail page for each trial request: contact details, request details, follow-up notes and trial company creation
+- Request verification: email domain check (company, personal or temporary), phone country vs connection country, VPN/proxy/data-centre detection, device vs connection time zone, form fill time and duplicate requests
+- Technical information: IP, country, region, internet provider, ASN, device, browser, operating system, screen, languages, referring site, first page visited and UTM tags
+- Re-check button to run the network checks again (configurable with TRIAL_NETWORK_CHECKS / IP_LOOKUP_URL)
+
 ## [1.6.0] - 2026-11-26
 - Arabic font changed to Cairo on the website and the whole system (self-hosted, no external requests)
 - English pages keep their font; Arabic words inside them also use Cairo

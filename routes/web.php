@@ -153,7 +153,9 @@ Route::prefix('admin')->middleware(['auth', 'usertype:super'])->name('admin.')->
     Route::get('/plans', [AdminController::class, 'plans'])->name('plans');
     Route::post('/plans', [AdminController::class, 'savePlan'])->name('plans.save');
     Route::get('/trials', [AdminController::class, 'trials'])->name('trials.index');
+    Route::get('/trials/{trial}', [AdminController::class, 'showTrial'])->name('trials.show');
     Route::put('/trials/{trial}', [AdminController::class, 'updateTrial'])->name('trials.update');
+    Route::post('/trials/{trial}/check', [AdminController::class, 'recheckTrial'])->name('trials.check');
     Route::post('/trials/{trial}/provision', [AdminController::class, 'provisionTrial'])->name('trials.provision');
     Route::get('/site', [AdminController::class, 'siteSettings'])->name('site.edit');
     Route::put('/site', [AdminController::class, 'updateSiteSettings'])->name('site.update');

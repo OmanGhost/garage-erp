@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Core\Models\Plan;
 use App\Modules\Core\Notifications\SystemMessage;
 use App\Modules\Saas\Models\TrialRequest;
+use App\Modules\Saas\Services\TrialInspector;
 use App\Support\SiteSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -60,13 +61,14 @@ class SiteController extends Controller
         ]);
     }
 
-    public function storeTrial(Request $request)
+    public function storeTrial(Request $request, TrialInspector $inspector)
     {
         $locale = $request->input('locale') === 'en' ? 'en' : 'ar';
         $this->useLocale($locale);
 
         // spam protection: honeypot field and a minimum time on the form
-        if (filled($request->input('website')) || ! $this->humanTiming((string) $request->input('_ft'))) {
+        $fillSeconds = $this->formSeconds((string) $request->input('_ft'));
+        if (filled($request->input('website')) || $fillSeconds === null || $fillSeconds < 3 || $fillSeconds > 86400) {
             return redirect()->route($locale === 'en' ? 'site.thanks.en' : 'site.thanks');
         }
 
@@ -94,8 +96,16 @@ class SiteController extends Controller
                 'phone' => omani_phone($data['phone']), 'city' => $data['city'] ?? null, 'business_type' => $data['business_type'],
                 'branches' => $data['branches'] ?? null, 'plan_id' => $data['plan_id'] ?? null, 'message' => $data['message'] ?? null,
                 'locale' => $locale, 'ip_address' => $request->ip(), 'user_agent' => mb_substr((string) $request->userAgent(), 0, 255),
-                'source' => mb_substr((string) ($request->input('utm_source') ?: $request->headers->get('referer')), 0, 120) ?: null,
+                'source' => mb_substr((string) ($request->input('utm_source') ?: ($request->input('_client.ref') ?: $request->headers->get('referer'))), 0, 120) ?: null,
+                'meta' => $inspector->fromRequest($request, $fillSeconds),
             ]);
+            // IP country / ISP / VPN flags and email MX check run after the visitor has the response
+            dispatch(function () use ($trial) {
+                $fresh = $trial->fresh();
+                if ($fresh && ! $fresh->checked_at) {
+                    app(TrialInspector::class)->enrich($fresh);
+                }
+            })->afterResponse();
             $admins = User::query()->where('is_super_admin', true)->where('is_active', true)->get();
             Notification::send($admins, new SystemMessage(
                 __('New trial request: :c', ['c' => $trial->company_name]), $trial->name.' · '.$trial->phone, route('admin.trials.index'), 'success'
@@ -111,15 +121,14 @@ class SiteController extends Controller
         return redirect()->route($locale === 'en' ? 'site.thanks.en' : 'site.thanks');
     }
 
-    protected function humanTiming(string $token): bool
+    /** Seconds the visitor spent on the form (null when the token is missing or forged). */
+    protected function formSeconds(string $token): ?int
     {
         try {
-            $elapsed = now()->timestamp - (int) Crypt::decryptString($token);
+            return now()->timestamp - (int) Crypt::decryptString($token);
         } catch (\Throwable) {
-            return false;
+            return null;
         }
-
-        return $elapsed >= 3 && $elapsed <= 86400;
     }
 
     public function thanks(string $locale = 'ar')
