@@ -12,6 +12,16 @@ class CheckInRequest extends FormRequest
         return (bool) $this->user()?->can('reception.create');
     }
 
+    /** Say exactly which permission is missing instead of a bare "403 Forbidden". */
+    protected function failedAuthorization(): void
+    {
+        $user = $this->user();
+        throw new \Illuminate\Auth\Access\AuthorizationException(__('Your account cannot receive vehicles (missing permission “:p”). Roles: :r. Ask the company administrator to grant it.', [
+            'p' => 'reception.create',
+            'r' => $user?->getRoleNames()->implode(', ') ?: '—',
+        ]));
+    }
+
     protected function prepareForValidation(): void
     {
         $this->merge([

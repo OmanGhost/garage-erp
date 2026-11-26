@@ -48,6 +48,20 @@ return Application::configure(basePath: dirname(__DIR__))
         // the whole request is bigger than PHP post_max_size (e.g. many large photos): PHP drops every field,
         // so explain it on the previous page instead of an error screen
         // the session expired while a long form was open (419): go back to the form with everything typed, instead of "Page expired"
+        // a form refused with 403 (permission, module, account): log the reason and return to the form with it, data kept
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Illuminate\Http\Request $request) {
+            $message = $e->getMessage() && $e->getMessage() !== 'This action is unauthorized.' ? $e->getMessage() : __('You do not have permission to perform this action.');
+            Illuminate\Support\Facades\Log::warning('403 '.$request->method().' '.$request->path().': '.$message, [
+                'user' => $request->user()?->id, 'company' => tenant()->id(), 'roles' => $request->user()?->getRoleNames()->all(),
+            ]);
+            if ($request->isMethodSafe() || $request->expectsJson() || ! $request->hasSession()) {
+                return null;
+            }
+
+            return redirect()->to(url()->previous() ?: '/')
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'photos', 'signature']))
+                ->with('error', $message);
+        });
         // (Laravel turns TokenMismatchException into an HTTP 419 exception before render callbacks run)
         $exceptions->render(function (Symfony\Component\HttpKernel\Exception\HttpException $e, Illuminate\Http\Request $request) {
             if ($e->getStatusCode() !== 419 || $request->isMethodSafe() || $request->expectsJson() || ! $request->hasSession()) {

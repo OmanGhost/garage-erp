@@ -154,6 +154,14 @@ class ReceptionFormTest extends TestCase
         $this->assertSame(1, $this->inTenant(fn () => JobCard::query()->count()));
     }
 
+    public function test_refused_permission_is_explained_on_the_form(): void
+    {
+        $this->actAsRole('Technician'); // technicians cannot receive vehicles
+        $this->from('/job-cards')->post('/reception', ['customer_name' => 'Walk In', 'reported_issues' => 'Noise', '_idem' => 'pm-1'])
+            ->assertRedirect('/job-cards')
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'reception.create') && str_contains($m, 'Technician'));
+    }
+
     public function test_request_larger_than_post_max_size_returns_to_the_form(): void
     {
         $this->from('/reception')->withServerVariables(['CONTENT_LENGTH' => (string) (1024 ** 4)])
