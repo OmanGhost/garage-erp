@@ -274,3 +274,53 @@ a { color: var(--brand); }
 .topnav-menu { max-height: calc(100vh - 125px); overflow-y: auto; }
 .topnav-link:focus { outline: none; }
 .topnav-link:focus-visible { outline: 2px solid var(--brand); outline-offset: -2px; border-radius: .35rem; }
+
+/* ======================================================================= phones & small tablets */
+.app-header .app-topbar { position: relative; }
+@media (max-width: 767.98px) {
+    /* top bar: search opens as a full-width row under the bar */
+    .app-topbar { gap: .1rem; padding: 0 .4rem; }
+    .app-topbar .btn-icon { width: 38px; height: 38px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .topbar-brand { margin-inline-end: .25rem; }
+    .topbar-search { display: none; }
+    .app-topbar.search-open .topbar-search {
+        display: block; position: absolute; inset-inline: 0; top: 100%; margin: 0 !important; max-width: none !important;
+        padding: .5rem .75rem; background: var(--sidebar-bg); z-index: 1040; box-shadow: 0 8px 20px rgba(0, 0, 0, .25);
+    }
+    .app-topbar.search-open [data-search-toggle] { color: #fff; background: rgba(255, 255, 255, .12); }
+
+    /* page header: title and actions stack, buttons wrap cleanly */
+    .page-header h1, .page-header .h4, .page-title { font-size: 1.2rem; }
+    .page-header .btn, .page-header .btn-group .btn { font-size: .85rem; padding: .35rem .6rem; }
+
+    /* KPI cards: full numbers, smaller icon, labels may wrap */
+    .kpi .card-body { padding: .75rem; gap: .6rem !important; }
+    .kpi .kpi-icon { width: 34px; height: 34px; font-size: 1.05rem; border-radius: 10px; flex: 0 0 auto; }
+    .kpi .kpi-value { font-size: 1.05rem; }
+    .kpi .kpi-value.text-truncate, .kpi .kpi-label.text-truncate { white-space: normal; overflow: visible; text-overflow: clip; }
+    .kpi .kpi-label { font-size: .75rem; line-height: 1.3; }
+
+    /* tables: scroll sideways instead of squeezing every word onto its own line */
+    .table-responsive > .table > :not(caption) > * > * { white-space: nowrap; }
+    .table-responsive > .table td .text-wrap, .table-responsive > .table td.text-wrap { white-space: normal; }
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+    .line-items { min-width: 760px; }
+
+    /* tabs and pill bars scroll horizontally instead of wrapping into several rows */
+    .nav-tabs, .nav-pills { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar, .nav-pills::-webkit-scrollbar { display: none; }
+    .nav-tabs .nav-link, .nav-pills .nav-link { white-space: nowrap; }
+
+    /* cards and forms */
+    .card-body { padding: .85rem; }
+    .card-header { padding: .6rem .85rem; }
+    .app-content { padding-left: .6rem !important; padding-right: .6rem !important; }
+    .modal-dialog { margin: .5rem; }
+    .btn-lg { font-size: 1rem; padding: .55rem .9rem; }
+    .dropdown-menu { max-width: calc(100vw - 1rem); }
+    dl.row dt { margin-bottom: 0; }
+}
+@media (max-width: 400px) {
+    .app-topbar .btn-icon { width: 34px; }
+    .topbar-brand .brand-mark { width: 32px; height: 32px; font-size: 1rem; }
+}

@@ -235,3 +235,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const a = document.querySelector('[data-subnav] .app-subnav-link.active');
     if (a) a.scrollIntoView({ block: 'nearest', inline: 'center' });
 });
+
+/* phones: search toggle in the top bar, and tables outside a scroll container get one */
+document.addEventListener('DOMContentLoaded', () => {
+    const bar = document.querySelector('.app-topbar');
+    document.querySelector('[data-search-toggle]')?.addEventListener('click', (e) => {
+        const open = bar.classList.toggle('search-open');
+        e.currentTarget.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) setTimeout(() => bar.querySelector('.topbar-search input')?.focus(), 50);
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') bar?.classList.remove('search-open'); });
+    document.querySelectorAll('main table.table').forEach((t) => {
+        if (t.closest('.table-responsive, .modal, .dropdown-menu, .line-items-wrap')) return;
+        const w = document.createElement('div');
+        w.className = 'table-responsive';
+        t.parentNode.insertBefore(w, t);
+        w.appendChild(t);
+    });
+});

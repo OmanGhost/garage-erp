@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.14.1] - 2026-11-26
+- Phones: search in the top bar opens as a full-width row from a search button instead of a squeezed box
+- Phones: dashboard and summary cards show full numbers and labels (no more cut values), smaller icons
+- Phones: tables scroll sideways instead of breaking every word onto its own line; tables outside a scroll area are wrapped automatically; invoice lines keep a readable width
+- Phones: tabs and pill bars scroll in one row, tighter card spacing, page header buttons sized for touch
+- SaaS admin: the top menu collapses behind a menu button on phones and tablets, with a badge for new requests
+
 ## [1.14.0] - 2026-11-26
 - Warranty claims: activity log (opened, status changes with inspection result, supplier claim updates, notes), progress bar and a redesigned claim page
 - Printing of warranty claims (A4 / PDF) with warranty details, inspection, resolution, costs, supplier recovery and tracking history

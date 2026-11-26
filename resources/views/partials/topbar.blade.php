@@ -13,11 +13,13 @@
         <span class="brand-text text-truncate d-none d-sm-inline">{{ $company?->displayName() ?? config('app.name') }}</span>
     </a>
 
-    <div class="flex-grow-1 mx-2" style="max-width:560px">
+    {{-- on phones the search box is a button that opens a full-width search row under the bar --}}
+    <div class="topbar-search flex-grow-1 mx-2" id="topbarSearch" style="max-width:560px">
         <livewire:global-search />
     </div>
 
     <div class="d-flex align-items-center gap-1 ms-auto">
+        <button type="button" class="btn btn-icon d-md-none" data-search-toggle aria-controls="topbarSearch" aria-expanded="false" aria-label="{{ __('Search') }}"><i class="bi bi-search fs-5"></i></button>
         @if($branches->count() > 1)
             <div class="dropdown d-none d-md-block">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-geo-alt"></i> {{ $currentBranch?->displayName() ?? __('All branches') }}</button>
