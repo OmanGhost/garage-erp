@@ -36,7 +36,7 @@
                                 <span class="badge text-bg-warning">{{ $h->held_label }}</span><span>{{ $h->customer?->name }}</span>
                                 <span class="ms-auto font-monospace">{{ money($h->total, false) }}</span>
                                 <button class="btn btn-sm btn-outline-primary" wire:click="resume({{ $h->id }})">{{ __('Resume') }}</button>
-                                <button class="btn btn-sm btn-outline-danger" wire:click="discardHeld({{ $h->id }})" wire:confirm="{{ __('Delete this held invoice?') }}"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" wire:click="discardHeld({{ $h->id }})" data-confirm="{{ __('Delete this held invoice?') }}"><i class="bi bi-trash"></i></button>
                             </div>
                         @endforeach
                     </div>
@@ -117,7 +117,7 @@
                     </button>
                     <div class="btn-group">
                         <button class="btn btn-outline-warning" wire:click="hold" @disabled(empty($cart))><i class="bi bi-pause"></i> {{ __('Hold') }}</button>
-                        <button class="btn btn-outline-secondary" wire:click="clearCart" wire:confirm="{{ __('Clear the cart?') }}"><i class="bi bi-trash"></i> {{ __('Clear') }}</button>
+                        <button class="btn btn-outline-secondary" wire:click="clearCart" data-confirm="{{ __('Clear the cart?') }}"><i class="bi bi-trash"></i> {{ __('Clear') }}</button>
                     </div>
                 </div>
                 @if($lastInvoiceId)

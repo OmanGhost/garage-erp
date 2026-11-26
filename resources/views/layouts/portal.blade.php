@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{{ asset(is_rtl() ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/ui.css') }}?v={{ config('app.asset_version', '1') }}">
     <style>:root{--brand: {{ $company?->primary_color ?? '#1f6feb' }};} body{background:var(--app-bg);padding-bottom:70px} .portal-tabbar{position:fixed;bottom:0;inset-inline:0;background:var(--surface);border-top:1px solid var(--border-soft);display:flex;z-index:1030} .portal-tabbar a{flex:1;text-align:center;padding:.45rem 0;font-size:.72rem;color:var(--bs-secondary-color);text-decoration:none} .portal-tabbar a.active{color:var(--brand)} .portal-tabbar i{font-size:1.25rem;display:block}</style>
     @livewireStyles
 </head>
@@ -40,5 +41,6 @@
 @livewireScripts
 <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});</script>
 @stack('scripts')
+<script src="{{ asset('js/ui.js') }}?v={{ config('app.asset_version', '1') }}"></script>
 </body>
 </html>

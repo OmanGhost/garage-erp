@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.5.0] - 2026-11-26
+- Unified popups: designed confirmation dialog replacing browser confirm, toast notifications with titles and progress, unified modal windows
+- Notifications for every add, edit and delete naming the record and the list
+- Every delete form asks for confirmation automatically; delete confirmations name the record
+- Phone numbers, emails and links always display left-to-right in lists
+
 ## [1.4.1] - 2026-11-26
 - Release command writes the VERSION file with Unix line endings
 

@@ -113,7 +113,7 @@
                             <a href="{{ $resource->editUrl($row) }}" class="btn btn-sm btn-light" title="{{ __('Edit') }}"><i class="bi bi-pencil"></i></a>
                         @endif
                         @if($resource->can('delete') && !$resource->deleteBlocker($row))
-                            <form method="post" action="{{ route('crud.destroy', [$slug, $row->getKey()]) }}" class="d-inline" data-confirm="{{ __('Delete this record?') }}">@csrf @method('delete')
+                            <form method="post" action="{{ route('crud.destroy', [$slug, $row->getKey()]) }}" class="d-inline" data-confirm="{{ __('Delete «:name»? This cannot be undone.', ['name' => $resource->recordLabel($row)]) }}">@csrf @method('delete')
                                 <button class="btn btn-sm btn-light text-danger" title="{{ __('Delete') }}"><i class="bi bi-trash"></i></button>
                             </form>
                         @endif

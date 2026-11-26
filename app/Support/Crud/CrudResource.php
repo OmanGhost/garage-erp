@@ -160,4 +160,17 @@ abstract class CrudResource
     {
         return [];
     }
+    /** Human name of a record for notifications and confirmations: number, name, code… or #id. */
+    public function recordLabel(Model $m): string
+    {
+        $attributes = $m->getAttributes(); // stored columns only (some models have methods named like title())
+        foreach (['number', 'name', 'name_ar', 'name_en', 'title', 'code', 'sku', 'plate_number', 'email', 'subject'] as $attr) {
+            $v = $attributes[$attr] ?? null;
+            if (is_scalar($v) && trim((string) $v) !== '') {
+                return \Illuminate\Support\Str::limit((string) $v, 60);
+            }
+        }
+
+        return '#'.$m->getKey();
+    }
 }

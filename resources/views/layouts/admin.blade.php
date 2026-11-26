@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="{{ asset(is_rtl() ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/ui.css') }}?v={{ config('app.asset_version', '1') }}">
     @livewireStyles
 </head>
 <body class="app-body">
@@ -24,5 +25,6 @@
 @include('partials.version-footer', ['owner' => config('app.name').' — SaaS', 'class' => 'border-top'])
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 @livewireScripts
+<script src="{{ asset('js/ui.js') }}?v={{ config('app.asset_version', '1') }}"></script>
 <script src="{{ asset('js/app.js') }}"></script>
 </body></html>

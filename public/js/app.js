@@ -67,32 +67,17 @@
         fetch(ERP.themeUrl, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf(), 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ theme: next }) });
     });
 
-    /* ---------------- confirm ---------------- */
+    /* ---------------- double submit (confirmations are handled by ui.js) ---------------- */
     document.addEventListener('submit', (e) => {
         const f = e.target;
-        if (f.dataset.confirm && !confirm(f.dataset.confirm)) { e.preventDefault(); return; }
         // prevent double submit
         if (f.dataset.submitted === '1' && !f.hasAttribute('data-allow-resubmit')) { e.preventDefault(); return; }
         f.dataset.submitted = '1';
         $$('button[type=submit], button:not([type])', f).forEach(b => { b.dataset.html = b.innerHTML; setTimeout(() => b.disabled = true, 0); });
         setTimeout(() => { f.dataset.submitted = '0'; $$('button', f).forEach(b => b.disabled = false); }, 8000);
     }, true);
-    document.addEventListener('click', (e) => {
-        const a = e.target.closest('[data-confirm]:not(form)');
-        if (a && !confirm(a.dataset.confirm || ERP.t.confirm)) { e.preventDefault(); e.stopImmediatePropagation(); }
-    }, true);
 
-    /* ---------------- toast ---------------- */
-    window.erpToast = function (msg, type = 'success') {
-        const c = $('#toastContainer'); if (!c) return alert(msg);
-        const el = document.createElement('div');
-        el.className = `toast align-items-center text-bg-${type} border-0`;
-        el.innerHTML = `<div class="d-flex"><div class="toast-body"></div><button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast"></button></div>`;
-        el.querySelector('.toast-body').textContent = msg;
-        c.appendChild(el); new bootstrap.Toast(el, { delay: 4000 }).show();
-        el.addEventListener('hidden.bs.toast', () => el.remove());
-    };
-    document.addEventListener('erp-toast', (e) => erpToast(e.detail?.message || e.detail?.[0]?.message || '', e.detail?.type || e.detail?.[0]?.type || 'success'));
+    /* toasts: ERP.toast / window.erpToast are provided by ui.js */
 
     /* ---------------- lookup (remote searchable select) ---------------- */
     function initLookup(root) {

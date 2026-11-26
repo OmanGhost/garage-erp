@@ -1,0 +1,81 @@
+/* Garage ERP — unified popups: confirmation dialog, toast notifications, modal windows (RTL/LTR, light/dark) */
+:root {
+    --ui-radius: 1rem;
+    --ui-shadow: 0 24px 60px rgba(10, 20, 40, .28);
+    --ui-success: #198754;
+    --ui-danger: #dc3545;
+    --ui-warning: #e8920c;
+    --ui-info: #0d6efd;
+    --ui-primary: var(--brand, #1f6feb);
+}
+
+/* ------------------------------------------------------------------ confirmation dialog */
+.ui-dialog-backdrop { position: fixed; inset: 0; z-index: 2000; background: rgba(12, 20, 36, .45); backdrop-filter: blur(3px);
+    display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; transition: opacity .16s ease; }
+.ui-dialog-backdrop.show { opacity: 1; }
+.ui-dialog { width: 100%; max-width: 430px; background: var(--bs-body-bg, #fff); color: var(--bs-body-color, #111); border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow); overflow: hidden; transform: translateY(12px) scale(.96); transition: transform .18s cubic-bezier(.2, .9, .3, 1.2); }
+.ui-dialog-backdrop.show .ui-dialog { transform: none; }
+.ui-dialog-body { padding: 1.6rem 1.6rem 1.1rem; text-align: center; }
+.ui-dialog-icon { width: 62px; height: 62px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 1.9rem; margin-bottom: .85rem; }
+.ui-dialog-title { font-size: 1.15rem; font-weight: 700; margin: 0 0 .4rem; }
+.ui-dialog-text { color: var(--bs-secondary-color, #555); margin: 0; line-height: 1.6; }
+.ui-dialog-actions { display: flex; gap: .6rem; padding: 0 1.6rem 1.4rem; }
+.ui-dialog-actions .btn { flex: 1; padding: .6rem 1rem; border-radius: .65rem; font-weight: 600; }
+.ui-dialog--danger .ui-dialog-icon { background: color-mix(in srgb, var(--ui-danger) 12%, transparent); color: var(--ui-danger); }
+.ui-dialog--warning .ui-dialog-icon { background: color-mix(in srgb, var(--ui-warning) 14%, transparent); color: var(--ui-warning); }
+.ui-dialog--primary .ui-dialog-icon { background: color-mix(in srgb, var(--ui-primary) 12%, transparent); color: var(--ui-primary); }
+.ui-dialog--danger { border-top: 4px solid var(--ui-danger); }
+.ui-dialog--warning { border-top: 4px solid var(--ui-warning); }
+.ui-dialog--primary { border-top: 4px solid var(--ui-primary); }
+
+/* ------------------------------------------------------------------ toast notifications */
+.ui-toasts { position: fixed; top: 1rem; inset-inline-end: 1rem; z-index: 2100; display: flex; flex-direction: column; gap: .6rem;
+    width: min(380px, calc(100vw - 2rem)); pointer-events: none; }
+.ui-toast { pointer-events: auto; position: relative; display: flex; gap: .75rem; align-items: flex-start; padding: .85rem .9rem .95rem;
+    background: var(--bs-body-bg, #fff); color: var(--bs-body-color, #111); border-radius: .85rem; box-shadow: 0 12px 34px rgba(10, 20, 40, .18);
+    border: 1px solid var(--bs-border-color-translucent, rgba(0, 0, 0, .08)); border-inline-start: 5px solid var(--ui-c);
+    overflow: hidden; opacity: 0; transform: translateX(30px); transition: opacity .2s, transform .25s cubic-bezier(.2, .9, .3, 1.2); }
+[dir="rtl"] .ui-toast { transform: translateX(-30px); }
+.ui-toast.show { opacity: 1; transform: none; }
+.ui-toast.hide { opacity: 0; transform: scale(.95); }
+.ui-toast-icon { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 1.15rem; color: #fff; background: var(--ui-c); }
+.ui-toast-content { flex: 1; min-width: 0; }
+.ui-toast-title { font-weight: 700; font-size: .92rem; margin-bottom: .1rem; }
+.ui-toast-text { font-size: .88rem; color: var(--bs-secondary-color, #444); word-wrap: break-word; }
+.ui-toast-text ul { margin: .25rem 0 0; padding-inline-start: 1.1rem; }
+.ui-toast-action { display: inline-flex; align-items: center; gap: .3rem; margin-top: .45rem; font-size: .82rem; font-weight: 600; padding: .25rem .65rem;
+    border-radius: .5rem; background: var(--ui-c); color: #fff !important; text-decoration: none; }
+.ui-toast-close { flex: 0 0 auto; border: 0; background: none; color: var(--bs-secondary-color, #666); font-size: 1.1rem; line-height: 1; padding: .1rem; opacity: .7; }
+.ui-toast-close:hover { opacity: 1; }
+.ui-toast-progress { position: absolute; bottom: 0; inset-inline-start: 0; height: 3px; background: var(--ui-c); opacity: .55; width: 100%;
+    transform-origin: left; animation: ui-progress linear forwards; }
+[dir="rtl"] .ui-toast-progress { transform-origin: right; }
+.ui-toast:hover .ui-toast-progress { animation-play-state: paused; }
+@keyframes ui-progress { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.ui-toast--success { --ui-c: var(--ui-success); }
+.ui-toast--danger, .ui-toast--error { --ui-c: var(--ui-danger); }
+.ui-toast--warning { --ui-c: var(--ui-warning); }
+.ui-toast--info { --ui-c: var(--ui-info); }
+@media (max-width: 575.98px) { .ui-toasts { top: auto; bottom: 1rem; inset-inline: 1rem; width: auto; } }
+
+/* ------------------------------------------------------------------ Bootstrap modal windows (unified look) */
+.modal-backdrop.show { opacity: .45; }
+.modal-backdrop { background: rgb(12, 20, 36); }
+.modal.fade .modal-dialog { transform: translateY(14px) scale(.97); transition: transform .2s cubic-bezier(.2, .9, .3, 1.2); }
+.modal.show .modal-dialog { transform: none; }
+.modal-content { border: 0; border-radius: var(--ui-radius); box-shadow: var(--ui-shadow); overflow: hidden; }
+.modal-header { border-bottom: 1px solid var(--bs-border-color-translucent); padding: 1rem 1.25rem; background: color-mix(in srgb, var(--ui-primary) 6%, var(--bs-body-bg)); }
+.modal-title { font-weight: 700; font-size: 1.05rem; display: flex; align-items: center; gap: .5rem; }
+.modal-title::before { content: ""; width: 6px; height: 1.15rem; border-radius: 4px; background: var(--ui-primary); }
+.modal-body { padding: 1.25rem; }
+.modal-footer { border-top: 1px solid var(--bs-border-color-translucent); background: var(--bs-tertiary-bg); padding: .8rem 1.25rem; gap: .5rem; }
+.modal-footer .btn { border-radius: .6rem; font-weight: 600; min-width: 96px; }
+.modal-header .btn-close { margin: 0; margin-inline-start: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-dialog, .ui-toast, .modal.fade .modal-dialog { transition: none; }
+    .ui-toast-progress { animation: none; }
+}
+@media print { .ui-toasts, .ui-dialog-backdrop { display: none !important; } }

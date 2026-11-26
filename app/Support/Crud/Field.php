@@ -211,6 +211,8 @@ class Field
             $this->type === 'color' => '<span class="d-inline-block rounded border" style="width:18px;height:18px;background:'.e($v).'"></span>',
             $this->type === 'image' => '<img src="'.e(\Illuminate\Support\Facades\Storage::disk('public')->url($v)).'" class="rounded" style="max-height:48px">',
             $this->type === 'password' => '••••••',
+            // phone numbers, emails and URLs always read left-to-right (no "96899112233+" in Arabic pages)
+            in_array($this->type, ['tel', 'email', 'url'], true) => '<bdi dir="ltr">'.e((string) $v).'</bdi>',
             default => e(Str::limit((string) $v, 120)),
         };
     }

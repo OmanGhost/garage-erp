@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{{ asset($rtl ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ config('app.asset_version', '1') }}">
+    <link rel="stylesheet" href="{{ asset('css/ui.css') }}?v={{ config('app.asset_version', '1') }}">
     <style>:root{--brand: {{ $company?->primary_color ?? '#1f6feb' }};}</style>
     @livewireStyles
     @stack('styles')
@@ -39,7 +40,6 @@
         @include('partials.version-footer', ['owner' => $company?->displayName() ?? config('app.name')])
     </div>
 </div>
-<div class="toast-container position-fixed bottom-0 {{ $rtl ? 'start-0' : 'end-0' }} p-3" id="toastContainer"></div>
 
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 @livewireScripts
@@ -66,6 +66,7 @@
     <script src="{{ asset('vendor/echo/pusher.min.js') }}"></script>
     <script src="{{ asset('vendor/echo/echo.iife.js') }}"></script>
 @endif
+<script src="{{ asset('js/ui.js') }}?v={{ config('app.asset_version', '1') }}"></script>
 <script src="{{ asset('js/app.js') }}?v={{ config('app.asset_version', '1') }}"></script>
 @stack('scripts')
 </body>

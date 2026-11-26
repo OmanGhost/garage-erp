@@ -68,8 +68,7 @@
 
                 <div class="col-lg-3">
                     @if($t->status !== 'provisioned')
-                        <form method="post" action="{{ route('admin.trials.provision', $t) }}" class="d-grid gap-2"
-                              onsubmit="return confirm(@js(__('Create a trial company and an admin account for this request?')))">
+                        <form method="post" action="{{ route('admin.trials.provision', $t) }}" class="d-grid gap-2" data-confirm="{{ __('Create a trial company and an admin account for this request?') }}" data-confirm-type="primary">
                             @csrf
                             <select name="plan_id" class="form-select form-select-sm" required>
                                 @foreach($plans as $p)<option value="{{ $p->id }}" @selected(($t->plan_id ?? $plans->firstWhere('code', 'professional')?->id) === $p->id)>{{ $p->name }} ({{ $p->trial_days }} {{ __('days') }})</option>@endforeach

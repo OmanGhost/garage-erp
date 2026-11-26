@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{{ asset(is_rtl() ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/ui.css') }}?v={{ config('app.asset_version', '1') }}">
     <style>:root{--brand: {{ $company?->primary_color ?? '#1f6feb' }};} body{background:var(--app-bg);}</style>
     @livewireStyles
 </head>
@@ -28,5 +29,6 @@
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 @livewireScripts
 @stack('scripts')
+<script src="{{ asset('js/ui.js') }}?v={{ config('app.asset_version', '1') }}"></script>
 </body>
 </html>

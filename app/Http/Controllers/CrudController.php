@@ -125,7 +125,8 @@ class CrudController extends Controller
         $this->storeAttachments($r, $request, $model);
 
         return redirect($request->input('_continue') ? route('crud.create', $slug) : ($r->showUrl($model) ?? $r->indexUrl()))
-            ->with('success', __('Saved successfully.'));
+            ->with('success', __('«:name» was added to :list.', ['name' => $r->recordLabel($model), 'list' => $r->title()]))
+            ->with('success_title', __('Record added'));
     }
 
     public function show(string $slug, $id)
@@ -174,7 +175,9 @@ class CrudController extends Controller
         });
         $this->storeAttachments($r, $request, $model);
 
-        return redirect($r->showUrl($model) ?? $r->indexUrl())->with('success', __('Saved successfully.'));
+        return redirect($r->showUrl($model) ?? $r->indexUrl())
+            ->with('success', __('Changes to «:name» were saved.', ['name' => $r->recordLabel($model)]))
+            ->with('success_title', __('Record updated'));
     }
 
     public function destroy(string $slug, $id)
@@ -184,13 +187,16 @@ class CrudController extends Controller
         if ($reason = $r->deleteBlocker($model)) {
             return back()->with('error', $reason);
         }
+        $label = $r->recordLabel($model);
         try {
             $model->delete();
         } catch (\Illuminate\Database\QueryException) {
             return back()->with('error', __('This record is used by other records and cannot be deleted.'));
         }
 
-        return redirect($r->indexUrl())->with('success', __('Deleted successfully.'));
+        return redirect($r->indexUrl())
+            ->with('success', __('«:name» was deleted from :list.', ['name' => $label, 'list' => $r->title()]))
+            ->with('success_title', __('Record deleted'));
     }
 
     protected function payload(CrudResource $r, Request $request, ?Model $model): array
