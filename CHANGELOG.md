@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.6.0] - 2026-11-26
+- Arabic font changed to Cairo on the website and the whole system (self-hosted, no external requests)
+- English pages keep their font; Arabic words inside them also use Cairo
+- Dashboard charts redraw with Cairo once the font is loaded
+- Stylesheets are versioned on every layout so browsers pick up design updates immediately
+
 ## [1.5.0] - 2026-11-26
 - Unified popups: designed confirmation dialog replacing browser confirm, toast notifications with titles and progress, unified modal windows
 - Notifications for every add, edit and delete naming the record and the list

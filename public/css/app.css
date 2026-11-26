@@ -1,12 +1,18 @@
 /* Garage ERP — unified design system (Bootstrap 5.3 + CSS variables, RTL/LTR, light/dark) */
+@import url("../vendor/fonts/cairo/cairo.css");
 :root {
     --brand: #1f6feb;
     --sidebar-w: 264px;
     --sidebar-w-collapsed: 72px;
     --topbar-h: 60px;
     --radius: .75rem;
-    --font: "Segoe UI", "Noto Sans Arabic", Tahoma, "Helvetica Neue", Arial, sans-serif;
+    --font: "Cairo Arabic", "Segoe UI", "Noto Sans Arabic", Tahoma, "Helvetica Neue", Arial, sans-serif;
 }
+html[lang^="ar"] {
+    --font: "Cairo", "Segoe UI", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+}
+/* Bootstrap components (tooltips, popovers, dropdowns…) use the same font */
+html:root { --bs-font-sans-serif: var(--font); --bs-body-font-family: var(--font); }
 [data-bs-theme="light"] {
     --app-bg: #f4f6fb;
     --surface: #ffffff;

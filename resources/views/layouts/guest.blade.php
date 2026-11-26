@@ -8,7 +8,7 @@
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
     <link rel="stylesheet" href="{{ asset(is_rtl() ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ config('app.asset_version', '1') }}">
     <link rel="stylesheet" href="{{ asset('css/ui.css') }}?v={{ config('app.asset_version', '1') }}">
     <style>
         body { min-height: 100vh; background: radial-gradient(circle at 20% 20%, #1f6feb33, transparent 40%), radial-gradient(circle at 80% 80%, #20c99733, transparent 40%), #0f1b2d; }

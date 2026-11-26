@@ -205,6 +205,8 @@
         new Chart(sc, { type: 'doughnut', data: { labels: keys.map(k => labels[k] || k), datasets: [{ data: keys.map(k => counts[k]), backgroundColor: keys.map(k => colors[k] || '#999') }] },
             options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }, cutout: '62%' } });
     }
+    // canvas text is drawn once: redraw when the Cairo web font has finished loading
+    document.fonts?.ready.then(() => Object.values(Chart.instances || {}).forEach((c) => c.update('none')));
 })();
 </script>
 @endpush

@@ -7,7 +7,7 @@
     <meta name="description" content="{{ __('Genuine and used spare parts') }} — {{ $company->displayName() }}">
     <link rel="stylesheet" href="{{ asset(is_rtl() ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ config('app.asset_version', '1') }}">
     <link rel="stylesheet" href="{{ asset('css/ui.css') }}?v={{ config('app.asset_version', '1') }}">
     <style>:root{--brand: {{ $company->primary_color ?? '#1f6feb' }};} body{background:#f6f7fb} .product-card img{height:150px;object-fit:contain;background:#fff}</style>
     @livewireStyles

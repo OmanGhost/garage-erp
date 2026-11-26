@@ -4,7 +4,7 @@
  * - Pages: always from the network (never cached); the /offline page is shown when offline.
  * - Non-GET requests are never cached (forms, API writes).
  */
-const VERSION = 'erp-v1';
+const VERSION = 'erp-v2';
 const STATIC_CACHE = `${VERSION}-static`;
 const PRECACHE = [
     '/offline',

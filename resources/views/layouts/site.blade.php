@@ -60,9 +60,10 @@
     <link rel="apple-touch-icon" href="{{ asset('icons/icon-192.png') }}">
     <link rel="sitemap" type="application/xml" href="{{ route('site.sitemap') }}">
 
+    <link rel="preload" href="{{ asset('vendor/fonts/cairo/cairo-arabic-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ asset(is_rtl() ? 'vendor/bootstrap/bootstrap.rtl.min.css' : 'vendor/bootstrap/bootstrap.min.css') }}">
     <link rel="stylesheet" href="{{ asset('vendor/icons/bootstrap-icons.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/site.css') }}?v=2">
+    <link rel="stylesheet" href="{{ asset('css/site.css') }}?v={{ config('app.asset_version', '1') }}">
 
     {{-- structured data (schema.org) --}}
     @foreach($seo['schema'] ?? [] as $schema)

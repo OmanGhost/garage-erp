@@ -1,4 +1,5 @@
 /* Garage ERP — public marketing website (RTL/LTR aware, mobile first) */
+@import url("../vendor/fonts/cairo/cairo.css");
 :root {
     --s-navy: #0b1b33;
     --s-navy-2: #12305e;
@@ -10,8 +11,12 @@
     --s-line: #e4e9f2;
     --s-soft: #f5f8fd;
     --s-radius: 1rem;
-    --s-font: "Segoe UI", "Noto Sans Arabic", Tahoma, "Helvetica Neue", Arial, sans-serif;
+    --s-font: "Cairo Arabic", "Segoe UI", "Noto Sans Arabic", Tahoma, "Helvetica Neue", Arial, sans-serif;
 }
+html[lang^="ar"] {
+    --s-font: "Cairo", "Segoe UI", "Noto Sans Arabic", Tahoma, Arial, sans-serif;
+}
+html:root { --bs-font-sans-serif: var(--s-font); --bs-body-font-family: var(--s-font); }
 
 html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 body.site { font-family: var(--s-font); color: var(--s-ink); background: #fff; line-height: 1.7; -webkit-font-smoothing: antialiased; }
