@@ -28,6 +28,7 @@ class NotificationService
         'service.reminder' => 'Periodic maintenance reminder',
         'handover.code' => 'Vehicle handover authorization code',
         'warranty.expiring' => 'Warranty expiring',
+        'inspection.report' => 'Vehicle inspection report',
     ];
 
     public function render(string $event, string $channel, array $data, ?string $locale = null): ?array

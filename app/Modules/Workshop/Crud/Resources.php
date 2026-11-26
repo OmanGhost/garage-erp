@@ -370,10 +370,11 @@ class InspectionTemplateResource extends CrudResource
             Field::text('name')->label(__('Name (Arabic)'))->required()->index()->searchable(),
             Field::text('name_en')->label(__('Name (English)'))->index(),
             Field::select('vehicle_type', Options::VEHICLE_TYPES)->label(__('Vehicle type'))->index()->help(__('Leave empty for all vehicle types.')),
+            Field::select('kind', ['inspection' => __('Vehicle inspection (DVI)'), 'qc' => __('Quality control (QMS)')])->label(__('Used for'))->default('inspection')->index()->filterable(),
             Field::number('items_count')->label(__('Items'))->hideOnForm()->index(false),
             Field::checkbox('is_active')->label(__('Active'))->default(true)->index(),
             Field::textarea('items_text')->label(__('Checklist items'))->hideOnShow()
-                ->help(__('One item per line: Section | Item (Arabic) | Item (English). Saving replaces the list.')),
+                ->help(__('One item per line: Section | Item (Arabic) | Item (English) | unit | min OK | max OK | service code. Unit, limits and service are optional (e.g. Brakes | سماكة الفحمات | Pad thickness | mm | 3 | | BRK-01). Saving replaces the list.')),
         ];
     }
 
@@ -386,10 +387,13 @@ class InspectionTemplateResource extends CrudResource
             return;
         }
         $m->items()->delete();
-        foreach (preg_split('/\R/', $text) as $i => $line) {
+        foreach (preg_split('/\R/u', $text) as $i => $line) {
             $p = array_map('trim', explode('|', $line));
             if (count($p) >= 2 && $p[1] !== '') {
-                $m->items()->create(['section' => $p[0], 'label' => $p[1], 'label_en' => $p[2] ?? null, 'sort' => $i]);
+                $num = fn ($v) => isset($v) && is_numeric($v) ? $v : null;
+                $m->items()->create(['section' => $p[0], 'label' => $p[1], 'label_en' => ($p[2] ?? '') ?: null, 'sort' => $i,
+                    'unit' => ($p[3] ?? '') ?: null, 'min_ok' => $num($p[4] ?? null), 'max_ok' => $num($p[5] ?? null),
+                    'service_id' => ! empty($p[6]) ? \App\Modules\Workshop\Models\Service::query()->where('code', $p[6])->value('id') : null]);
             }
         }
     }

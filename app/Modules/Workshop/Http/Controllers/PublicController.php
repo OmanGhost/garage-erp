@@ -54,6 +54,59 @@ class PublicController extends Controller
         return back()->with('success', __('Thank you. Your response has been recorded.'));
     }
 
+    /* ---------------- interactive inspection report (DVI) ---------------- */
+
+    protected function findInspection(string $token): \App\Modules\Workshop\Models\Inspection
+    {
+        abort_unless(strlen($token) >= 40, 404);
+        $i = \App\Modules\Workshop\Models\Inspection::query()->withoutGlobalScopes()->where('public_token', $token)->firstOrFail();
+        $this->enterTenant($i->company_id);
+
+        return \App\Modules\Workshop\Models\Inspection::query()->findOrFail($i->id);
+    }
+
+    public function dvi(string $token)
+    {
+        $i = $this->findInspection($token);
+        if (! $i->customer_viewed_at) {
+            $i->forceFill(['customer_viewed_at' => now()])->save();
+        }
+        $i->load('jobCard.vehicle.make', 'jobCard.vehicle.vehicleModel', 'jobCard.customer', 'results', 'findings.service', 'findings.part', 'findings.attachments', 'attachments', 'technician');
+
+        return view('workshop::public.dvi', ['i' => $i, 'company' => tenant()->company(), 'token' => $token]);
+    }
+
+    public function dviDecide(Request $request, string $token, int $finding)
+    {
+        $i = $this->findInspection($token);
+        $f = $i->findings()->findOrFail($finding);
+        app(\App\Modules\Workshop\Services\InspectionService::class)->decide($f, (string) $request->validate(['decision' => ['required', 'in:approved,declined']])['decision']);
+
+        return redirect()->to(route('public.dvi', $token).'#f'.$f->id)->with('success', __('Thank you, your choice was saved.'));
+    }
+
+    public function dviSign(Request $request, string $token)
+    {
+        $i = $this->findInspection($token);
+        $data = $request->validate(['signature_file' => ['required', 'file', 'mimetypes:image/png', 'max:1024'], 'name' => ['required', 'string', 'max:190']]);
+        app(\App\Modules\Workshop\Services\InspectionService::class)->sign($i, 'customer', (string) file_get_contents($request->file('signature_file')->getRealPath()), $data['name']);
+
+        return redirect()->route('public.dvi', $token)->with('success', __('Thank you, the report was signed.'));
+    }
+
+    /** Photos of the report: only attachments of this inspection or of its findings. */
+    public function dviPhoto(string $token, int $attachment)
+    {
+        $i = $this->findInspection($token);
+        $a = \App\Modules\Core\Models\Attachment::query()->whereKey($attachment)->where('mime', 'like', 'image/%')
+            ->where(fn ($q) => $q->where(fn ($w) => $w->where('attachable_type', $i->getMorphClass())->where('attachable_id', $i->id))
+                ->orWhere(fn ($w) => $w->where('attachable_type', (new \App\Modules\Workshop\Models\InspectionFinding)->getMorphClass())->whereIn('attachable_id', $i->findings()->pluck('id'))))
+            ->firstOrFail();
+        abort_unless(\Illuminate\Support\Facades\Storage::disk($a->disk)->exists($a->path), 404);
+
+        return \Illuminate\Support\Facades\Storage::disk($a->disk)->response($a->path, $a->original_name, ['Content-Type' => $a->mime, 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, max-age=86400']);
+    }
+
     public function fleetApproval(string $token)
     {
         $a = FleetApproval::query()->withoutGlobalScopes()->where('token', $token)->firstOrFail();

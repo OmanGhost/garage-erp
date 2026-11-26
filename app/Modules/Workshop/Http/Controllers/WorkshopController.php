@@ -351,7 +351,7 @@ class WorkshopController extends Controller
     public function startInspection(Request $request, JobCard $jobCard)
     {
         $this->can('inspections.create');
-        $i = $this->inspections->start($jobCard, $request->integer('template_id') ?: null, $request->integer('technician_id') ?: null);
+        $i = $this->inspections->start($jobCard, $request->integer('template_id') ?: null, $request->integer('technician_id') ?: null, (string) $request->input('stage', 'before'));
 
         return redirect()->route('inspections.show', $i);
     }
@@ -359,7 +359,7 @@ class WorkshopController extends Controller
     public function inspection(Inspection $inspection)
     {
         $this->can('inspections.view');
-        $inspection->load('jobCard.vehicle.make', 'jobCard.vehicle.vehicleModel', 'jobCard.customer', 'results', 'findings.service', 'findings.part', 'technician', 'template');
+        $inspection->load('jobCard.vehicle.make', 'jobCard.vehicle.vehicleModel', 'jobCard.customer', 'results.templateItem', 'findings.service', 'findings.part', 'findings.attachments', 'technician', 'template');
 
         return view('workshop::inspection', ['inspection' => $inspection, 'suggestions' => app(\App\Modules\Reports\Services\AiAssistant::class)->suggestForJob($inspection->jobCard)]);
     }
@@ -368,6 +368,7 @@ class WorkshopController extends Controller
     {
         $this->can('inspections.update');
         $data = $request->validate(['results' => ['nullable', 'array'], 'results.*.result' => ['in:ok,attention,urgent,na'], 'results.*.notes' => ['nullable', 'string', 'max:250'],
+            'results.*.value' => ['nullable', 'numeric', 'min:-99999', 'max:9999999'],
             'summary' => ['nullable', 'string', 'max:5000'], 'recommendations' => ['nullable', 'string', 'max:5000'],
             'files' => ['nullable', 'array'], 'files.*' => ['file', 'max:'.config('erp.uploads.max_kb'), 'mimes:'.config('erp.uploads.mimes')]]);
         $this->inspections->saveResults($inspection, $data['results'] ?? [], $data['summary'] ?? null, $data['recommendations'] ?? null);
@@ -385,8 +386,13 @@ class WorkshopController extends Controller
             'description' => ['required', 'string', 'max:250'], 'dtc_code' => ['nullable', 'string', 'max:20', 'regex:/^[PBCU][0-9A-F]{4}$/i'],
             'severity' => ['required', 'in:low,medium,high,critical'], 'service_id' => ['nullable', 'integer'], 'part_id' => ['nullable', 'integer'],
             'qty' => ['nullable', 'numeric', 'gt:0'], 'estimated_price' => ['nullable', 'numeric', 'min:0'], 'notes' => ['nullable', 'string', 'max:250'],
+            'zone' => ['nullable', 'string', \Illuminate\Validation\Rule::in(array_keys(Inspection::ZONES))], 'result_id' => ['nullable', 'integer'],
+            'photos' => ['nullable', 'array', 'max:6'], 'photos.*' => ['image', 'max:'.config('erp.uploads.max_kb')],
         ]);
-        $this->inspections->addFinding($inspection, $data);
+        if (! empty($data['result_id']) && ! $inspection->results()->whereKey($data['result_id'])->exists()) {
+            $data['result_id'] = null;
+        }
+        $this->inspections->addFinding($inspection, $data, $request->file('photos', []));
 
         return back()->with('success', __('Finding added.'));
     }
@@ -407,6 +413,52 @@ class WorkshopController extends Controller
         $this->inspections->complete($inspection);
 
         return back()->with('success', __('Inspection completed.'));
+    }
+
+    public function suggestServices(Inspection $inspection)
+    {
+        $this->can('inspections.update');
+        $n = $this->inspections->suggest($inspection);
+
+        return back()->with($n ? 'success' : 'info', $n ? __(':n recommended services added from the checklist.', ['n' => $n])
+            : __('No new recommendations: link checklist items to services in the checklist template.'));
+    }
+
+    public function sendInspection(Request $request, Inspection $inspection)
+    {
+        $this->can('inspections.update');
+        $link = $this->inspections->publish($inspection, ! $request->boolean('link_only'));
+
+        return back()->with('success', __('The interactive report is ready to share with the customer.'))->with('dvi_link', $link);
+    }
+
+    public function decideFinding(Request $request, InspectionFinding $finding)
+    {
+        $this->can('inspections.update');
+        abort_unless(Inspection::query()->whereKey($finding->inspection_id)->exists(), 404);
+        $this->inspections->decide($finding, (string) $request->validate(['decision' => ['required', 'in:approved,declined']])['decision']);
+
+        return back()->with('success', __('Customer decision recorded.'));
+    }
+
+    public function signInspection(Request $request, Inspection $inspection)
+    {
+        $this->can('inspections.update');
+        $data = $request->validate(['who' => ['required', 'in:technician,customer'], 'signature_file' => ['required', 'file', 'mimetypes:image/png', 'max:1024'],
+            'name' => ['nullable', 'string', 'max:190']]);
+        $this->inspections->sign($inspection, $data['who'], (string) file_get_contents($request->file('signature_file')->getRealPath()), $data['name'] ?? null);
+
+        return back()->with('success', __('Signature saved.'));
+    }
+
+    public function compareInspections(JobCard $jobCard)
+    {
+        $this->can('inspections.view');
+        $before = $jobCard->inspections()->where('stage', 'before')->with('results', 'findings.attachments')->latest('id')->firstOrFail();
+        $after = $jobCard->inspections()->where('stage', 'after')->with('results', 'findings.attachments')->latest('id')->firstOrFail();
+
+        return view('workshop::inspection-compare', ['jc' => $jobCard->load('vehicle', 'customer'), 'before' => $before, 'after' => $after,
+            'rows' => $this->inspections->compare($before, $after)]);
     }
 
     public function quotationFromInspection(Inspection $inspection)

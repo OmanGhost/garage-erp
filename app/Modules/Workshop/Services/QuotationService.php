@@ -46,7 +46,12 @@ class QuotationService
         $jc = $inspection->jobCard;
         $vehicleType = $jc->vehicle->vehicle_type;
         $items = [];
-        foreach ($inspection->findings as $f) {
+        // repairs the customer declined are left out; once some are approved, only those are quoted
+        $findings = $inspection->findings->where('customer_decision', '!=', 'declined');
+        if ($findings->where('customer_decision', 'approved')->isNotEmpty()) {
+            $findings = $findings->where('customer_decision', 'approved');
+        }
+        foreach ($findings as $f) {
             if ($f->service_id && ($s = Service::query()->with('vehiclePrices')->find($f->service_id))) {
                 $items[] = ['item_type' => 'service', 'service_id' => $s->id, 'description' => $s->displayName().' — '.$f->description,
                     'qty' => 1, 'unit_price' => $s->priceFor($vehicleType), 'tax_rate' => $s->tax_rate];

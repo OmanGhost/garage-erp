@@ -67,6 +67,10 @@ Route::middleware('throttle:portal')->group(function () {
     Route::get('/r/{token}', [PublicController::class, 'receipt'])->name('public.receipt');
     Route::get('/i/{uuid}', [PublicController::class, 'invoice'])->name('public.invoice');
     Route::get('/track/{token}', [PublicController::class, 'track'])->name('public.track');
+    Route::get('/dvi/{token}', [PublicController::class, 'dvi'])->name('public.dvi');
+    Route::post('/dvi/{token}/findings/{finding}', [PublicController::class, 'dviDecide'])->name('public.dvi.decide');
+    Route::post('/dvi/{token}/sign', [PublicController::class, 'dviSign'])->name('public.dvi.sign');
+    Route::get('/dvi/{token}/photo/{attachment}', [PublicController::class, 'dviPhoto'])->name('public.dvi.photo');
     Route::get('/tv/{token}', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'tv'])->name('workshop.tv');
 });
 
@@ -265,6 +269,16 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         // live screen
         Route::get('/workshop/live', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'index'])->name('workshop.live');
         Route::post('/workshop/live/token', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'rotateToken'])->name('workshop.live.token');
+        // quality management
+        Route::get('/quality', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'dashboard'])->name('quality.dashboard');
+        Route::post('/quality/job-cards/{jobCard}/ncr', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'ncrFromJob'])->name('quality.ncr.from-job');
+        Route::get('/quality/ncr/{ncr}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'ncr'])->name('quality.ncr.show');
+        Route::put('/quality/ncr/{ncr}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'updateNcr'])->name('quality.ncr.update');
+        Route::post('/quality/ncr/{ncr}/actions', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'addAction'])->name('quality.ncr.actions');
+        Route::post('/quality/ncr/{ncr}/close', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'closeNcr'])->name('quality.ncr.close');
+        Route::post('/quality/actions/{action}/{step}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'actionStep'])->name('quality.actions.step')->whereIn('step', ['complete', 'verify']);
+        Route::get('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'audit'])->name('quality.audits.show');
+        Route::post('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'recordAudit'])->name('quality.audits.record');
         // vehicle & key tracking
         Route::get('/workshop/tracking', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'index'])->name('tracking.index');
         Route::post('/workshop/tracking/scan', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'scan'])->name('tracking.scan');
@@ -310,6 +324,11 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::delete('/inspections/findings/{finding}', [WorkshopController::class, 'deleteFinding'])->name('inspections.findings.destroy');
         Route::post('/inspections/{inspection}/complete', [WorkshopController::class, 'completeInspection'])->name('inspections.complete');
         Route::post('/inspections/{inspection}/quotation', [WorkshopController::class, 'quotationFromInspection'])->name('inspections.quotation');
+        Route::post('/inspections/{inspection}/suggest', [WorkshopController::class, 'suggestServices'])->name('inspections.suggest');
+        Route::post('/inspections/{inspection}/send', [WorkshopController::class, 'sendInspection'])->name('inspections.send');
+        Route::post('/inspections/{inspection}/sign', [WorkshopController::class, 'signInspection'])->name('inspections.sign');
+        Route::post('/inspections/findings/{finding}/decision', [WorkshopController::class, 'decideFinding'])->name('inspections.findings.decide');
+        Route::get('/job-cards/{jobCard}/inspections/compare', [WorkshopController::class, 'compareInspections'])->name('inspections.compare');
         Route::get('/inspections/{inspection}/print', [WorkshopController::class, 'printInspection'])->name('inspections.print');
         Route::get('/departments/{department}/technicians', [WorkshopController::class, 'technicians'])->name('departments.technicians');
         Route::put('/departments/{department}/technicians', [WorkshopController::class, 'saveTechnicians']);

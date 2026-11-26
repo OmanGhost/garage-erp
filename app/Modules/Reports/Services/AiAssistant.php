@@ -96,7 +96,7 @@ class AiAssistant
         $parts = DB::table('job_card_parts as p')->join('parts as pt', 'pt.id', '=', 'p.part_id')->whereIn('p.job_card_id', $ids)->where('p.qty_issued', '>', 0)
             ->groupBy('pt.id', 'pt.sku', 'pt.name_ar')->selectRaw('pt.id, pt.sku, pt.name_ar, COUNT(*) n')->orderByDesc('n')->limit(10)->get();
         $diagnoses = DB::table('job_cards')->whereIn('id', $ids)->whereNotNull('diagnosis')->pluck('diagnosis')
-            ->flatMap(fn ($d) => preg_split('/\R/', (string) $d))->map(fn ($l) => trim($l))->filter()->countBy()->sortDesc()->take(8);
+            ->flatMap(fn ($d) => preg_split('/\R/u', (string) $d))->map(fn ($l) => trim($l))->filter()->countBy()->sortDesc()->take(8);
 
         return ['matches' => $total, 'services' => $services, 'parts' => $parts, 'diagnoses' => $diagnoses,
             'confidence' => $total >= 20 ? 'high' : ($total >= 5 ? 'medium' : 'low')];

@@ -7,12 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InspectionFinding extends Model
 {
+    use \App\Support\Concerns\HasAttachments;
+
     protected $guarded = ['id'];
 
     protected $casts = [
         'estimated_price' => 'decimal:3',
         'qty' => 'decimal:3',
+        'decided_at' => 'datetime',
     ];
+
+    public function light(): string
+    {
+        return Inspection::light($this->severity);
+    }
 
     public function inspection(): BelongsTo
     {

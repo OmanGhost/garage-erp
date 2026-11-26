@@ -5,6 +5,11 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.18.0] - 2026-11-27
+- Digital vehicle inspection (DVI): interactive vehicle diagram with colour-coded zones, fault photos per area, green / yellow / red priorities, measurements with OK limits, suggested services, technician and customer signatures, interactive report link where the customer approves or declines each repair, quotation from approved repairs, before / after repair comparison
+- Quality management (QMS): dashboard (first-time fix, comebacks, QC pass rate, customer satisfaction, Pareto of causes, recurring warranty failures, supplier quality), nonconformities with root cause analysis, corrective / preventive actions with effectiveness checks, SOPs with review dates, internal audits that raise NCRs, QC checklist templates; a failed QC opens an NCR
+- Fix: multi-line lists (checklist templates, vehicle models, audit questions) no longer break Arabic text
+
 ## [1.17.0] - 2026-11-27
 - Workshop resource planning: day planner per bay / technician, automatic technician and bay scheduling within working hours, no double booking (tasks and appointments), estimated completion on the job card, bay occupancy, technician load, productivity and efficiency
 - Live workshop screen for TVs: vehicles in progress, waiting, ready and late, today's appointments; real-time over Reverb with 30 s fallback and a secret TV link

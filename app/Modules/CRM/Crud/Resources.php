@@ -325,7 +325,7 @@ class VehicleMakeResource extends CrudResource
 
     public function saved(Model $m, array $data, bool $created): void
     {
-        foreach (preg_split('/\R/', (string) ($data['models_text'] ?? '')) as $line) {
+        foreach (preg_split('/\R/u', (string) ($data['models_text'] ?? '')) as $line) {
             if ($line = trim($line)) {
                 $m->models()->firstOrCreate(['name' => $line]);
             }

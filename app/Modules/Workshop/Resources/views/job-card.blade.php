@@ -224,8 +224,11 @@
                 <h6>{{ __('Inspections') }}</h6>
                 <div class="list-group mb-3">
                     @forelse($jc->inspections as $i)
-                        <a href="{{ route('inspections.show', $i) }}" class="list-group-item list-group-item-action d-flex">
-                            <span>{{ $i->started_at?->format('Y-m-d H:i') }} · {{ $i->technician?->name }}</span><span class="ms-auto">{!! status_badge($i->status) !!}</span></a>
+                        <a href="{{ route('inspections.show', $i) }}" class="list-group-item list-group-item-action d-flex align-items-center gap-2">
+                            <span class="badge {{ $i->stage === 'after' ? 'text-bg-success' : 'text-bg-primary' }}">{{ $i->stage === 'after' ? __('After repair') : __('Before repair') }}</span>
+                            <span>{{ $i->started_at?->format('Y-m-d H:i') }} · {{ $i->technician?->name }}</span>
+                            @if($i->customer_viewed_at)<span class="small text-success"><i class="bi bi-eye"></i> {{ __('Seen by customer') }}</span>@elseif($i->sent_at)<span class="small text-body-secondary"><i class="bi bi-send"></i> {{ __('Sent') }}</span>@endif
+                            <span class="ms-auto">{!! status_badge($i->status) !!}</span></a>
                     @empty
                         <div class="text-body-secondary small mb-2">{{ __('No inspection yet.') }}</div>
                     @endforelse
@@ -237,7 +240,17 @@
                     <div class="col-md-4"><select name="technician_id" class="form-select form-select-sm">@foreach($technicians as $id => $n)<option value="{{ $id }}" @selected($id === auth()->id())>{{ $n }}</option>@endforeach</select></div>
                     <div class="col-md-3"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-search"></i> {{ __('Start inspection') }}</button></div>
                 </form>
+                @if($jc->inspections->where('stage', 'before')->where('status', 'completed')->isNotEmpty())
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        @if($jc->inspections->where('stage', 'after')->isEmpty())
+                            <form method="post" action="{{ route('inspections.start', $jc) }}">@csrf<input type="hidden" name="stage" value="after"><button class="btn btn-sm btn-outline-success"><i class="bi bi-clipboard2-check"></i> {{ __('Start after-repair inspection') }}</button></form>
+                        @endif
+                    </div>
+                @endif
                 @endcan
+                @endif
+                @if($jc->inspections->where('stage', 'after')->isNotEmpty() && $jc->inspections->where('stage', 'before')->isNotEmpty())
+                    <a href="{{ route('inspections.compare', $jc) }}" class="btn btn-sm btn-outline-secondary mb-4"><i class="bi bi-layout-split"></i> {{ __('Compare before / after repair') }}</a>
                 @endif
                 <h6>{{ __('Quotations') }}</h6>
                 <div class="list-group">
@@ -361,8 +374,15 @@
         <div class="card mb-3 border-primary" id="qc-card">
             <div class="card-header"><i class="bi bi-patch-check me-1"></i>{{ __('Quality inspection') }}</div>
             <form method="post" action="{{ route('job-cards.qc', $jc) }}" class="card-body">@csrf <x-idem/>
-                @foreach(['road_test' => 'Road test done', 'no_leaks' => 'No leaks', 'warning_lights' => 'No warning lights', 'cleanliness' => 'Vehicle clean', 'old_parts' => 'Old parts returned/disposed'] as $k => $l)
-                    <div class="form-check small"><input class="form-check-input" type="checkbox" name="checklist[{{ $k }}]" value="1" id="qc_{{ $k }}"><label class="form-check-label" for="qc_{{ $k }}">{{ __($l) }}</label></div>
+                @php
+                    $qcTpl = \App\Modules\Workshop\Models\InspectionTemplate::query()->with('items')->where('is_active', true)->where('kind', 'qc')
+                        ->where(fn ($q) => $q->where('vehicle_type', $jc->vehicle->vehicle_type)->orWhereNull('vehicle_type'))->orderByRaw('vehicle_type IS NULL')->first();
+                    $qcItems = $qcTpl ? $qcTpl->items->sortBy('sort')->mapWithKeys(fn ($i) => ['i'.$i->id => app()->getLocale() === 'en' && $i->label_en ? $i->label_en : $i->label])->all()
+                        : ['road_test' => __('Road test done'), 'no_leaks' => __('No leaks'), 'warning_lights' => __('No warning lights'), 'cleanliness' => __('Vehicle clean'), 'old_parts' => __('Old parts returned/disposed')];
+                @endphp
+                @if($qcTpl)<div class="small text-body-secondary mb-1">{{ $qcTpl->name }}</div>@endif
+                @foreach($qcItems as $k => $l)
+                    <div class="form-check small"><input class="form-check-input" type="checkbox" name="checklist[{{ $k }}]" value="1" id="qc_{{ $k }}"><label class="form-check-label" for="qc_{{ $k }}">{{ $l }}</label></div>
                 @endforeach
                 <textarea name="notes" class="form-control form-control-sm my-2" rows="2" placeholder="{{ __('Notes') }}"></textarea>
                 <div class="d-flex gap-2">

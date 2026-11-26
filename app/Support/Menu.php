@@ -40,6 +40,15 @@ class Menu
                 ['label' => __('Handover Authorizations'), 'icon' => 'bi-person-badge', 'url' => route('handover-authorizations.index'), 'perm' => 'handover_authorizations.view'],
                 ['label' => __('Commissions'), 'icon' => 'bi-cash-coin', 'url' => self::crud('commissions'), 'perm' => 'commissions.view'],
             ]],
+            ['label' => __('Quality'), 'module' => 'workshop', 'paths' => ['quality', 'm/nonconformities', 'm/capa-actions', 'm/quality-sops', 'm/quality-audits'], 'items' => [
+                ['label' => __('Quality management'), 'icon' => 'bi-award', 'route' => 'quality.dashboard', 'perm' => 'quality.view'],
+                ['label' => __('Nonconformities (NCR)'), 'icon' => 'bi-exclamation-diamond', 'url' => self::crud('nonconformities'), 'perm' => 'nonconformities.view'],
+                ['label' => __('Corrective & preventive actions (CAPA)'), 'icon' => 'bi-check2-square', 'url' => self::crud('capa-actions'), 'perm' => 'capa_actions.view'],
+                ['label' => __('Standard procedures (SOP)'), 'icon' => 'bi-journal-check', 'url' => self::crud('quality-sops'), 'perm' => 'quality_sops.view'],
+                ['label' => __('Internal audits'), 'icon' => 'bi-clipboard2-data', 'url' => self::crud('quality-audits'), 'perm' => 'quality_audits.view'],
+                ['label' => __('Inspection Checklists'), 'icon' => 'bi-list-check', 'url' => self::crud('inspection-templates'), 'perm' => 'inspection_templates.view'],
+                ['label' => __('Supplier evaluations'), 'icon' => 'bi-star-half', 'url' => self::crud('supplier-evaluations'), 'perm' => 'supplier_evaluations.view'],
+            ]],
             ['label' => __('Customers & Vehicles'), 'paths' => ['customers', 'vehicles', 'complaints', 'reminders'], 'items' => [
                 ['label' => __('Customers'), 'icon' => 'bi-people', 'url' => self::crud('customers'), 'perm' => 'customers.view'],
                 ['label' => __('Vehicles'), 'icon' => 'bi-car-front', 'url' => self::crud('vehicles'), 'perm' => 'vehicles.view'],
@@ -191,7 +200,8 @@ class Menu
             $seg = explode('/', $path);
             $aliases = ['inventory/transfers' => 'stock-transfers', 'inventory/counts' => 'stock-counts', 'inventory/adjustments' => 'stock-adjustments',
                 'warranty/claims' => 'warranty-claims', 'hr/payroll' => 'payrolls', 'accounting/transfers' => 'fund-transfers', 'journal' => 'journal-entries',
-                'vouchers/transfers' => 'fund-transfers', 'vouchers/expenses' => 'expenses', 'vouchers/payments' => 'payments'];
+                'vouchers/transfers' => 'fund-transfers', 'vouchers/expenses' => 'expenses', 'vouchers/payments' => 'payments',
+                'quality/ncr' => 'nonconformities', 'quality/audits' => 'quality-audits'];
             $two = implode('/', array_slice($seg, 0, 2));
             $slugs = array_filter([$aliases[$two] ?? null, $aliases[$seg[0]] ?? null, str_replace('/', '-', $two), $seg[0]]);
             foreach ($slugs as $slug) {
