@@ -112,6 +112,48 @@ class ReceptionFormTest extends TestCase
         $this->assertSame(2, $this->inTenant(fn () => JobCard::query()->count()));
     }
 
+    public function test_unexpected_server_error_is_shown_on_the_form_with_a_reference(): void
+    {
+        $this->mock(\App\Modules\Workshop\Services\ReceptionService::class, function ($m) {
+            $m->shouldReceive('checkIn')->andThrow(new \RuntimeException('SQLSTATE[22001]: Data too long for column plate_code'));
+        });
+        $data = ['customer_name' => 'Walk In', 'customer_phone' => '92223344', 'plate_number' => '777', 'odometer' => 10, 'fuel_level' => 50, 'reported_issues' => 'Noise'];
+
+        $this->from('/reception')->post('/reception', $data + ['_idem' => 'se-1'])->assertRedirect('/reception')->assertSessionHas('error');
+        $this->get('/reception')->assertOk()
+            ->assertSee('لم يتم استلام المركبة. السبب:')
+            ->assertSee('تعذر استلام المركبة بسبب خطأ في الخادم')
+            ->assertSee('Data too long for column plate_code')   // company admin sees the technical detail
+            ->assertSee('value="Walk In"', false);
+    }
+
+    public function test_expired_session_returns_to_the_form_with_the_data(): void
+    {
+        $this->app->instance(\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, new class(app(), app('encrypter')) extends \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken {
+            public function handle($request, \Closure $next)
+            {
+                if ($request->isMethodSafe()) {
+                    return $next($request);
+                }
+                throw new \Illuminate\Session\TokenMismatchException('CSRF token mismatch.');
+            }
+        });
+        $this->from('/reception')->post('/reception', ['customer_name' => 'Late Customer', 'reported_issues' => 'Oil leak'])
+            ->assertRedirect('/reception')->assertSessionHas('error');
+        $this->get('/reception')->assertOk()->assertSee('انتهت الجلسة')->assertSee('value="Late Customer"', false)->assertSee('Oil leak');
+    }
+
+    public function test_failed_customer_message_does_not_hide_the_new_job_card(): void
+    {
+        $this->mock(\App\Modules\Core\Services\NotificationService::class, function ($m) {
+            $m->shouldReceive('notifyCustomer')->andThrow(new \RuntimeException('SMS gateway not configured'));
+        });
+        $this->post('/reception', ['customer_name' => 'Walk In', 'customer_phone' => '92223344', 'plate_number' => '778', 'odometer' => 10,
+            'fuel_level' => 50, 'reported_issues' => 'Noise', 'notify' => '1', '_idem' => 'nf-1'])
+            ->assertRedirect()->assertSessionHas('success')->assertSessionHas('warning');
+        $this->assertSame(1, $this->inTenant(fn () => JobCard::query()->count()));
+    }
+
     public function test_request_larger_than_post_max_size_returns_to_the_form(): void
     {
         $this->from('/reception')->withServerVariables(['CONTENT_LENGTH' => (string) (1024 ** 4)])

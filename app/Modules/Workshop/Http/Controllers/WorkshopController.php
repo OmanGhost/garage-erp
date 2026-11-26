@@ -85,15 +85,37 @@ class WorkshopController extends Controller
             }
         }
 
-        $jc = $reception->checkIn($request->validated(), $request->file('photos', []));
+        try {
+            $jc = $reception->checkIn($request->validated(), $request->file('photos', []));
+        } catch (\App\Exceptions\BusinessException $e) {
+            throw $e; // shown on the form as it is
+        } catch (\Throwable $e) {
+            // unexpected failure (database, files…): nothing is saved (transaction), the user keeps the form and sees why
+            $ref = strtoupper(\Illuminate\Support\Str::random(6));
+            report($e);
+            \Illuminate\Support\Facades\Log::error("Vehicle reception failed [ref $ref]: ".$e->getMessage(), ['user' => auth()->id(), 'company' => tenant()->id()]);
+            $detail = auth()->user()?->can('settings.view') || auth()->user()?->is_super_admin
+                ? ' '.__('Technical detail').': '.\Illuminate\Support\Str::limit($e->getMessage(), 400)
+                : ' '.__('Please send this reference to the system administrator.');
+
+            return back()->withInput($request->except(['photos', '_token']))
+                ->with('error', __('The vehicle could not be received because of a server error (reference :r).', ['r' => $ref]).$detail);
+        }
+        $notifyFailed = null;
         if ($request->boolean('notify')) {
-            app(NotificationService::class)->notifyCustomer($jc->customer, 'job_card.received', [
-                'number' => $jc->number, 'plate' => $jc->vehicle->plate(), 'link' => route('public.track', $jc->checkIn->receipt_token),
-            ], [$jc->customer->preferred_channel ?: 'sms'], $jc);
+            try { // the job card is already saved: a failing SMS / WhatsApp gateway must not hide that
+                app(NotificationService::class)->notifyCustomer($jc->customer, 'job_card.received', [
+                    'number' => $jc->number, 'plate' => $jc->vehicle->plate(), 'link' => route('public.track', $jc->checkIn->receipt_token),
+                ], [$jc->customer->preferred_channel ?: 'sms'], $jc);
+            } catch (\Throwable $e) {
+                report($e);
+                $notifyFailed = __('The confirmation message to the customer could not be sent: :m', ['m' => \Illuminate\Support\Str::limit($e->getMessage(), 200)]);
+            }
         }
 
         return redirect()->route('job-cards.show', $jc)->with('success', __('Vehicle received. Job card :n created.', ['n' => $jc->number]))
-            ->with('print_receipt', route('reception.receipt', $jc));
+            ->with('print_receipt', route('reception.receipt', $jc))
+            ->with('warning', $notifyFailed);
     }
 
     public function receipt(JobCard $jobCard)

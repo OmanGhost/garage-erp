@@ -2628,5 +2628,12 @@
     "This vehicle is already in the workshop.": "هذه المركبة موجودة حالياً في الورشة.",
     "Job card :n · :s · opened :d": "بطاقة العمل :n · :s · فُتحت في :d",
     "Open an additional job card for this vehicle anyway": "فتح بطاقة عمل إضافية لهذه المركبة على أي حال",
-    "Open the existing job card": "فتح بطاقة العمل الحالية"
+    "Open the existing job card": "فتح بطاقة العمل الحالية",
+    "The form was not sent. Complete the following:": "لم يتم إرسال النموذج. أكمل ما يلي:",
+    "The vehicle was not received. Reason:": "لم يتم استلام المركبة. السبب:",
+    "Your session expired before the form was sent, so nothing was saved. Your data is still on the form: press the button again.": "انتهت الجلسة قبل إرسال النموذج فلم يُحفظ شيء. بياناتك ما زالت في النموذج: اضغط الزر مرة أخرى.",
+    "Technical detail": "التفاصيل التقنية",
+    "Please send this reference to the system administrator.": "يرجى إرسال هذا الرقم المرجعي إلى مدير النظام.",
+    "The vehicle could not be received because of a server error (reference :r).": "تعذر استلام المركبة بسبب خطأ في الخادم (الرقم المرجعي :r).",
+    "The confirmation message to the customer could not be sent: :m": "تعذر إرسال رسالة التأكيد للعميل: :m"
 }

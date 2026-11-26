@@ -33,8 +33,6 @@
             </div>
             <a class="btn btn-warning" href="{{ $ojc['url'] }}"><i class="bi bi-box-arrow-up-right"></i> {{ __('Open the existing job card') }}</a>
         </div>
-    @elseif(session('error'))
-        <div class="alert alert-danger d-flex gap-2 align-items-center" role="alert"><i class="bi bi-x-octagon fs-5"></i><div>{{ session('error') }}</div></div>
     @endif
     <div class="row g-3">
         <div class="col-xl-7">
@@ -200,7 +198,20 @@
                 </div>
             </div>
             <div class="card"><div class="card-body">
-                <div class="alert alert-warning small py-2 d-flex gap-2" x-show="missing" x-cloak role="alert"><i class="bi bi-exclamation-triangle"></i><span x-text="missing"></span></div>
+                {{-- why the reception was not saved: problems found before sending (browser) and reasons returned by the server --}}
+                <div class="alert alert-warning small py-2 mb-2" x-show="problems.length" x-cloak role="alert" id="reception-problems">
+                    <div class="fw-semibold mb-1"><i class="bi bi-exclamation-triangle"></i> {{ __('The form was not sent. Complete the following:') }}</div>
+                    <ul class="mb-0 ps-3"><template x-for="p in problems" :key="p.msg"><li><a href="#" class="link-dark" @click.prevent="goTo(p.selector)" x-text="p.msg"></a></li></template></ul>
+                </div>
+                @if($errors->any() || session('error'))
+                    <div class="alert alert-danger small py-2 mb-2" role="alert" id="reception-server-errors">
+                        <div class="fw-semibold mb-1"><i class="bi bi-x-octagon"></i> {{ __('The vehicle was not received. Reason:') }}</div>
+                        <ul class="mb-0 ps-3">
+                            @if(session('error'))<li>{{ session('error') }}</li>@endif
+                            @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                        </ul>
+                    </div>
+                @endif
                 <div class="form-check mb-2"><input class="form-check-input" type="checkbox" name="notify" value="1" id="notify" @checked($hasOld ? old('notify') : true)><label class="form-check-label" for="notify">{{ __('Send reception confirmation to the customer (SMS/WhatsApp)') }}</label></div>
                 <button class="btn btn-primary btn-lg w-100" :disabled="photoBusy || sending">
                     <span x-show="sending" class="spinner-border spinner-border-sm"></span>
@@ -223,19 +234,21 @@ function reception() {
         odometer: @js(__('Enter the odometer reading.')),
         issues: @js(__('Enter the problems reported by the customer.')),
         title: @js(__('Missing information')),
+        phone: @js(__('Enter the new customer mobile number.')),
+        photos: @js(__('Preparing photos...')),
     };
     return {
         customerMode: @js($customerMode), vehicleMode: @js($vehicleMode),
         customerId: @js($customer?->id), odometer: @js((string) old('odometer', '')), fuel: @js((float) old('fuel_level', 50)),
         damages: @js($oldDamages), items: @js($oldItems), previews: [], vin: @js((string) old('vin', '')), vinInfo: '',
-        makeId: @js((string) old('vehicle_make_id', '')), year: @js((string) old('year', '')), pad: null, photoBusy: false, sending: false, missing: '',
+        makeId: @js((string) old('vehicle_make_id', '')), year: @js((string) old('year', '')), pad: null, photoBusy: false, sending: false, problems: [],
         init() {
             this.$nextTick(() => {
                 this.pad = erpSignature('sigPad', 'sigInput');
                 const sig = document.getElementById('sigInput').value;
                 if (this.pad && sig) this.pad.fromDataURL(sig);
                 // after a failed submit: bring the first problem into view
-                const bad = this.$el.querySelector('#open-job-card-alert, .alert-danger, .is-invalid, .invalid-feedback.d-block');
+                const bad = this.$el.querySelector('#open-job-card-alert, #reception-server-errors, .is-invalid, .invalid-feedback.d-block');
                 if (bad) { bad.scrollIntoView({ block: 'center' }); bad.focus?.({ preventScroll: true }); }
             });
         },
@@ -283,43 +296,50 @@ function reception() {
                 img.src = url;
             });
         },
-        // a required value is missing: keep the field red with its message until the user fixes it
-        stop(e, msg, selector) {
-            e.preventDefault();
-            window.ERP?.toast ? ERP.toast(msg, 'warning', { title: T.title, timeout: 9000 }) : alert(msg);
+        mark(selector, msg) {
             const el = selector && this.$el.querySelector(selector);
-            this.missing = msg;
-            if (el) {
-                el.classList.add('is-invalid');
-                const anchor = el.closest('.lookup, .input-group') || el;
-                let fb = anchor.parentElement.querySelector(':scope > .client-feedback');
-                if (!fb) { fb = document.createElement('div'); fb.className = 'invalid-feedback d-block client-feedback'; anchor.after(fb); }
-                fb.textContent = msg;
-                const clear = () => { el.classList.remove('is-invalid'); fb.remove(); if (this.missing === msg) this.missing = ''; };
-                el.addEventListener('input', clear, { once: true });
-                el.closest('.lookup')?.addEventListener('lookup-selected', clear, { once: true });
-                el.scrollIntoView({ block: 'center' }); el.focus?.({ preventScroll: true });
-            }
-            return false;
+            if (!el) return;
+            el.classList.add('is-invalid');
+            const anchor = el.closest('.lookup, .input-group') || el;
+            let fb = anchor.parentElement.querySelector(':scope > .client-feedback');
+            if (!fb) { fb = document.createElement('div'); fb.className = 'invalid-feedback d-block client-feedback'; anchor.after(fb); }
+            fb.textContent = msg;
+            const clear = () => { el.classList.remove('is-invalid'); fb.remove(); this.problems = this.problems.filter((p) => p.selector !== selector); };
+            el.addEventListener('input', clear, { once: true });
+            el.closest('.lookup')?.addEventListener('lookup-selected', clear, { once: true });
+        },
+        goTo(selector) {
+            const el = selector && this.$el.querySelector(selector);
+            if (el) { el.scrollIntoView({ block: 'center' }); el.focus?.({ preventScroll: true }); }
         },
         beforeSubmit(e) {
             const val = (sel) => (this.$el.querySelector(sel)?.value || '').trim();
+            const problems = [];
+            const need = (ok, msg, selector) => { if (!ok) problems.push({ msg, selector }); };
             if (this.customerMode === 'new') {
                 document.querySelector('input[name=customer_id]').value = '';
-                if (!val('#customer_name')) return this.stop(e, T.customerNew, '#customer_name');
-                if (!val('#customer_phone')) return this.stop(e, T.customerNew, '#customer_phone');
-            } else if (!val('input[name=customer_id]')) {
-                return this.stop(e, T.customer, '#sec-customer .lookup input[type=text]');
+                need(val('#customer_name'), T.customerNew, '#customer_name');
+                need(val('#customer_phone'), T.phone, '#customer_phone');
+            } else {
+                need(val('input[name=customer_id]'), T.customer, '#sec-customer .lookup input[type=text]');
             }
             if (this.vehicleMode === 'new' || this.customerMode === 'new') {
                 const v = document.querySelector('input[name=vehicle_id]'); if (v) v.value = '';
-                if (!val('#plate_number')) return this.stop(e, T.plate, '#plate_number');
-            } else if (!val('input[name=vehicle_id]')) {
-                return this.stop(e, T.vehicle, '#sec-vehicle .lookup input[type=text]');
+                need(val('#plate_number'), T.plate, '#plate_number');
+            } else {
+                need(val('input[name=vehicle_id]'), T.vehicle, '#sec-vehicle .lookup input[type=text]');
             }
-            if (String(this.odometer).trim() === '') return this.stop(e, T.odometer, '#odometer');
-            if (!val('#reported_issues')) return this.stop(e, T.issues, '#reported_issues');
-            if (this.photoBusy) { e.preventDefault(); return false; }
+            need(String(this.odometer).trim() !== '', T.odometer, '#odometer');
+            need(val('#reported_issues'), T.issues, '#reported_issues');
+            this.problems = problems;
+            if (problems.length) {
+                e.preventDefault();
+                problems.forEach((p) => this.mark(p.selector, p.msg));
+                window.ERP?.toast?.(problems.map((p) => p.msg), 'warning', { title: T.title, timeout: 9000 });
+                this.goTo(problems[0].selector);
+                return false;
+            }
+            if (this.photoBusy) { e.preventDefault(); window.ERP?.toast?.(T.photos, 'info'); return false; }
             this.sending = true;
         }
     };

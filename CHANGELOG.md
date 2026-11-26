@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.8.2] - 2026-11-26
+- Vehicle reception: pressing the button lists every missing value at once, marks each field with its message and keeps the list above the button
+- Vehicle reception: the reason a submission was refused is shown above the button (validation, open job card, server error with a reference number and the technical detail for administrators)
+- An expired session no longer shows a 'Page expired' screen: the user returns to the form with the data kept and a clear message
+- A failing SMS / WhatsApp confirmation no longer hides the created job card; it is reported as a warning
+
 ## [1.8.1] - 2026-11-26
 - Vehicle reception: when the vehicle already has an open job card, the form stays filled and shows which job card is open, with a button to open it and an option to open an additional job card
 - Vehicle reception: refusals from the server stay visible on the page instead of only a short notification

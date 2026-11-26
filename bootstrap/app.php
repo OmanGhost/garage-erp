@@ -47,6 +47,17 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->dontReport([App\Exceptions\BusinessException::class]);
         // the whole request is bigger than PHP post_max_size (e.g. many large photos): PHP drops every field,
         // so explain it on the previous page instead of an error screen
+        // the session expired while a long form was open (419): go back to the form with everything typed, instead of "Page expired"
+        // (Laravel turns TokenMismatchException into an HTTP 419 exception before render callbacks run)
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\HttpException $e, Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() !== 419 || $request->isMethodSafe() || $request->expectsJson() || ! $request->hasSession()) {
+                return null;
+            }
+
+            return redirect()->to(url()->previous() ?: '/')
+                ->withInput($request->except(['_token', 'password', 'password_confirmation', 'photos', 'signature']))
+                ->with('error', __('Your session expired before the form was sent, so nothing was saved. Your data is still on the form: press the button again.'));
+        });
         $exceptions->render(function (Illuminate\Http\Exceptions\PostTooLargeException $e, Illuminate\Http\Request $request) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => __('The attached files are too large.')], 413);
