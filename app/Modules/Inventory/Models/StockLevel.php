@@ -17,6 +17,7 @@ class StockLevel extends Model
         'qty_on_hand' => 'decimal:3',
         'qty_reserved' => 'decimal:3',
         'last_movement_at' => 'datetime',
+        'last_counted_at' => 'datetime',
     ];
 
     public function part(): BelongsTo

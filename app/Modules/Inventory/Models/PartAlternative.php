@@ -10,6 +10,11 @@ class PartAlternative extends Model
     protected $guarded = ['id'];
 
 
+    public function alternativePart(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Inventory\Models\Part::class, 'alternative_part_id');
+    }
+
     public function part(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Inventory\Models\Part::class);

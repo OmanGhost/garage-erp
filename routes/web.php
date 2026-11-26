@@ -363,6 +363,11 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/parts/import', [InventoryController::class, 'import']);
         Route::get('/parts/labels', [InventoryController::class, 'labels'])->name('parts.labels');
         Route::get('/parts/{part}', [InventoryController::class, 'part'])->name('parts.show');
+        Route::post('/parts/{part}/alternatives', [InventoryController::class, 'addAlternative'])->name('parts.alternatives.store');
+        Route::delete('/parts/alternatives/{alternative}', [InventoryController::class, 'deleteAlternative'])->name('parts.alternatives.destroy');
+        Route::get('/inventory/cross-reference', [InventoryController::class, 'crossReference'])->name('inventory.cross-reference');
+        Route::get('/inventory/analytics', [InventoryController::class, 'analytics'])->name('inventory.analytics');
+        Route::post('/inventory/analytics/{action}', [InventoryController::class, 'analyticsAction'])->name('inventory.analytics.action')->whereIn('action', ['abc', 'reorder', 'cycle', 'settings']);
         Route::post('/parts/{part}/compatibility', [InventoryController::class, 'addCompatibility'])->name('parts.compat.store');
         Route::delete('/parts/compatibility/{compat}', [InventoryController::class, 'deleteCompatibility'])->name('parts.compat.destroy');
         Route::get('/inventory/reorder', [InventoryController::class, 'reorder'])->name('inventory.reorder');

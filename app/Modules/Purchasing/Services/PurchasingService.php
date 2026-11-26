@@ -275,6 +275,7 @@ class PurchasingService
                 }
                 DB::table('part_supplier')->updateOrInsert(['part_id' => $item->part_id, 'supplier_id' => $grn->supplier_id],
                     ['last_price' => $item->unit_cost, 'updated_at' => now(), 'created_at' => now()]);
+                \App\Modules\Inventory\Services\InventoryAnalyticsService::recordPrice($item->part_id, $grn->supplier_id, $item->unit_cost, $item->qty, 'grn', $grn->number, $grn->received_at->toDateString());
             }
             $je = $this->posting->post([
                 'date' => $grn->received_at->toDateString(), 'description' => __('Goods receipt').' '.$grn->number,

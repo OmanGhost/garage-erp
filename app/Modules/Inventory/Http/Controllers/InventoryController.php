@@ -57,7 +57,96 @@ class InventoryController extends Controller
         $history = $forecast->monthlyConsumption($part->id);
 
         return view('inventory::part', ['p' => $part, 'movements' => $movements, 'batches' => $batches, 'sales' => $sales,
-            'history' => $history, 'forecast' => $forecast->forecast($history), 'makes' => VehicleMake::query()->orderBy('name')->pluck('name', 'id')]);
+            'history' => $history, 'forecast' => $forecast->forecast($history), 'makes' => VehicleMake::query()->orderBy('name')->pluck('name', 'id'),
+            'group' => app(\App\Modules\Inventory\Services\CrossReferenceService::class)->group($part),
+            'prices' => app(\App\Modules\Inventory\Services\InventoryAnalyticsService::class)->priceHistory($part->id)]);
+    }
+
+    /* ---------------- cross reference ---------------- */
+
+    public function crossReference(Request $request)
+    {
+        $this->can('parts.view');
+        $q = trim((string) $request->query('q'));
+        $xref = app(\App\Modules\Inventory\Services\CrossReferenceService::class);
+        $parts = $q !== '' ? $xref->search($q) : collect();
+
+        return view('inventory::cross-reference', ['q' => $q, 'parts' => $parts, 'numbers' => $parts->isNotEmpty() ? $xref->numbers($parts) : collect()]);
+    }
+
+    public function addAlternative(Request $request, Part $part)
+    {
+        $this->can('parts.update');
+        $data = $request->validate([
+            'alternative_part_id' => ['nullable', 'integer', Rule::exists('parts', 'id')->where('company_id', tenant()->id())],
+            'number' => ['nullable', 'string', 'max:80'], 'brand' => ['nullable', 'string', 'max:100'],
+            'type' => ['nullable', 'in:alternative,superseded,cross_reference'], 'quality' => ['nullable', Rule::in(\App\Modules\Inventory\Services\CrossReferenceService::QUALITIES)],
+            'notes' => ['nullable', 'string', 'max:190'],
+        ]);
+        app(\App\Modules\Inventory\Services\CrossReferenceService::class)->link($part, $data);
+
+        return back()->with('success', __('Alternative linked.'));
+    }
+
+    public function deleteAlternative(\App\Modules\Inventory\Models\PartAlternative $alternative)
+    {
+        $this->can('parts.update');
+        abort_unless(Part::query()->whereKey($alternative->part_id)->exists(), 404);
+        $alternative->delete();
+
+        return back()->with('success', __('Alternative removed.'));
+    }
+
+    /* ---------------- analytics & automation ---------------- */
+
+    public function analytics(Request $request)
+    {
+        $this->can('stock.view');
+        $svc = app(\App\Modules\Inventory\Services\InventoryAnalyticsService::class);
+        $tab = in_array($request->query('tab'), ['abc', 'aging', 'dead', 'forecast', 'cycle'], true) ? $request->query('tab') : 'abc';
+        $wh = $request->integer('warehouse_id') ?: (int) (setting('inventory.auto_reorder_warehouse') ?: \App\Modules\Inventory\Models\Warehouse::query()->value('id'));
+        $abc = $tab === 'abc' ? $svc->abc(12, false) : null;
+
+        return view('inventory::analytics', [
+            'tab' => $tab, 'warehouseId' => $wh, 'warehouses' => Options::warehouses(),
+            'abc' => $abc, 'abcParts' => $abc ? Part::query()->whereIn('id', array_slice(array_keys($abc['rows']), 0, 100))->get()->keyBy('id') : collect(),
+            'aging' => $tab === 'aging' ? $svc->aging($request->integer('warehouse_id') ?: null) : null,
+            'dead' => $tab === 'dead' ? app(ReorderService::class)->slowMoving((int) $request->query('days', 180))->limit(200)->get() : null,
+            'forecasts' => $tab === 'forecast' ? $svc->forecasts() : null,
+            'due' => $tab === 'cycle' ? $svc->dueForCount($wh, 200) : null,
+            'lastAbc' => Part::query()->max('abc_calculated_at'),
+        ]);
+    }
+
+    public function analyticsAction(Request $request, string $action)
+    {
+        $svc = app(\App\Modules\Inventory\Services\InventoryAnalyticsService::class);
+        $wh = (int) $request->validate(['warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('company_id', tenant()->id())]])['warehouse_id']
+            ?: (int) \App\Modules\Inventory\Models\Warehouse::query()->value('id');
+        switch ($action) {
+            case 'abc':
+                $this->can('parts.update');
+                $r = $svc->abc();
+
+                return back()->with('success', __('ABC classes updated: A :a, B :b, C :c parts.', ['a' => $r['summary']['A']['parts'], 'b' => $r['summary']['B']['parts'], 'c' => $r['summary']['C']['parts']]));
+            case 'reorder':
+                $this->can('purchase_orders.create');
+                $orders = $svc->autoReorder($wh);
+
+                return back()->with($orders ? 'success' : 'info', $orders ? __(':n draft purchase orders created.', ['n' => count($orders)]) : __('Nothing to reorder: stock is sufficient or already on order.'));
+            case 'cycle':
+                $this->can('stock_counts.create');
+                $count = $svc->createCycleCount($wh, max(5, min(500, $request->integer('limit', 50))));
+
+                return $count ? redirect()->route('inventory.counts.show', $count)->with('success', __('Cycle count created.'))
+                    : back()->with('info', __('No parts are due for counting in this warehouse.'));
+            case 'settings':
+                $this->can('settings.update');
+                \App\Support\Settings::set(['inventory.auto_reorder' => $request->boolean('auto_reorder'), 'inventory.auto_reorder_warehouse' => $wh]);
+
+                return back()->with('success', __('Saved.'));
+        }
+        abort(404);
     }
 
     public function addCompatibility(Request $request, Part $part)

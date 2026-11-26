@@ -131,6 +131,7 @@ return [
     'defaults' => [
         'inventory.valuation_method' => 'weighted_average', // weighted_average | fifo
         'inventory.allow_negative' => false,
+        'inventory.auto_reorder' => false,
         'inventory.low_stock_alerts' => true,
         'workshop.require_quotation_approval' => true,
         'workshop.default_labor_cost_per_hour' => '3.000',

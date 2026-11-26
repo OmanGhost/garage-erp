@@ -298,4 +298,6 @@ return [
     'verification' => 'التحقق',
     'planned' => 'مخطط',
     'verified' => 'تم التحقق',
+    'oes' => 'مورد المصنع (OES)',
+    'reman' => 'مجدد',
 ];

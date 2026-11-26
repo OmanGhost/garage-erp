@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.19.0] - 2026-11-27
+- Part cross reference: alternatives linked to catalog parts with brand and quality (OEM, OES, aftermarket, remanufactured, used), interchange groups by shared factory numbers (spaces / dashes ignored), cross reference search with stock and prices
+- Inventory analytics: ABC classification by consumption value (saved on parts, refreshed monthly), stock aging buckets, dead stock with tied-up value, demand forecast with cover in months
+- Automatic reordering into draft purchase orders per default supplier (nightly when enabled, or on demand), skipping parts already on order
+- Supplier price history recorded on every goods receipt (back-filled from past receipts) with price change per supplier
+- Cycle counting by ABC class (A 30 days, B 90, C 365) with last-counted date per part
+
 ## [1.18.0] - 2026-11-27
 - Digital vehicle inspection (DVI): interactive vehicle diagram with colour-coded zones, fault photos per area, green / yellow / red priorities, measurements with OK limits, suggested services, technician and customer signatures, interactive report link where the customer approves or declines each repair, quotation from approved repairs, before / after repair comparison
 - Quality management (QMS): dashboard (first-time fix, comebacks, QC pass rate, customer satisfaction, Pareto of causes, recurring warranty failures, supplier quality), nonconformities with root cause analysis, corrective / preventive actions with effectiveness checks, SOPs with review dates, internal audits that raise NCRs, QC checklist templates; a failed QC opens an NCR

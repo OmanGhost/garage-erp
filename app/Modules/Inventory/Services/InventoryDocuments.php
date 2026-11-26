@@ -146,6 +146,8 @@ class InventoryDocuments
                 Money::isPositive($r['value']) ? $gain = Money::add($gain, $r['value']) : $loss = Money::add($loss, Money::neg($r['value']));
             }
             $count->forceFill(['status' => 'posted', 'posted_at' => now(), 'posted_by' => auth()->id()])->save();
+            StockLevel::query()->where('warehouse_id', $count->warehouse_id)
+                ->whereIn('part_id', $count->items()->whereNotNull('counted_qty')->pluck('part_id'))->update(['last_counted_at' => now()]);
             $je = $this->postGainLoss($count, $gain, $loss, __('Stock count').' '.$count->number);
             if ($je) {
                 $count->forceFill(['journal_entry_id' => $je->id])->save();

@@ -47,6 +47,19 @@ class ErpDaily extends Command
                         Notification::send($managers->filter(fn ($u) => $u->can('stock.view')), new SystemMessage(__(':n parts need reordering', ['n' => $low]), '', route('inventory.reorder'), 'warning'));
                     }
                 }
+                // ABC classes refreshed monthly; automatic reordering when enabled
+                $analytics = app(\App\Modules\Inventory\Services\InventoryAnalyticsService::class);
+                $lastAbc = \App\Modules\Inventory\Models\Part::query()->max('abc_calculated_at');
+                if (! $lastAbc || now()->diffInDays($lastAbc, true) >= 30) {
+                    $analytics->abc();
+                }
+                if (setting('inventory.auto_reorder') && ($wh = (int) setting('inventory.auto_reorder_warehouse'))) {
+                    $orders = $analytics->autoReorder($wh);
+                    $r['auto_reorder_orders'] = count($orders);
+                    if ($orders) {
+                        Notification::send($managers->filter(fn ($u) => $u->can('purchase_orders.view')), new SystemMessage(__(':n draft purchase orders created.', ['n' => count($orders)]), '', route('crud.index', 'purchase-orders'), 'info'));
+                    }
+                }
                 $docs = Employee::query()->where('status', 'active')->where(fn ($q) => $q->whereBetween('id_expiry', [now(), now()->addDays(30)])
                     ->orWhereBetween('visa_expiry', [now(), now()->addDays(30)])->orWhereBetween('passport_expiry', [now(), now()->addDays(30)]))->count();
                 if ($docs) {

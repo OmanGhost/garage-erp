@@ -60,6 +60,8 @@ class Menu
             ['label' => __('Spare Parts & Inventory'), 'module' => 'inventory', 'paths' => ['inventory', 'parts'], 'items' => [
                 ['label' => __('Parts Catalog'), 'icon' => 'bi-gear-wide-connected', 'url' => self::crud('parts'), 'perm' => 'parts.view'],
                 ['label' => __('Advanced Part Search'), 'icon' => 'bi-binoculars', 'route' => 'parts.search', 'perm' => 'parts.view'],
+                ['label' => __('Cross reference'), 'icon' => 'bi-arrow-left-right', 'route' => 'inventory.cross-reference', 'perm' => 'parts.view'],
+                ['label' => __('Inventory analytics'), 'icon' => 'bi-graph-up', 'route' => 'inventory.analytics', 'perm' => 'stock.view'],
                 ['label' => __('Stock Levels'), 'icon' => 'bi-boxes', 'url' => self::crud('stock-levels'), 'perm' => 'stock.view'],
                 ['label' => __('Stock Movements'), 'icon' => 'bi-arrow-left-right', 'url' => self::crud('stock-movements'), 'perm' => 'stock.view'],
                 ['label' => __('Transfers'), 'icon' => 'bi-truck', 'url' => self::crud('stock-transfers'), 'perm' => 'stock_transfers.view'],
