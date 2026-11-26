@@ -125,7 +125,8 @@ class TrialVerificationTest extends TestCase
         $this->makeTenant(); // signs in a normal company admin
         tenant()->forget();
         $this->get('/admin/trials/'.$t->id)->assertForbidden();
-        $this->post('/admin/trials/'.$t->id.'/check')->assertForbidden();
+        $this->post('/admin/trials/'.$t->id.'/check')->assertRedirect()->assertSessionHas('error');
+        $this->assertSame('AE', $t->fresh()->country_code); // unchanged by the refused re-check
     }
 
     public function test_phone_country_and_user_agent_parsing(): void

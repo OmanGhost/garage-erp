@@ -166,21 +166,51 @@ php artisan up
 
 ## B. cPanel shared hosting
 
-1. **PHP version**: cPanel → *Select PHP Version* → 8.3; enable `bcmath`, `intl`, `gd`, `zip`, `pdo_mysql`, `fileinfo`.
+### Requirements
+
+| Item | Required |
+|---|---|
+| PHP | 8.2 or 8.3 for **both** the website (MultiPHP Manager) and the terminal (`/opt/cpanel/ea-php83/root/usr/bin/php`) |
+| PHP extensions | bcmath, ctype, curl, dom, fileinfo, gd, intl, json, mbstring, openssl, pdo_mysql, tokenizer, xml, zip |
+| PHP options | memory_limit ≥ 256M, upload_max_filesize 20M, post_max_size 50M, max_execution_time 300, file_uploads On |
+| Database | MySQL 8+ or MariaDB 10.6+, utf8mb4, user with ALL PRIVILEGES |
+| Web root | the (sub)domain document root points to `garage-erp/public` (not to `garage-erp`) |
+| HTTPS | AutoSSL certificate (login cookies are secure-only) |
+| Writable | `storage/` and `bootstrap/cache/` (chmod -R 775) |
+| Cron | 1-minute cron lines below |
+| Not needed | Redis, Supervisor, WebSockets, Node.js |
+
+Optional: `proc_open` (database backups with mysqldump and `schedule:run`), `symlink` (storage link). When they are disabled use the separate cron lines and cPanel → Backup.
+
+### Check the server
+
+```bash
+cd ~/garage-erp
+php artisan erp:doctor                       # requirements, folders, database, permissions
+php artisan erp:doctor --user=you@company.om # + replays a vehicle reception as this user (rolled back, nothing saved)
+```
+
+Every ✘ line says what to fix. The terminal and the website can use different PHP settings: compare with cPanel → Select PHP Version.
+
+### Install
+
+1. **PHP version**: cPanel → *MultiPHP Manager* → 8.3 for the domain; *Select PHP Version* → enable the extensions above and set the options.
 2. **Database**: *MySQL Databases* → create database + user, grant ALL.
-3. **Upload** the project (with `vendor/`, run `composer install --no-dev` locally first if SSH is not available) to `~/garage-erp` (outside `public_html`).
-4. **Web root**: point the (sub)domain document root to `~/garage-erp/public`. If that is not possible, copy the contents of `public/` into `public_html/` and edit `public_html/index.php` paths to `__DIR__.'/../garage-erp/vendor/autoload.php'` and `__DIR__.'/../garage-erp/bootstrap/app.php'`.
-5. **.env**: `CACHE_STORE=database`, `QUEUE_CONNECTION=database`, `SESSION_DRIVER=database`, `BROADCAST_CONNECTION=log` (no WebSockets on shared hosting; Kanban refreshes on reload).
-6. **Install** via *Terminal* (or SSH): `php artisan erp:install --admin=... --password=...` and `php artisan storage:link`.
-7. **Cron jobs** (cPanel → *Cron Jobs*):
+3. **Code**: `git clone https://github.com/OmanGhost/garage-erp.git ~/garage-erp`, then `php composer.phar install --no-dev --optimize-autoloader` (if `proc_open` is disabled run `php artisan package:discover` afterwards).
+4. **Web root**: point the (sub)domain document root to `~/garage-erp/public` (or replace the domain folder with a symlink to it).
+5. **.env**: `CACHE_STORE=database`, `QUEUE_CONNECTION=database`, `SESSION_DRIVER=database`, `BROADCAST_CONNECTION=log`, `APP_URL=https://…`, database credentials.
+6. **Install**: `php artisan key:generate && php artisan erp:install --admin=... --password=... && php artisan optimize`.
+7. **Cron jobs** (cPanel → *Cron Jobs*, full PHP path):
 
 ```
 * * * * * cd ~/garage-erp && php artisan schedule:run >> /dev/null 2>&1
 * * * * * cd ~/garage-erp && php artisan queue:work --stop-when-empty --max-time=55 >> /dev/null 2>&1
 ```
 
-8. **Backups**: if `mysqldump` is not allowed, use cPanel *Backup* for the database and download `storage/app` periodically.
+When `proc_open` is disabled replace `schedule:run` with separate lines: `erp:daily` (07:00), `erp:depreciation` (1st of the month), `queue:prune-failed --hours=720` (weekly), `sanctum:prune-expired --hours=24` (daily).
 
+8. **Update**: `php artisan down && git pull && php artisan erp:install && php artisan optimize && php artisan up`.
+9. **Backups**: if `mysqldump` is not allowed, use cPanel *Backup* for the database and download `storage/app` periodically.
 ---
 
 ## Scaling notes

@@ -49,7 +49,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // so explain it on the previous page instead of an error screen
         // the session expired while a long form was open (419): go back to the form with everything typed, instead of "Page expired"
         // a form refused with 403 (permission, module, account): log the reason and return to the form with it, data kept
-        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException $e, Illuminate\Http\Request $request) {
+        $exceptions->render(function (Symfony\Component\HttpKernel\Exception\HttpException $e, Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() !== 403) {
+                return null; // abort(403) gives a plain HttpException, policies an AccessDeniedHttpException: both handled here
+            }
             $message = $e->getMessage() && $e->getMessage() !== 'This action is unauthorized.' ? $e->getMessage() : __('You do not have permission to perform this action.');
             Illuminate\Support\Facades\Log::warning('403 '.$request->method().' '.$request->path().': '.$message, [
                 'user' => $request->user()?->id, 'company' => tenant()->id(), 'roles' => $request->user()?->getRoleNames()->all(),

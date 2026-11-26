@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.9.0] - 2026-11-26
+- New diagnostic command: php artisan erp:doctor checks PHP, extensions, upload limits, folders, database, drivers and permissions, with the fix for each problem
+- php artisan erp:doctor --user=email replays a vehicle reception as that user and prints exactly why it is accepted or refused (rolled back, nothing saved)
+- Every refused form submission (403 from a permission, module or account check) returns to the form with the reason shown and logged
+- cPanel requirements and checks documented in docs/DEPLOYMENT.md
+
 ## [1.8.3] - 2026-11-26
 - Forms refused with 403 (missing permission, module not in plan…) now return to the form with the data kept and the exact reason shown, instead of a bare 'Forbidden' page; the reason is also written to the log
 - Vehicle reception: a missing permission names the permission (reception.create) and the user's roles

@@ -118,6 +118,8 @@ class ClientsTest extends TestCase
     {
         $this->actingAs(User::query()->where('email', 'admin@alpha.test')->first());
         $this->get('/admin/clients')->assertForbidden();
-        $this->post('/admin/clients/'.$this->company->id.'/toggle')->assertForbidden();
+        // refused: back to the page with the reason, and the company is not suspended
+        $this->post('/admin/clients/'.$this->company->id.'/toggle')->assertRedirect()->assertSessionHas('error');
+        $this->assertTrue((bool) $this->company->fresh()->is_active);
     }
 }
