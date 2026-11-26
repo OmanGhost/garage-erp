@@ -250,6 +250,17 @@ class PurchasingController extends Controller
         return view('purchasing::receipt', ['grn' => $grn->load('items.part', 'supplier', 'order', 'warehouse', 'landedCosts')]);
     }
 
+    public function printReceipt(GoodsReceipt $grn, string $format = 'a4')
+    {
+        $this->can('goods_receipts.print');
+        $html = view('purchasing::print.receipt', ['grn' => $grn->load('items.part', 'items.location', 'supplier', 'order', 'warehouse', 'creator', 'poster')])->render();
+        if ($format === 'pdf') {
+            return response(\App\Support\Export\Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="'.$grn->number.'.pdf"']);
+        }
+
+        return response($html);
+    }
+
     public function invoiceReceipt(Request $request, GoodsReceipt $grn)
     {
         $this->can('supplier_invoices.create');

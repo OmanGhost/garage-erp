@@ -26,6 +26,7 @@ class NotificationService
         'appointment.reminder' => 'Appointment reminder',
         'appointment.booked' => 'Appointment booked',
         'service.reminder' => 'Periodic maintenance reminder',
+        'handover.code' => 'Vehicle handover authorization code',
         'warranty.expiring' => 'Warranty expiring',
     ];
 
@@ -50,9 +51,14 @@ class NotificationService
         return ['subject' => strtr((string) $subject, $replace), 'body' => strtr((string) $body, $replace)];
     }
 
-    /** Notify a customer on the requested channels that are configured & templated. */
-    public function notifyCustomer(Customer $customer, string $event, array $data, array $channels = ['mail', 'sms', 'whatsapp'], ?Model $related = null): void
+    /**
+     * Notify a customer on the requested channels that are configured & templated.
+     *
+     * @return array<int, NotificationLog> the queued messages (empty when no channel is configured)
+     */
+    public function notifyCustomer(Customer $customer, string $event, array $data, array $channels = ['mail', 'sms', 'whatsapp'], ?Model $related = null): array
     {
+        $logs = [];
         $data['customer_name'] ??= $customer->name;
         foreach ($channels as $channel) {
             $recipient = match ($channel) {
@@ -73,12 +79,15 @@ class NotificationService
                 'related_type' => $related?->getMorphClass(), 'related_id' => $related?->getKey(),
             ]);
             SendChannelMessage::dispatch($log->id, tenant()->id())->afterCommit();
+            $logs[] = $log;
         }
         // in-app notification for the portal user
         if ($customer->portalUser) {
             $msg = $this->render($event, 'database', $data) ?? ['subject' => __(self::EVENTS[$event] ?? $event), 'body' => $data['number'] ?? ''];
             $customer->portalUser->notify(new \App\Modules\Core\Notifications\SystemMessage($msg['subject'] ?: __(self::EVENTS[$event] ?? $event), $msg['body'], $data['link'] ?? null));
         }
+
+        return $logs;
     }
 
     public function channelEnabled(string $channel): bool

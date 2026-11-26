@@ -20,7 +20,7 @@ class DocumentNumber
         'dismantled_vehicle' => 'DV', 'expense' => 'EXP', 'fund_transfer' => 'FT', 'customer' => 'C', 'supplier' => 'S',
         'employee' => 'EMP', 'insurance_claim' => 'IC', 'warranty_claim' => 'WC', 'appointment' => 'AP', 'store_order' => 'SO',
         'sales_order' => 'SLO', 'payroll' => 'PAY', 'part' => 'P', 'fixed_asset' => 'FA', 'equipment' => 'EQ', 'reception' => 'RC',
-        'serial' => 'SN',
+        'serial' => 'SN', 'complaint' => 'CMP', 'handover_authorization' => 'HA',
     ];
 
     public static function next(string $type, bool $yearly = true): string

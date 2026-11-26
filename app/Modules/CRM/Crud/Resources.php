@@ -127,6 +127,8 @@ class ComplaintResource extends CrudResource
     public function fields(): array
     {
         return [
+            Field::text('number')->label(__('Reference'))->hideOnForm()->index()->searchable()
+                ->display(fn ($c) => '<span class="font-monospace fw-semibold">'.e($c->displayNumber()).'</span>'),
             Field::lookup('customer_id', 'customers', 'customer')->label(__('Customer'))->required()->index(),
             Field::lookup('job_card_id', 'job_cards', 'jobCard', 'number')->label(__('Job card'))->index(),
             Field::text('subject')->required()->index()->searchable()->col(12),
@@ -145,6 +147,15 @@ class ComplaintResource extends CrudResource
         if (in_array($m->status, ['resolved', 'closed'], true) && ! $m->resolved_at) {
             $m->resolved_at = now();
         }
+    }
+
+    public function showUrl(Model $m): ?string { return route('complaints.show', $m); }
+
+    public function rowActions(Model $m): array
+    {
+        return auth()->user()?->can('complaints.print')
+            ? [['label' => __('Print'), 'url' => route('complaints.print', $m), 'icon' => 'bi-printer', 'blank' => true]]
+            : [];
     }
 }
 
@@ -174,6 +185,9 @@ class ServiceReminderResource extends CrudResource
             Field::text('notes')->col(12),
         ];
     }
+
+    public function indexUrl(): string { return route('reminders.index'); }
+    public function showUrl(Model $m): ?string { return route('reminders.show', $m); }
 }
 
 class VehicleResource extends CrudResource

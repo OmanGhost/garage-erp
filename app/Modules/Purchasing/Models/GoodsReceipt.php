@@ -47,4 +47,14 @@ class GoodsReceipt extends TenantModel
     {
         return $this->hasMany(\App\Modules\Purchasing\Models\LandedCost::class);
     }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function poster(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'posted_by');
+    }
 }

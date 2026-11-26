@@ -16,7 +16,7 @@ $resources = [
     // crm & vehicles
     'customers', 'customer_groups', 'complaints', 'service_reminders', 'vehicles', 'vehicle_makes',
     // workshop
-    'departments', 'services', 'service_packages', 'promotions', 'workshop_bays', 'reception',
+    'departments', 'services', 'service_packages', 'promotions', 'workshop_bays', 'reception', 'handover_authorizations',
     'inspection_templates', 'inspections', 'quotations', 'job_cards', 'quality_checks', 'commissions',
     // inventory
     'parts', 'part_categories', 'brands', 'stock', 'stock_transfers', 'stock_counts', 'stock_adjustments',
@@ -110,9 +110,9 @@ return [
         'Super Admin' => '*',
         'Company Admin' => '*',
         'General Manager' => ['*.view', '*.print', '*.export', '*.approve', 'dashboard.*', 'reports.*', 'branches.all', 'job_cards.*'],
-        'Branch Manager' => ['dashboard.*', 'reports.*', 'customers.*', 'vehicles.*', 'reception.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'appointments.*', 'invoices.*', 'payments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'purchase_orders.view', 'employees.view', 'attendance.*', 'leaves.*', 'complaints.*', 'pos.*'],
-        'Workshop Manager' => ['dashboard.view', 'customers.*', 'vehicles.*', 'departments.*', 'services.*', 'service_packages.*', 'workshop_bays.*', 'reception.*', 'inspection_templates.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'quality_checks.*', 'appointments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'warranty_claims.*', 'warranties.view', 'equipment.*', 'reports.view', 'commissions.view', 'insurance_claims.*', 'fleets.view'],
-        'Receptionist' => ['dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'vehicles.view', 'vehicles.create', 'vehicles.update', 'reception.*', 'job_cards.view', 'job_cards.print', 'quotations.view', 'quotations.create', 'quotations.print', 'appointments.*', 'complaints.view', 'complaints.create', 'services.view', 'parts.view'],
+        'Branch Manager' => ['dashboard.*', 'reports.*', 'customers.*', 'vehicles.*', 'reception.*', 'handover_authorizations.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'appointments.*', 'invoices.*', 'payments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'purchase_orders.view', 'employees.view', 'attendance.*', 'leaves.*', 'complaints.*', 'pos.*'],
+        'Workshop Manager' => ['dashboard.view', 'customers.*', 'vehicles.*', 'departments.*', 'services.*', 'service_packages.*', 'workshop_bays.*', 'reception.*', 'handover_authorizations.*', 'inspection_templates.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'quality_checks.*', 'appointments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'warranty_claims.*', 'warranties.view', 'equipment.*', 'reports.view', 'commissions.view', 'insurance_claims.*', 'fleets.view'],
+        'Receptionist' => ['dashboard.view', 'customers.view', 'customers.create', 'customers.update', 'vehicles.view', 'vehicles.create', 'vehicles.update', 'reception.*', 'handover_authorizations.*', 'job_cards.view', 'job_cards.print', 'quotations.view', 'quotations.create', 'quotations.print', 'appointments.*', 'complaints.view', 'complaints.create', 'services.view', 'parts.view'],
         'Technician' => ['dashboard.view', 'job_cards.view', 'job_cards.change_status', 'inspections.view', 'inspections.create', 'inspections.update', 'parts.view', 'vehicles.view', 'services.view'],
         'Quality Inspector' => ['dashboard.view', 'job_cards.view', 'job_cards.change_status', 'quality_checks.*', 'inspections.view', 'vehicles.view'],
         'Storekeeper' => ['dashboard.view', 'parts.*', 'part_categories.*', 'brands.*', 'stock.*', 'stock_transfers.*', 'stock_counts.*', 'stock_adjustments.*', 'warehouses.view', 'goods_receipts.*', 'purchase_requests.view', 'purchase_requests.create', 'job_cards.view', 'dismantling.*', 'reports.view'],

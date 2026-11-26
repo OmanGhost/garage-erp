@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.11.0] - 2026-11-26
+- Goods received note (GRN) printout (A4 / PDF) with supplier, PO, warehouse, items, locations, batches, serial numbers and signatures; print buttons on the receipt and the list
+- Complaints: automatic reference number (CMP-YYYY-000001), new complaint page with tracking history (registration, status changes, assignment, notes, resolution), follow-up form (a resolution is required to close) and printout (A4 / PDF)
+- Maintenance reminders: new board with status cards (overdue, due, sent, delivered, failed, customer confirmed, booked), search and date filters, call / WhatsApp / send buttons
+- Reminder page: contact history with the message delivery status, recording calls / WhatsApp / visits and their result, follow-up date, customer confirmation and booking the visit directly
+- Database prepared for vehicle handover authorizations (next release)
+
 ## [1.10.0] - 2026-11-26
 - Vehicle gate pass (A5 / A4 / PDF): release and payment status, plate, vehicle, invoices, QR to verify and signatures; printed from the job card, the invoice, the invoice list and the gate log
 - Delivery note for sales invoices: goods and delivered quantities without prices, returned quantities, receiver signature; printed from the invoice page and the invoice list

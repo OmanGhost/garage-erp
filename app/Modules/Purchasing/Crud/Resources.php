@@ -193,6 +193,13 @@ class GoodsReceiptResource extends PurchasingDocResource
 
     public function createUrl(): ?string { return null; }
     public function showUrl(Model $m): ?string { return route('goods-receipts.show', $m); }
+
+    public function rowActions(Model $m): array
+    {
+        return auth()->user()?->can('goods_receipts.print')
+            ? [['label' => __('Print'), 'url' => route('goods-receipts.print', $m), 'icon' => 'bi-printer', 'blank' => true]]
+            : [];
+    }
 }
 
 class SupplierInvoiceResource extends PurchasingDocResource

@@ -215,6 +215,15 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
 
     // CRM & vehicles
     Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::get('/reminders', [\App\Modules\CRM\Http\Controllers\ReminderController::class, 'index'])->name('reminders.index');
+    Route::get('/reminders/{reminder}', [\App\Modules\CRM\Http\Controllers\ReminderController::class, 'show'])->name('reminders.show');
+    Route::post('/reminders/{reminder}/send', [\App\Modules\CRM\Http\Controllers\ReminderController::class, 'send'])->name('reminders.send');
+    Route::post('/reminders/{reminder}/contact', [\App\Modules\CRM\Http\Controllers\ReminderController::class, 'contact'])->name('reminders.contact');
+    Route::post('/reminders/{reminder}/book', [\App\Modules\CRM\Http\Controllers\ReminderController::class, 'book'])->name('reminders.book');
+    Route::post('/reminders/{reminder}/complete', [\App\Modules\CRM\Http\Controllers\ReminderController::class, 'complete'])->name('reminders.complete');
+    Route::get('/complaints/{complaint}', [\App\Modules\CRM\Http\Controllers\ComplaintController::class, 'show'])->name('complaints.show');
+    Route::post('/complaints/{complaint}/follow-up', [\App\Modules\CRM\Http\Controllers\ComplaintController::class, 'followUp'])->name('complaints.follow-up');
+    Route::get('/complaints/{complaint}/print/{format?}', [\App\Modules\CRM\Http\Controllers\ComplaintController::class, 'print'])->name('complaints.print')->whereIn('format', ['a4', 'pdf']);
     Route::get('/customers/{customer}/statement', [CustomerController::class, 'statement'])->name('customers.statement');
     Route::post('/customers/{customer}/portal', [CustomerController::class, 'portalAccess'])->name('customers.portal');
     Route::get('/vehicles/{vehicle}', [CustomerController::class, 'vehicle'])->name('vehicles.show');
@@ -336,6 +345,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/purchase-orders/{po}/receive', [PurchasingController::class, 'receive']);
         Route::get('/purchase-orders/{po}/print', [PurchasingController::class, 'printOrder'])->name('purchase-orders.print');
         Route::get('/goods-receipts/{grn}', [PurchasingController::class, 'receipt'])->name('goods-receipts.show');
+        Route::get('/goods-receipts/{grn}/print/{format?}', [PurchasingController::class, 'printReceipt'])->name('goods-receipts.print')->whereIn('format', ['a4', 'pdf']);
         Route::post('/goods-receipts/{grn}/invoice', [PurchasingController::class, 'invoiceReceipt'])->name('goods-receipts.invoice');
         Route::get('/supplier-invoices/create', [PurchasingController::class, 'createSupplierInvoice'])->name('supplier-invoices.create');
         Route::post('/supplier-invoices', [PurchasingController::class, 'storeSupplierInvoice'])->name('supplier-invoices.store');

@@ -40,7 +40,7 @@ class Menu
                 ['label' => __('Vehicles'), 'icon' => 'bi-car-front', 'url' => self::crud('vehicles'), 'perm' => 'vehicles.view'],
                 ['label' => __('Customer Groups'), 'icon' => 'bi-collection', 'url' => self::crud('customer-groups'), 'perm' => 'customer_groups.view'],
                 ['label' => __('Complaints'), 'icon' => 'bi-chat-left-dots', 'url' => self::crud('complaints'), 'perm' => 'complaints.view'],
-                ['label' => __('Service Reminders'), 'icon' => 'bi-bell', 'url' => self::crud('service-reminders'), 'perm' => 'service_reminders.view'],
+                ['label' => __('Service Reminders'), 'icon' => 'bi-bell', 'url' => route('reminders.index'), 'perm' => 'service_reminders.view'],
                 ['label' => __('Vehicle Makes'), 'icon' => 'bi-tags', 'url' => self::crud('vehicle-makes'), 'perm' => 'vehicle_makes.view'],
             ]],
             ['label' => __('Spare Parts & Inventory'), 'module' => 'inventory', 'items' => [

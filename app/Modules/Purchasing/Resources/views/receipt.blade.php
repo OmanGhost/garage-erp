@@ -3,6 +3,10 @@
 @section('content')
 <x-page-header :title="__('Goods receipt').' '.$grn->number" icon="bi-box-seam" :breadcrumbs="[__('Goods Receipts') => route('crud.index', 'goods-receipts'), $grn->number]"
     :subtitle="e($grn->supplier->name).' · '.e($grn->warehouse->displayName()).' · '.status_badge($grn->status)">
+    @can('goods_receipts.print')
+        <a href="{{ route('goods-receipts.print', $grn) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> {{ __('Print') }}</a>
+        <a href="{{ route('goods-receipts.print', [$grn, 'pdf']) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="bi bi-filetype-pdf"></i> PDF</a>
+    @endcan
     @can('landed_costs.create')<a href="{{ route('landed-costs.create', ['goods_receipt_id' => $grn->id]) }}" class="btn btn-outline-secondary"><i class="bi bi-airplane"></i> {{ __('Add landed cost') }}</a>@endcan
     @can('purchase_returns.create')<a href="{{ route('purchase-returns.create', ['goods_receipt_id' => $grn->id]) }}" class="btn btn-outline-danger"><i class="bi bi-arrow-return-left"></i> {{ __('Return to supplier') }}</a>@endcan
 </x-page-header>
