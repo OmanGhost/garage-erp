@@ -75,6 +75,16 @@ class WorkshopController extends Controller
 
     public function checkIn(CheckInRequest $request, ReceptionService $reception)
     {
+        // a registered vehicle that is still in the workshop: say which job card is open and offer to open it (or a second one)
+        if ($request->filled('vehicle_id') && ! $request->boolean('allow_duplicate')) {
+            $open = JobCard::query()->where('vehicle_id', $request->integer('vehicle_id'))->open()->latest('id')->first();
+            if ($open) {
+                return back()->withInput()
+                    ->with('error', __('This vehicle already has an open job card: :n (:s).', ['n' => $open->number, 's' => status_label($open->status)]))
+                    ->with('open_job_card', ['number' => $open->number, 'url' => route('job-cards.show', $open), 'status' => status_label($open->status), 'date' => $open->created_at?->format('Y-m-d H:i')]);
+            }
+        }
+
         $jc = $reception->checkIn($request->validated(), $request->file('photos', []));
         if ($request->boolean('notify')) {
             app(NotificationService::class)->notifyCustomer($jc->customer, 'job_card.received', [

@@ -2623,5 +2623,10 @@
     "Awaiting posting": "بانتظار الترحيل",
     "Credited to account": "مقيد للحساب",
     "Partly refunded": "مُرد جزئياً",
-    "Price charged": "السعر بعد الخصم"
+    "Price charged": "السعر بعد الخصم",
+    "This vehicle already has an open job card: :n (:s).": "هذه المركبة لديها بطاقة عمل مفتوحة: :n (:s).",
+    "This vehicle is already in the workshop.": "هذه المركبة موجودة حالياً في الورشة.",
+    "Job card :n · :s · opened :d": "بطاقة العمل :n · :s · فُتحت في :d",
+    "Open an additional job card for this vehicle anyway": "فتح بطاقة عمل إضافية لهذه المركبة على أي حال",
+    "Open the existing job card": "فتح بطاقة العمل الحالية"
 }

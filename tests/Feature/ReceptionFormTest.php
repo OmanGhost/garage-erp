@@ -87,6 +87,31 @@ class ReceptionFormTest extends TestCase
         $this->assertSame(1, $this->inTenant(fn () => JobCard::query()->count()));
     }
 
+    public function test_vehicle_with_open_job_card_is_explained_and_can_be_overridden(): void
+    {
+        [$customer, $vehicle] = $this->inTenant(function () {
+            $c = Customer::create(['code' => 'C-9002', 'name' => 'Marwan Mohammed', 'phone' => '+96891113333', 'type' => 'individual']);
+
+            return [$c, Vehicle::create(['customer_id' => $c->id, 'plate_number' => '49069', 'plate_code' => 'AA', 'plate_country' => 'OM', 'vehicle_type' => 'car'])];
+        });
+        $data = ['customer_id' => $customer->id, 'vehicle_id' => $vehicle->id, 'odometer' => 88000, 'fuel_level' => 50, 'reported_issues' => 'Brake noise'];
+
+        $this->post('/reception', $data + ['_idem' => 'oj-1'])->assertRedirect();
+        $first = $this->inTenant(fn () => JobCard::query()->firstOrFail());
+
+        // second reception of the same vehicle: kept on the form with a clear explanation and a link to the open job card
+        $this->from('/reception')->post('/reception', $data + ['_idem' => 'oj-2'])->assertRedirect('/reception')->assertSessionHas('open_job_card');
+        $this->get('/reception')->assertOk()
+            ->assertSee('هذه المركبة موجودة حالياً في الورشة.')->assertSee($first->number)
+            ->assertSee(route('job-cards.show', $first), false)->assertSee('name="allow_duplicate"', false)
+            ->assertSee('Brake noise');
+        $this->assertSame(1, $this->inTenant(fn () => JobCard::query()->count()));
+
+        // the user confirms an additional job card
+        $this->post('/reception', $data + ['allow_duplicate' => '1', '_idem' => 'oj-3'])->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertSame(2, $this->inTenant(fn () => JobCard::query()->count()));
+    }
+
     public function test_request_larger_than_post_max_size_returns_to_the_form(): void
     {
         $this->from('/reception')->withServerVariables(['CONTENT_LENGTH' => (string) (1024 ** 4)])

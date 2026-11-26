@@ -5,6 +5,10 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.8.1] - 2026-11-26
+- Vehicle reception: when the vehicle already has an open job card, the form stays filled and shows which job card is open, with a button to open it and an option to open an additional job card
+- Vehicle reception: refusals from the server stay visible on the page instead of only a short notification
+
 ## [1.8.0] - 2026-11-26
 - Credit notes: new page with summary, tracking timeline (created, posted, returned to stock, refunded or credited to the account), refund voucher link, original invoice balance and journal entry
 - Credit notes: official bilingual printout (A4 and PDF) with original invoice, returned items, VAT, settlement and signatures; print buttons on the credit note, the list and the invoice

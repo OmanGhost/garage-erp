@@ -18,6 +18,24 @@
 <form method="post" action="{{ route('reception.store') }}" enctype="multipart/form-data" x-data="reception()" @submit="beforeSubmit" @pageshow.window="sending = false" novalidate>
     @csrf <x-idem/>
     @if($appointment)<input type="hidden" name="appointment_id" value="{{ $appointment->id }}">@endif
+    {{-- refusals from the server stay on the page (the toast alone disappears) --}}
+    @if(session('open_job_card'))
+        @php $ojc = session('open_job_card'); @endphp
+        <div class="alert alert-warning d-flex flex-wrap gap-3 align-items-center" role="alert" id="open-job-card-alert">
+            <i class="bi bi-car-front-fill fs-3"></i>
+            <div class="flex-grow-1">
+                <div class="fw-semibold">{{ __('This vehicle is already in the workshop.') }}</div>
+                <div class="small">{{ __('Job card :n · :s · opened :d', ['n' => $ojc['number'], 's' => $ojc['status'], 'd' => $ojc['date']]) }}</div>
+                <div class="form-check mt-2 mb-0">
+                    <input class="form-check-input" type="checkbox" name="allow_duplicate" value="1" id="allow_duplicate">
+                    <label class="form-check-label small" for="allow_duplicate">{{ __('Open an additional job card for this vehicle anyway') }}</label>
+                </div>
+            </div>
+            <a class="btn btn-warning" href="{{ $ojc['url'] }}"><i class="bi bi-box-arrow-up-right"></i> {{ __('Open the existing job card') }}</a>
+        </div>
+    @elseif(session('error'))
+        <div class="alert alert-danger d-flex gap-2 align-items-center" role="alert"><i class="bi bi-x-octagon fs-5"></i><div>{{ session('error') }}</div></div>
+    @endif
     <div class="row g-3">
         <div class="col-xl-7">
             <div class="card mb-3" id="sec-customer">
@@ -217,7 +235,7 @@ function reception() {
                 const sig = document.getElementById('sigInput').value;
                 if (this.pad && sig) this.pad.fromDataURL(sig);
                 // after a failed submit: bring the first problem into view
-                const bad = this.$el.querySelector('.is-invalid, .invalid-feedback.d-block');
+                const bad = this.$el.querySelector('#open-job-card-alert, .alert-danger, .is-invalid, .invalid-feedback.d-block');
                 if (bad) { bad.scrollIntoView({ block: 'center' }); bad.focus?.({ preventScroll: true }); }
             });
         },
