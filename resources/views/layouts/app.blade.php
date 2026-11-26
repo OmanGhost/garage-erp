@@ -45,6 +45,18 @@
 
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
 @livewireScripts
+@php
+    $quickTypes = $user ? collect(\App\Http\Controllers\QuickCreateController::TYPES)->filter(function ($d) {
+        try {
+            $r = \App\Support\Crud\CrudRegistry::resolve($d[0]);
+
+            return $r->can('create') && (! $r::$module || tenant()->company()?->moduleEnabled($r::$module));
+        } catch (\Throwable) {
+            return false;
+        }
+    })->keys()->values()->all() : [];
+    $quickTitles = ['customers' => __('New customer'), 'vehicles' => __('New vehicle'), 'parts' => __('New spare part'), 'services' => __('New service'), 'suppliers' => __('New supplier')];
+@endphp
 @php($reverbCfg = config('broadcasting.default') === 'reverb' ? ['key' => config('broadcasting.connections.reverb.key'), 'host' => config('broadcasting.connections.reverb.options.host'), 'port' => config('broadcasting.connections.reverb.options.port'), 'scheme' => config('broadcasting.connections.reverb.options.scheme')] : null)
 <script>
     window.ERP = {
@@ -55,12 +67,20 @@
         companyId: @json($company?->id),
         userId: @json($user?->id),
         lookupUrl: @json(url('/lookup')),
+        quickUrl: @json(url('/quick')),
+        quickTypes: @json($quickTypes),
         themeUrl: @json(route('profile.theme')),
         reverb: @json($reverbCfg),
         t: {
             confirm: @json(__('Are you sure?')),
             noResults: @json(__('No results')),
             searching: @json(__('Searching...')),
+            addNew: @json(__('Add new')),
+            addNewNamed: @json(__('Add «:q» as new')),
+            save: @json(__('Save')),
+            cancel: @json(__('Cancel')),
+            error: @json(__('Something went wrong. Please try again.')),
+            quickTitles: @json($quickTitles),
         }
     };
 </script>

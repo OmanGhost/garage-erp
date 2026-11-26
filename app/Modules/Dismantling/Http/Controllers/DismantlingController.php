@@ -46,6 +46,40 @@ class DismantlingController extends Controller
         return back()->with('success', __('Extracted part registered with serial :s.', ['s' => $part->serial_number]));
     }
 
+    /** Factory part numbers for the checklist (JSON). */
+    public function suggest(Request $request)
+    {
+        $this->can('dismantling.view');
+
+        return response()->json(['suggestions' => $this->service->suggestions(
+            $request->integer('make') ?: null, $request->integer('model') ?: null, $request->integer('year') ?: null)]);
+    }
+
+    /** Parts ticked in the checklist on the dismantling file. */
+    public function addChecklist(Request $request, DismantledVehicle $vehicle)
+    {
+        $this->can('dismantling.update');
+        $request->validate(DismantlingService::checklistRules() + [
+            'warehouse_id' => ['nullable', 'integer', Rule::exists('warehouses', 'id')->where('company_id', tenant()->id())],
+        ]);
+        $parts = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $vehicle) {
+            $parts = $this->service->addChecklist($vehicle, (array) $request->input('checklist', []), $request->integer('warehouse_id') ?: $vehicle->warehouse_id);
+            if ($parts && $request->boolean('checklist_to_stock')) {
+                $this->can('dismantling.approve');
+                $this->service->moveToStock($vehicle);
+            }
+
+            return $parts;
+        });
+        if (! $parts) {
+            return back()->with('error', __('Tick at least one part.'));
+        }
+
+        return back()->with('success', $request->boolean('checklist_to_stock')
+            ? __(':n parts registered and moved to stock.', ['n' => count($parts)])
+            : __(':n parts registered. Move them to stock when ready.', ['n' => count($parts)]));
+    }
+
     public function deletePart(DismantledPart $part)
     {
         $this->can('dismantling.update');

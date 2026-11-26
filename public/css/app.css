@@ -119,6 +119,8 @@ a { color: var(--brand); }
 .lookup-menu .lookup-item { unicode-bidi: plaintext; text-align: start; }
 [dir="rtl"] .lookup-menu .lookup-item { text-align: right; }
 .lookup-menu .lookup-item:hover, .lookup-menu .lookup-item.active { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+.lookup-menu .lookup-add { position: sticky; bottom: 0; background: var(--bs-body-bg); color: var(--brand); font-weight: 600; border-top: 1px solid var(--border-soft); }
+.lookup-menu .lookup-add:hover { background: color-mix(in srgb, var(--brand) 12%, var(--bs-body-bg)); }
 .line-items td { padding: .3rem; }
 .line-items .form-control, .line-items .form-select { min-width: 80px; }
 .totals-box { min-width: 280px; }
@@ -352,3 +354,38 @@ a { color: var(--brand); }
     .pos-total { font-size: 1.5rem; }
     .pos-cart .btn-lg { padding: .7rem; }
 }
+
+/* ---------- document pages (invoice / supplier invoice) ---------- */
+.doc-hero { border-width: 0; border-inline-start-width: 4px !important; border-style: solid; background: linear-gradient(135deg, color-mix(in srgb, var(--brand) 6%, var(--bs-body-bg)), var(--bs-body-bg) 60%); }
+.doc-hero-icon { width: 3.25rem; height: 3.25rem; border-radius: 1rem; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; flex: 0 0 auto; }
+.doc-meta > div { display: flex; flex-direction: column; margin-bottom: .45rem; font-size: .9rem; min-width: 0; }
+.doc-meta > div:last-child { margin-bottom: 0; }
+.doc-meta > div > span:first-child { font-size: .75rem; color: var(--bs-secondary-color); }
+.doc-totals > div { display: flex; justify-content: space-between; align-items: baseline; padding: .3rem 0; gap: 1rem; }
+.doc-totals > div > b { font-family: var(--bs-font-monospace); font-weight: 600; }
+.doc-totals .grand { border-top: 2px solid var(--bs-border-color); margin-top: .35rem; padding-top: .55rem; font-size: 1.2rem; }
+.doc-totals .grand b { font-weight: 800; }
+.doc-totals .due { border-top: 1px dashed var(--bs-border-color); margin-top: .35rem; padding-top: .5rem; font-weight: 700; }
+.item-ico { width: 2rem; height: 2rem; border-radius: .6rem; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; background: var(--bs-secondary-bg); color: var(--bs-secondary-color); }
+.item-ico.part { background: color-mix(in srgb, var(--brand) 12%, transparent); color: var(--brand); }
+.item-ico.service, .item-ico.labor { background: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); }
+.warranty-chip { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem; font-size: .78rem; padding: .15rem .55rem; border-radius: 1rem; background: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); border: 1px solid var(--bs-success-border-subtle); }
+.warranty-chip a { color: inherit; font-weight: 600; text-decoration: none; }
+.warranty-chip a:hover { text-decoration: underline; }
+details.card > summary { list-style: none; }
+details.card > summary::-webkit-details-marker { display: none; }
+/* list pages with KPI + status tabs */
+.status-tabs { display: flex; gap: .25rem; overflow-x: auto; scrollbar-width: thin; padding: .5rem .75rem 0; border-bottom: 1px solid var(--bs-border-color); }
+.status-tabs a { white-space: nowrap; padding: .45rem .8rem; border-bottom: 2px solid transparent; color: var(--bs-secondary-color); text-decoration: none; font-size: .9rem; }
+.status-tabs a.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+.status-tabs a .badge { font-weight: 500; }
+.doc-row-title { font-weight: 600; font-family: var(--bs-font-monospace); }
+.party-avatar { width: 2.1rem; height: 2.1rem; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; flex: 0 0 auto; background: color-mix(in srgb, var(--brand) 14%, transparent); color: var(--brand); }
+.pay-bar { height: 4px; border-radius: 2px; background: var(--bs-secondary-bg); overflow: hidden; min-width: 70px; }
+.pay-bar > span { display: block; height: 100%; background: var(--bs-success); }
+/* dismantling parts checklist */
+.checklist-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .6rem .75rem; margin-bottom: .5rem; border-radius: .6rem; background: var(--bs-tertiary-bg); }
+.checklist-group .list-group-item { padding: .45rem .75rem; }
+.checklist-row.is-on { background: color-mix(in srgb, var(--brand) 6%, transparent); }
+.checklist-inputs { display: grid; grid-template-columns: 1.6fr .8fr 1fr 1fr; gap: .35rem; margin-top: .4rem; padding-inline-start: 1.6rem; }
+@media (max-width: 575.98px) { .checklist-inputs { grid-template-columns: 1fr 1fr; padding-inline-start: 0; } }

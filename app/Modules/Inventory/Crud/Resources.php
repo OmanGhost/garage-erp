@@ -481,8 +481,14 @@ class DismantledVehicleResource extends CrudResource
     {
         $r = parent::rules($m);
         $r['supplier_id'][] = 'required_without:paid_from_bank_account_id';
+        $r += DismantlingService::checklistRules();
 
         return $r;
+    }
+
+    public function formExtras(?Model $m = null): ?string
+    {
+        return $m ? null : 'dismantling::_parts-checklist';
     }
 
     public function formFields(?Model $m = null): array
@@ -498,7 +504,13 @@ class DismantledVehicleResource extends CrudResource
     public function saved(Model $m, array $data, bool $created): void
     {
         if ($created) {
-            app(DismantlingService::class)->registerPurchase($m);
+            $service = app(DismantlingService::class);
+            $service->registerPurchase($m);
+            // parts ticked in the checklist of the new-vehicle form
+            $parts = $service->addChecklist($m, (array) request()->input('checklist', []), $m->warehouse_id);
+            if ($parts && request()->boolean('checklist_to_stock') && auth()->user()->can('dismantling.approve')) {
+                $service->moveToStock($m);
+            }
         }
     }
 

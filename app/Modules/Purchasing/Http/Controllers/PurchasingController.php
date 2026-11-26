@@ -301,7 +301,7 @@ class PurchasingController extends Controller
     {
         $this->can('supplier_invoices.view');
 
-        return view('purchasing::supplier-invoice', ['si' => $si->load('items.part', 'items.account', 'supplier', 'order', 'receipt', 'allocations.payment')]);
+        return view('purchasing::supplier-invoice', ['si' => $si->load('items.part', 'items.account', 'supplier', 'order', 'receipt', 'allocations.payment', 'journal.lines.account', 'creator', 'poster')]);
     }
 
     public function postSupplierInvoice(SupplierInvoice $si)

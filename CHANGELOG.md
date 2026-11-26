@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.16.0] - 2026-11-27
+- Dismantling: standard vehicle parts checklist in the new-vehicle form and the dismantling file, factory part numbers (OEM) suggested per make/model/year from earlier vehicles and the catalog, optional immediate move to stock, used stock grouped by OEM and grade
+- Fleets: add / remove vehicles from the fleet page (with new-vehicle option) and choose the fleet in the vehicle form
+- Sales invoice: per-line warranty with print button, print all warranty cards (A4 / PDF), redesigned invoice page
+- Redesigned sales and supplier invoice lists (KPIs, status tabs, payment progress) and supplier invoice page
+- Quick add: create customers, vehicles, parts, services and suppliers from any search field (job cards, invoices, purchase orders, POS) without leaving the form
+
 ## [1.15.0] - 2026-11-27
 - SaaS billing: issue tax invoices to clients (subscription renewals and custom charges), discount and VAT, due dates and overdue tracking, record payments, cancel with reason, bilingual A4/PDF print with paid/cancelled/overdue stamp, billing header settings; clients view and print their own invoices from the Subscription page|POS on phones: stacked cart lines with qty stepper, price and discount fields, fixed bottom bar with total and jump to cart
 

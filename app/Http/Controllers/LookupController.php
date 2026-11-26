@@ -28,24 +28,19 @@ class LookupController extends Controller
         $results = match ($type) {
             'customers' => Customer::query()->where('is_active', true)
                 ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('name_en', 'like', $like)->orWhere('phone', 'like', $like)->orWhere('code', $q)))
-                ->limit($limit)->get()->map(fn ($c) => ['id' => $c->id, 'text' => $c->name.($c->phone ? ' — '.$c->phone : ''),
-                    'extra' => ['price_level' => $c->price_level, 'discount' => (string) $c->discount_percent]]),
+                ->limit($limit)->get()->map(fn ($c) => self::item('customers', $c, $request)),
             'vehicles' => Vehicle::query()->with('make', 'vehicleModel', 'customer')
                 ->when($request->query('customer_id'), fn ($x, $c) => $x->where('customer_id', $c))
                 ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('plate_number', 'like', $like)->orWhere('vin', 'like', $like)->orWhereHas('customer', fn ($c) => $c->where('name', 'like', $like)->orWhere('phone', 'like', $like))))
-                ->limit($limit)->get()->map(fn ($v) => ['id' => $v->id, 'text' => $v->label().' ('.$v->customer?->name.')',
-                    'extra' => ['customer_id' => $v->customer_id, 'customer' => $v->customer?->name, 'odometer' => $v->odometer, 'vehicle_type' => $v->vehicle_type]]),
+                ->limit($limit)->get()->map(fn ($v) => self::item('vehicles', $v, $request)),
             'parts' => PartSearch::query(['q' => $q, 'warehouse_id' => null])->where('is_active', true)->limit($limit)->get()
-                ->map(fn ($p) => ['id' => $p->id, 'text' => $p->label().' ['.qty($p->on_hand ?? 0).']',
-                    'extra' => ['sale_price' => (string) $p->sale_price, 'wholesale_price' => (string) $p->wholesale_price, 'workshop_price' => (string) $p->workshop_price,
-                        'purchase_price' => (string) $p->purchase_price, 'tax_rate' => (string) $p->tax_rate, 'on_hand' => (string) ($p->on_hand ?? 0), 'min_sale_price' => (string) $p->min_sale_price]]),
+                ->map(fn ($p) => self::item('parts', $p, $request)),
             'services' => Service::query()->where('is_active', true)->with('vehiclePrices')
                 ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('name_ar', 'like', $like)->orWhere('name_en', 'like', $like)->orWhere('code', $q)))
-                ->limit($limit)->get()->map(fn ($s) => ['id' => $s->id, 'text' => $s->code.' — '.$s->displayName(),
-                    'extra' => ['price' => $s->priceFor($request->query('vehicle_type')), 'tax_rate' => (string) $s->tax_rate, 'minutes' => $s->estimated_minutes, 'department_id' => $s->department_id]]),
+                ->limit($limit)->get()->map(fn ($s) => self::item('services', $s, $request)),
             'suppliers' => Supplier::query()->where('is_active', true)
                 ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('code', $q)->orWhere('phone', 'like', $like)))
-                ->limit($limit)->get()->map(fn ($s) => ['id' => $s->id, 'text' => $s->code.' — '.$s->name]),
+                ->limit($limit)->get()->map(fn ($s) => self::item('suppliers', $s, $request)),
             'users', 'technicians' => User::query()->where('company_id', tenant()->id())->whereNull('customer_id')->where('is_active', true)
                 ->when($type === 'technicians', fn ($x) => $x->whereHas('employee', fn ($e) => $e->where('is_technician', true)))
                 ->when($q, fn ($x) => $x->where('name', 'like', $like))->limit($limit)->get()->map(fn ($u) => ['id' => $u->id, 'text' => $u->name]),
@@ -63,5 +58,23 @@ class LookupController extends Controller
         };
 
         return response()->json(['results' => $results->values()]);
+    }
+
+    /** One result row (also returned by the quick-add dialog for the record it just created). */
+    public static function item(string $type, \Illuminate\Database\Eloquent\Model $m, Request $request): array
+    {
+        return match ($type) {
+            'customers' => ['id' => $m->id, 'text' => $m->name.($m->phone ? ' — '.$m->phone : ''),
+                'extra' => ['price_level' => $m->price_level, 'discount' => (string) $m->discount_percent]],
+            'vehicles' => ['id' => $m->id, 'text' => $m->label().' ('.$m->customer?->name.')',
+                'extra' => ['customer_id' => $m->customer_id, 'customer' => $m->customer?->name, 'odometer' => $m->odometer, 'vehicle_type' => $m->vehicle_type]],
+            'parts' => ['id' => $m->id, 'text' => $m->label().' ['.qty($m->on_hand ?? 0).']',
+                'extra' => ['sale_price' => (string) $m->sale_price, 'wholesale_price' => (string) $m->wholesale_price, 'workshop_price' => (string) $m->workshop_price,
+                    'purchase_price' => (string) $m->purchase_price, 'tax_rate' => (string) $m->tax_rate, 'on_hand' => (string) ($m->on_hand ?? 0), 'min_sale_price' => (string) $m->min_sale_price]],
+            'services' => ['id' => $m->id, 'text' => $m->code.' — '.$m->displayName(),
+                'extra' => ['price' => $m->priceFor($request->query('vehicle_type')), 'tax_rate' => (string) $m->tax_rate, 'minutes' => $m->estimated_minutes, 'department_id' => $m->department_id]],
+            'suppliers' => ['id' => $m->id, 'text' => $m->code.' — '.$m->name],
+            default => ['id' => $m->getKey(), 'text' => (string) $m->getKey()],
+        };
     }
 }

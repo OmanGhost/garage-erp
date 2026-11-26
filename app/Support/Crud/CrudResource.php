@@ -155,6 +155,18 @@ abstract class CrudResource
         return true;
     }
 
+    /** Blade view for the list page (custom designs reuse crud._filters / crud._pager). */
+    public function indexView(): string
+    {
+        return 'crud.index';
+    }
+
+    /** Optional Blade view included at the end of the create / edit form (inside the <form>). */
+    public function formExtras(?Model $m = null): ?string
+    {
+        return null;
+    }
+
     /** Optional extra HTML rendered on the show page (Blade view name + data). */
     public function showPanels(Model $m): array
     {

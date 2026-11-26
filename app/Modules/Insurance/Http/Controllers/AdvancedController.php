@@ -61,6 +61,30 @@ class AdvancedController extends Controller
             'pendingJobs' => $fleet->jobCards()->whereNull('invoice_id')->whereIn('status', ['ready_for_delivery', 'delivered', 'completed'])->with('vehicle')->get()]);
     }
 
+    public function fleetAddVehicle(Request $request, Fleet $fleet)
+    {
+        $this->can('fleets.update');
+        $data = $request->validate(['vehicle_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('vehicles', 'id')->where('company_id', tenant()->id())->whereNull('deleted_at')]]);
+        $v = \App\Modules\Vehicles\Models\Vehicle::query()->findOrFail($data['vehicle_id']);
+        if ($v->fleet_id && $v->fleet_id !== $fleet->id && ! $request->boolean('move')) {
+            return back()->with('error', __('Vehicle :v already belongs to fleet «:f».', ['v' => $v->plate(), 'f' => $v->fleet?->name]));
+        }
+        $v->update(['fleet_id' => $fleet->id]);
+        \App\Support\Audit\AuditLogger::log('fleet.vehicle_added', $fleet, ['vehicle' => $v->plate()]);
+
+        return back()->with('success', __('Vehicle :v added to the fleet.', ['v' => $v->plate()]));
+    }
+
+    public function fleetRemoveVehicle(Fleet $fleet, \App\Modules\Vehicles\Models\Vehicle $vehicle)
+    {
+        $this->can('fleets.update');
+        abort_unless($vehicle->fleet_id === $fleet->id, 404);
+        $vehicle->update(['fleet_id' => null]);
+        \App\Support\Audit\AuditLogger::log('fleet.vehicle_removed', $fleet, ['vehicle' => $vehicle->plate()]);
+
+        return back()->with('success', __('Vehicle :v removed from the fleet.', ['v' => $vehicle->plate()]));
+    }
+
     public function fleetInvoice(Request $request, Fleet $fleet, FleetService $service)
     {
         $this->can('invoices.create');

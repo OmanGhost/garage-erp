@@ -22,7 +22,7 @@ class InvoiceResource extends CrudResource
     public static string $permission = 'invoices';
     public static ?string $module = 'sales';
     public static string $icon = 'bi-receipt-cutoff';
-    public static array $with = ['customer', 'jobCard', 'creditNotes'];
+    public static array $with = ['customer', 'jobCard.vehicle', 'creditNotes'];
     public static ?string $dateColumn = 'issue_date';
 
     public function title(): string { return __('Sales & Tax Invoices'); }
@@ -56,6 +56,26 @@ class InvoiceResource extends CrudResource
         }
 
         return $actions;
+    }
+
+    public function indexView(): string { return 'sales::invoices-index'; }
+
+    /** Headline numbers and per-status counts for the list page. */
+    public function stats(): array
+    {
+        $base = fn () => $this->scope(Invoice::query());
+        $open = fn () => $base()->whereIn('status', ['posted', 'partially_paid']);
+
+        return [
+            'month' => (string) $base()->whereIn('status', ['posted', 'partially_paid', 'paid'])->whereBetween('issue_date', [now()->startOfMonth()->toDateString(), now()->toDateString()])->sum('total'),
+            'month_count' => $base()->whereIn('status', ['posted', 'partially_paid', 'paid'])->whereBetween('issue_date', [now()->startOfMonth()->toDateString(), now()->toDateString()])->count(),
+            'outstanding' => (string) $open()->sum(\Illuminate\Support\Facades\DB::raw('total - paid_amount')),
+            'outstanding_count' => $open()->count(),
+            'overdue' => (string) $open()->whereDate('due_date', '<', today())->sum(\Illuminate\Support\Facades\DB::raw('total - paid_amount')),
+            'overdue_count' => $open()->whereDate('due_date', '<', today())->count(),
+            'drafts' => $base()->whereIn('status', ['draft', 'held'])->count(),
+            'by_status' => $base()->selectRaw('status, COUNT(*) n')->groupBy('status')->pluck('n', 'status')->all(),
+        ];
     }
 
     public function createUrl(): ?string { return route('invoices.create'); }

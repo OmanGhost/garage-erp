@@ -105,10 +105,19 @@
             menu.classList.remove('show');
             window.removeEventListener('scroll', onMove, true); window.removeEventListener('resize', onMove);
         };
+        const canQuick = (ERP.quickTypes || []).includes(type) && root.dataset.quick !== '0' && !root.closest('#quickCreateModal');
         const render = () => {
             menu.innerHTML = '';
             if (!items.length) { menu.innerHTML = `<div class="lookup-item text-body-secondary">${ERP.t.noResults}</div>`; }
             items.forEach((it, i) => { const d = document.createElement('div'); d.className = 'lookup-item' + (i === idx ? ' active' : ''); d.textContent = it.text; d.addEventListener('mousedown', (ev) => { ev.preventDefault(); choose(it); }); menu.appendChild(d); });
+            if (canQuick) {
+                const q = input.value.trim(), d = document.createElement('div');
+                d.className = 'lookup-item lookup-add';
+                d.innerHTML = '<i class="bi bi-plus-circle"></i> ';
+                d.appendChild(document.createTextNode(q ? ERP.t.addNewNamed.replace(':q', q) : ERP.t.addNew));
+                d.addEventListener('mousedown', (ev) => { ev.preventDefault(); hide(); erpQuickCreate(type, q, params(), choose); });
+                menu.appendChild(d);
+            }
             if (document.activeElement !== input) return; // focus moved on while the search was running
             menu.classList.add('show');
             place();
@@ -137,6 +146,62 @@
         });
     }
     window.erpInitLookups = (r = document) => $$('[data-lookup]', r).forEach(initLookup);
+
+    /* ---------------- quick add from a search field (customer, vehicle, part, service, supplier) ---------------- */
+    window.erpQuickCreate = function (type, q, searchParams, onCreated) {
+        let el = document.getElementById('quickCreateModal');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'quickCreateModal'; el.className = 'modal fade'; el.tabIndex = -1;
+            el.innerHTML = `<div class="modal-dialog modal-lg modal-dialog-scrollable modal-fullscreen-sm-down"><div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title"></h5><button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="${ERP.t.cancel}"></button></div>
+                <div class="modal-body"></div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">${ERP.t.cancel}</button>
+                    <button type="button" class="btn btn-primary" data-quick-save><i class="bi bi-check2"></i> ${ERP.t.save}</button></div></div></div>`;
+            document.body.appendChild(el);
+        }
+        const modal = bootstrap.Modal.getOrCreateInstance(el), body = $('.modal-body', el), saveBtn = $('[data-quick-save]', el);
+        $('.modal-title', el).textContent = (ERP.t.quickTitles || {})[type] || ERP.t.addNew;
+        body.innerHTML = '<div class="text-center py-5"><span class="spinner-border"></span></div>';
+        const p = new URLSearchParams({ q: q || '' });
+        if (searchParams && searchParams.get('customer_id')) p.set('customer_id', searchParams.get('customer_id'));
+        fetch(`${ERP.quickUrl}/${type}?${p}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
+            .then(html => { body.innerHTML = html; erpInitLookups(body); setTimeout(() => $('input:not([type=hidden]),select', body)?.focus(), 300); })
+            .catch(() => { body.innerHTML = `<div class="alert alert-danger mb-0">${ERP.t.error}</div>`; });
+        const clearErrors = (form) => {
+            $$('.is-invalid', form).forEach(x => x.classList.toggle('is-invalid', false));
+            $$('.quick-err', form).forEach(x => x.parentNode && x.parentNode.removeChild(x));
+        };
+        const submit = () => {
+            const form = $('form[data-quick-form]', body); if (!form) return;
+            clearErrors(form);
+            saveBtn.disabled = true;
+            fetch(form.action, { method: 'POST', body: new FormData(form), headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(async r => {
+                    const j = await r.json().catch(() => ({}));
+                    if (r.ok && j.item) { modal.hide(); onCreated(j.item); if (ERP.toast) ERP.toast(j.message || '', 'success'); return; }
+                    const errs = j.errors || { _: [j.message || ERP.t.error] };
+                    let first = null;
+                    Object.entries(errs).forEach(([name, msgs]) => {
+                        const field = form.querySelector(`[name="${name}"]`);
+                        const box = document.createElement('div'); box.className = 'invalid-feedback d-block quick-err'; box.textContent = msgs[0];
+                        if (field) {
+                            const holder = field.closest('.lookup') || field;
+                            const visible = field.type === 'hidden' ? holder.querySelector('input[type=text]') : field;
+                            if (visible) visible.classList.add('is-invalid');
+                            holder.after(box); first = first || visible;
+                        } else { box.className = 'alert alert-danger quick-err'; form.prepend(box); }
+                    });
+                    if (first && first.focus) first.focus();
+                })
+                .catch(() => { if (ERP.toast) ERP.toast(ERP.t.error, 'danger'); })
+                .finally(() => { saveBtn.disabled = false; });
+        };
+        saveBtn.onclick = submit;
+        body.onkeydown = (e) => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.target.closest('.lookup')) { e.preventDefault(); submit(); } };
+        modal.show();
+    };
     document.addEventListener('DOMContentLoaded', () => erpInitLookups());
     document.addEventListener('livewire:navigated', () => erpInitLookups());
     new MutationObserver(() => erpInitLookups()).observe(document.documentElement, { childList: true, subtree: true });

@@ -111,7 +111,27 @@ class SalesController extends Controller
         $this->can('invoices.view');
         $invoice->load('items.part', 'items.service', 'customer', 'jobCard.vehicle', 'allocations.payment', 'creditNotes', 'journal.lines.account', 'creator', 'salesperson');
 
-        return view('sales::invoice', ['inv' => $invoice, 'banks' => Options::bankAccounts()]);
+        $warranties = tenant()->company()?->moduleEnabled('warranty')
+            ? \App\Modules\Warranty\Models\Warranty::query()->where('invoice_id', $invoice->id)->get()->keyBy('invoice_item_id')
+            : collect();
+
+        return view('sales::invoice', ['inv' => $invoice, 'banks' => Options::bankAccounts(), 'warranties' => $warranties]);
+    }
+
+    /** All warranty cards of an invoice, one per page. */
+    public function printWarranties(Request $request, Invoice $invoice, string $format = 'a4')
+    {
+        abort_unless(auth()->user()->can('invoices.print') || auth()->user()->can('warranties.print'), 403);
+        abort_unless(tenant()->company()?->moduleEnabled('warranty'), 403);
+        $warranties = \App\Modules\Warranty\Models\Warranty::query()->where('invoice_id', $invoice->id)
+            ->when($request->query('w'), fn ($q, $id) => $q->whereKey((int) $id))
+            ->with('customer', 'vehicle', 'part.brand', 'invoice', 'claims')->orderBy('id')->get();
+        abort_if($warranties->isEmpty(), 404);
+        $html = view('insurance::print.warranty-cards', ['warranties' => $warranties, 'inv' => $invoice])->render();
+
+        return $format === 'pdf'
+            ? response(\App\Support\Export\Exporter::pdfFromHtml($html), 200, ['Content-Type' => 'application/pdf', 'Content-Disposition' => 'inline; filename="warranties-'.$invoice->number.'.pdf"'])
+            : response($html);
     }
 
     public function editInvoice(Invoice $invoice)

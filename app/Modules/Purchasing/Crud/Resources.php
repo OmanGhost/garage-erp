@@ -226,6 +226,29 @@ class SupplierInvoiceResource extends PurchasingDocResource
         ];
     }
 
+    public static array $with = ['supplier', 'order', 'receipt'];
+
+    public function indexView(): string { return 'purchasing::supplier-invoices-index'; }
+
+    /** Headline numbers and per-status counts for the list page. */
+    public function stats(): array
+    {
+        $base = fn () => $this->scope(SupplierInvoice::query());
+        $open = fn () => $base()->whereIn('status', ['posted', 'partially_paid']);
+        $raw = \Illuminate\Support\Facades\DB::raw('total - paid_amount');
+        $month = [now()->startOfMonth()->toDateString(), now()->toDateString()];
+        $week = [today()->toDateString(), today()->addDays(7)->toDateString()];
+
+        return [
+            'month' => (string) $base()->whereIn('status', ['posted', 'partially_paid', 'paid'])->whereBetween('invoice_date', $month)->sum('total'),
+            'month_count' => $base()->whereIn('status', ['posted', 'partially_paid', 'paid'])->whereBetween('invoice_date', $month)->count(),
+            'payable' => (string) $open()->sum($raw), 'payable_count' => $open()->count(),
+            'overdue' => (string) $open()->whereDate('due_date', '<', today())->sum($raw), 'overdue_count' => $open()->whereDate('due_date', '<', today())->count(),
+            'due_week' => (string) $open()->whereBetween('due_date', $week)->sum($raw), 'due_week_count' => $open()->whereBetween('due_date', $week)->count(),
+            'by_status' => $base()->selectRaw('status, COUNT(*) n')->groupBy('status')->pluck('n', 'status')->all(),
+        ];
+    }
+
     public function createUrl(): ?string { return route('supplier-invoices.create'); }
     public function showUrl(Model $m): ?string { return route('supplier-invoices.show', $m); }
 }

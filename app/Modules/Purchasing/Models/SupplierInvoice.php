@@ -52,6 +52,21 @@ class SupplierInvoice extends TenantModel
         return $this->morphMany(\App\Modules\Sales\Models\PaymentAllocation::class, 'allocatable');
     }
 
+    public function journal(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Accounting\Models\JournalEntry::class, 'journal_entry_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function poster(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'posted_by');
+    }
+
     public function balanceDue(): string
     {
         return \App\Support\Money::sub($this->total, $this->paid_amount);

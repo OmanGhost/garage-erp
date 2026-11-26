@@ -51,6 +51,20 @@
             @endcan
             @endif
         </div>
+        @if($v->status !== 'closed' && $v->status !== 'completed')
+        @can('dismantling.update')
+        <details class="card mb-3" id="parts-checklist" @if($v->parts->isEmpty()) open @endif>
+            <summary class="card-header d-flex align-items-center" style="cursor:pointer"><i class="bi bi-ui-checks-grid me-2 text-brand"></i><span class="fw-semibold">{{ __('Vehicle parts checklist') }}</span><span class="small text-body-secondary ms-2 d-none d-md-inline">{{ __('Tick several parts at once with their factory numbers') }}</span><i class="bi bi-chevron-down ms-auto"></i></summary>
+            <form method="post" action="{{ route('dismantling.parts.checklist', $v) }}" class="card-body">@csrf <x-idem/>
+                <div class="row">@include('dismantling::_parts-checklist', ['vehicle' => $v])</div>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-4"><label class="form-label small mb-1" for="cl_wh">{{ __('Warehouse') }}</label><select id="cl_wh" name="warehouse_id" class="form-select form-select-sm">@foreach($warehouses as $id => $n)<option value="{{ $id }}" @selected($v->warehouse_id === $id)>{{ $n }}</option>@endforeach</select></div>
+                    <div class="col-md-4 ms-auto d-grid"><button class="btn btn-primary"><i class="bi bi-check2-all"></i> {{ __('Register ticked parts') }}</button></div>
+                </div>
+            </form>
+        </details>
+        @endcan
+        @endif
         <x-attachments :model="$v" :title="__('Vehicle photos & documents')"/>
     </div>
     <div class="col-xl-4">

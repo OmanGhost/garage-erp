@@ -206,7 +206,8 @@ class VehicleResource extends CrudResource
     {
         return [
             Field::lookup('customer_id', 'customers', 'customer')->label(__('Owner'))->required()->index()->section(__('Ownership & registration'))->col(6),
-            Field::lookup('fleet_id', 'fleets', 'fleet')->label(__('Fleet'))->hideOnForm(),
+            Field::select('fleet_id', fn () => \App\Modules\Fleet\Models\Fleet::query()->orderBy('name')->pluck('name', 'id')->all())->label(__('Fleet (optional)'))->relation('fleet')->col(6)
+                ->help(__('Company fleet this vehicle belongs to (contract billing, approvals and limits).')),
             Field::text('plate_number')->label(__('Plate number'))->index()->searchable()->col(3)->rules(['max:20']),
             Field::text('plate_code')->label(__('Plate code'))->index()->col(3)->help(__('Omani plates: letters code e.g. A, AB')),
             Field::select('plate_country', ['OM' => __('Oman'), 'AE' => __('UAE'), 'SA' => __('Saudi Arabia'), 'QA' => __('Qatar'), 'KW' => __('Kuwait'), 'BH' => __('Bahrain'), 'XX' => __('Other')])->label(__('Registration country'))->default('OM')->col(3),
@@ -267,6 +268,16 @@ class VehicleResource extends CrudResource
                 'changed_at' => now()->toDateString(), 'user_id' => auth()->id(),
             ]);
         }
+    }
+
+    public function formFields(?Model $m = null): array
+    {
+        $fields = parent::formFields($m);
+        if (! tenant()->company()?->moduleEnabled('fleet')) {
+            $fields = array_values(array_filter($fields, fn ($f) => $f->name !== 'fleet_id'));
+        }
+
+        return $fields;
     }
 
     public function showUrl(Model $m): ?string { return route('vehicles.show', $m); }

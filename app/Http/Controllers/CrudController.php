@@ -54,7 +54,7 @@ class CrudController extends Controller
         $perPage = in_array((int) $request->query('per_page'), [10, 25, 50, 100], true) ? (int) $request->query('per_page') : 25;
         $rows = $query->paginate($perPage)->withQueryString();
 
-        return view('crud.index', ['resource' => $r, 'rows' => $rows, 'slug' => $slug]);
+        return view($r->indexView(), ['resource' => $r, 'rows' => $rows, 'slug' => $slug]);
     }
 
     protected function filtered(CrudResource $r, Request $request): Builder

@@ -86,12 +86,118 @@ class DismantlingService
         $serial = $data['serial_number'] ?? DocumentNumber::next('serial', false);
 
         return $v->parts()->create([
-            'part_id' => $data['part_id'] ?? null, 'name' => $data['name'], 'oem_number' => $data['oem_number'] ?? null,
+            'part_id' => $data['part_id'] ?? null, 'name' => $data['name'], 'template_key' => $data['template_key'] ?? null, 'oem_number' => $data['oem_number'] ?? null,
             'grade' => $data['grade'] ?? 'A', 'estimated_value' => $data['estimated_value'] ?? 0, 'sale_price' => $data['sale_price'] ?? ($data['estimated_value'] ?? 0),
             'serial_number' => $serial, 'barcode' => $data['barcode'] ?? $serial,
             'warehouse_id' => $data['warehouse_id'] ?? $v->warehouse_id, 'location_id' => $data['location_id'] ?? null,
             'status' => 'pending', 'notes' => $data['notes'] ?? null,
         ]);
+    }
+
+    /** Validation for the checklist inputs (new-vehicle form and dismantling file). */
+    public static function checklistRules(): array
+    {
+        return [
+            'checklist' => ['nullable', 'array', 'max:120'],
+            'checklist.*.selected' => ['nullable', 'boolean'],
+            'checklist.*.name' => ['nullable', 'string', 'max:190'],
+            'checklist.*.oem' => ['nullable', 'string', 'max:80'],
+            'checklist.*.grade' => ['nullable', 'in:A,B,C,damaged'],
+            'checklist.*.estimated_value' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'checklist.*.sale_price' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
+            'checklist_to_stock' => ['nullable', 'boolean'],
+        ];
+    }
+
+    /** The standard parts checklist (config/dismantling.php) with labels in the current language. */
+    public static function checklist(): array
+    {
+        $ar = app()->getLocale() === 'ar';
+        $out = [];
+        foreach (config('dismantling.groups', []) as $gk => $g) {
+            $parts = [];
+            foreach ($g['parts'] as $pk => [$nameAr, $nameEn]) {
+                $parts[$pk] = ['key' => $pk, 'name' => $ar ? $nameAr : $nameEn, 'alt' => $ar ? $nameEn : $nameAr];
+            }
+            $out[$gk] = ['key' => $gk, 'label' => $ar ? $g['ar'] : $g['en'], 'icon' => $g['icon'] ?? 'bi-gear', 'parts' => $parts];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Factory part numbers for a make / model / year, per checklist key: first from parts already extracted from
+     * the same vehicle (model, ±3 years), then from catalog parts listed as compatible with it.
+     *
+     * @return array<string, array{oem: string, source: string, sale_price: ?string, name: ?string}>
+     */
+    public function suggestions(?int $makeId, ?int $modelId = null, ?int $year = null): array
+    {
+        if (! $makeId) {
+            return [];
+        }
+        $out = [];
+        $history = DismantledPart::query()->join('dismantled_vehicles as v', 'v.id', '=', 'dismantled_parts.dismantled_vehicle_id')
+            ->where('v.vehicle_make_id', $makeId)->when($modelId, fn ($q) => $q->where('v.vehicle_model_id', $modelId))
+            ->when($year, fn ($q) => $q->whereBetween('v.year', [$year - 3, $year + 3]))
+            ->whereNotNull('dismantled_parts.template_key')->whereNotNull('dismantled_parts.oem_number')->where('dismantled_parts.oem_number', '!=', '')
+            ->orderByDesc('dismantled_parts.id')->limit(1000)
+            ->get(['dismantled_parts.template_key', 'dismantled_parts.oem_number', 'dismantled_parts.sale_price']);
+        foreach ($history as $h) {
+            $out[$h->template_key] ??= ['oem' => $h->oem_number, 'source' => 'history', 'sale_price' => (string) $h->sale_price, 'name' => null];
+        }
+        $catalog = Part::query()->whereNotNull('oem_number')->where('oem_number', '!=', '')
+            ->whereHas('compatibilities', fn ($c) => $c->where('vehicle_make_id', $makeId)
+                ->when($modelId, fn ($q) => $q->where(fn ($w) => $w->whereNull('vehicle_model_id')->orWhere('vehicle_model_id', $modelId)))
+                ->when($year, fn ($q) => $q->where(fn ($w) => $w->whereNull('year_from')->orWhere('year_from', '<=', $year))->where(fn ($w) => $w->whereNull('year_to')->orWhere('year_to', '>=', $year))))
+            ->limit(500)->get(['id', 'oem_number', 'name_ar', 'name_en', 'sale_price']);
+        foreach (config('dismantling.groups', []) as $g) {
+            foreach ($g['parts'] as $key => [$nameAr, $nameEn]) {
+                if (isset($out[$key])) {
+                    continue;
+                }
+                $hit = $catalog->first(fn ($p) => ($p->name_ar && (mb_stripos($p->name_ar, $nameAr) !== false || mb_stripos($nameAr, $p->name_ar) !== false))
+                    || ($p->name_en && (mb_stripos($p->name_en, $nameEn) !== false || mb_stripos($nameEn, $p->name_en) !== false)));
+                if ($hit) {
+                    $out[$key] = ['oem' => $hit->oem_number, 'source' => 'catalog', 'sale_price' => null, 'name' => $hit->displayName()];
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Register the parts ticked in the checklist.
+     *
+     * @param  array<string, array{selected?: mixed, name?: ?string, oem?: ?string, grade?: ?string, estimated_value?: mixed, sale_price?: mixed}>  $rows
+     * @return array<int, DismantledPart>
+     */
+    public function addChecklist(DismantledVehicle $v, array $rows, ?int $warehouseId = null): array
+    {
+        $catalog = collect(self::checklist())->flatMap(fn ($g) => $g['parts']);
+        $created = [];
+        foreach ($rows as $key => $row) {
+            if (empty($row['selected'])) {
+                continue;
+            }
+            $tpl = $catalog->get($key);
+            $name = trim((string) ($row['name'] ?? '')) ?: ($tpl['name'] ?? null);
+            if (! $name) {
+                continue;
+            }
+            $created[] = $this->addPart($v, [
+                'name' => $name, 'template_key' => $tpl ? $key : null, 'oem_number' => trim((string) ($row['oem'] ?? '')) ?: null,
+                'grade' => in_array($row['grade'] ?? 'A', ['A', 'B', 'C', 'damaged'], true) ? $row['grade'] : 'A',
+                'estimated_value' => Money::round($row['estimated_value'] ?? 0), 'sale_price' => filled($row['sale_price'] ?? null) ? Money::round($row['sale_price']) : null,
+                'warehouse_id' => $warehouseId,
+            ]);
+        }
+        if ($created) {
+            AuditLogger::log('dismantling.checklist_added', $v, ['parts' => count($created)]);
+        }
+
+        return $created;
     }
 
     /**
@@ -123,6 +229,11 @@ class DismantlingService
                 }
                 $allocTotal = Money::add($allocTotal, $share);
                 $part = $dp->part_id ? Part::query()->find($dp->part_id) : null;
+                if (! $part && $dp->oem_number) {
+                    // same factory number & grade already stocked as a used part: add this piece to it (own serial)
+                    $part = Part::query()->where('oem_number', $dp->oem_number)->where('condition_grade', $dp->grade)
+                        ->whereIn('part_type', ['used', 'damaged'])->where('track_serial', true)->first();
+                }
                 if (! $part) {
                     $part = Part::create([
                         'sku' => 'U-'.$dp->serial_number, 'barcode' => $dp->barcode, 'oem_number' => $dp->oem_number, 'serial_number' => $dp->serial_number,

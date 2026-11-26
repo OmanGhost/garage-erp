@@ -21,6 +21,9 @@
                     @endif
                     @include('crud._field', ['f' => $f, 'model' => $model])
                 @endforeach
+                @if($extras = $resource->formExtras($model))
+                    @include($extras, ['model' => $model])
+                @endif
                 @if($resource::$hasAttachments)
                     <div class="col-12 mb-3">
                         <label class="form-label">{{ __('Attachments / documents') }}</label>

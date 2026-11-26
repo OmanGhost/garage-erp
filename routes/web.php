@@ -186,6 +186,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     Route::post('/dashboard/widgets', [DashboardController::class, 'saveWidgets'])->name('dashboard.widgets');
     Route::post('/branch', [SystemController::class, 'switchBranch'])->name('branch.switch');
     Route::get('/lookup/{type}', LookupController::class)->name('lookup');
+    Route::get('/quick/{type}', [\App\Http\Controllers\QuickCreateController::class, 'form'])->name('quick.form');
+    Route::post('/quick/{type}', [\App\Http\Controllers\QuickCreateController::class, 'store'])->name('quick.store');
     Route::post('/attachments', [AttachmentController::class, 'store'])->name('attachments.store');
     Route::delete('/attachments/{attachment}', [AttachmentController::class, 'destroy'])->name('attachments.destroy');
 
@@ -346,7 +348,9 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
 
     // dismantling
     Route::middleware('module:dismantling')->prefix('dismantling')->name('dismantling.')->group(function () {
+        Route::get('/oem-suggest', [DismantlingController::class, 'suggest'])->name('suggest');
         Route::get('/{vehicle}', [DismantlingController::class, 'show'])->name('show');
+        Route::post('/{vehicle}/checklist', [DismantlingController::class, 'addChecklist'])->name('parts.checklist');
         Route::post('/{vehicle}/parts', [DismantlingController::class, 'addPart'])->name('parts.store');
         Route::delete('/parts/{part}', [DismantlingController::class, 'deletePart'])->name('parts.destroy');
         Route::post('/{vehicle}/stock', [DismantlingController::class, 'moveToStock'])->name('stock');
@@ -409,6 +413,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::get('/invoices/{invoice}/print/{format?}', [SalesController::class, 'printInvoice'])->name('invoices.print')->whereIn('format', ['a4', '80mm', 'pdf']);
         Route::get('/invoices/{invoice}/return', [SalesController::class, 'createCreditNote'])->name('credit-notes.create');
         Route::post('/invoices/{invoice}/return', [SalesController::class, 'storeCreditNote'])->name('credit-notes.store');
+        Route::get('/invoices/{invoice}/warranties/{format?}', [SalesController::class, 'printWarranties'])->name('invoices.warranties')->whereIn('format', ['a4', 'pdf']);
         Route::get('/invoices/{invoice}/delivery-note/{format?}', [SalesController::class, 'deliveryNote'])->name('invoices.delivery-note')->whereIn('format', ['a4', 'pdf']);
         Route::get('/credit-notes/{creditNote}', [SalesController::class, 'creditNote'])->name('credit-notes.show');
         Route::get('/credit-notes/{creditNote}/print/{format?}', [SalesController::class, 'printCreditNote'])->name('credit-notes.print')->whereIn('format', ['a4', 'pdf']);
@@ -477,6 +482,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     Route::post('/insurance/claims/{claim}/status', [AdvancedController::class, 'claimStatus'])->name('insurance.claims.status')->middleware('module:insurance');
     Route::post('/insurance/claims/{claim}/invoice', [AdvancedController::class, 'claimInvoice'])->name('insurance.claims.invoice')->middleware('module:insurance');
     Route::get('/fleets/{fleet}', [AdvancedController::class, 'fleet'])->name('fleets.show')->middleware('module:fleet');
+    Route::post('/fleets/{fleet}/vehicles', [AdvancedController::class, 'fleetAddVehicle'])->name('fleets.vehicles.add')->middleware('module:fleet');
+    Route::delete('/fleets/{fleet}/vehicles/{vehicle}', [AdvancedController::class, 'fleetRemoveVehicle'])->name('fleets.vehicles.remove')->middleware('module:fleet');
     Route::post('/fleets/{fleet}/invoice', [AdvancedController::class, 'fleetInvoice'])->name('fleets.invoice')->middleware('module:fleet');
     Route::post('/fleets/approvals/{approval}/{decision}', [AdvancedController::class, 'decideApproval'])->name('fleets.approvals.decide')->whereIn('decision', ['approve', 'reject'])->middleware('module:fleet');
     Route::get('/warranty/claims/create', [AdvancedController::class, 'createWarrantyClaim'])->name('warranty.claims.create')->middleware('module:warranty');
