@@ -86,10 +86,14 @@ class LoyaltyService
     /** Called when an invoice is posted. */
     public function earn(Invoice $invoice): void
     {
-        if (! self::enabled() || ! $invoice->customer_id) {
+        // the walk-in customer and invoices paid by someone else (insurance, fleet contracts) earn nothing
+        if (! self::enabled() || ! $invoice->customer_id || in_array($invoice->type, ['insurance', 'fleet'], true)) {
             return;
         }
         $customer = $invoice->customer;
+        if ($customer->isWalkIn()) {
+            return;
+        }
         $base = Money::sub($invoice->subtotal, $invoice->discount_total);
         $tier = $this->tierFor($customer, $invoice->id);
         $points = (string) floor((float) $base * (float) setting('loyalty.points_per_omr', 1) * $tier['multiplier']);
@@ -101,7 +105,7 @@ class LoyaltyService
             $customer->forceFill(['loyalty_tier' => $tier['code']])->save();
         }
         // referral bonus: the first posted invoice of a referred customer rewards the referrer once
-        if ($customer->referred_by_id && ($referrer = Customer::query()->find($customer->referred_by_id))
+        if ($customer->referred_by_id && ($referrer = Customer::query()->find($customer->referred_by_id)) && ! $referrer->isWalkIn()
             && Invoice::query()->where('customer_id', $customer->id)->whereIn('status', ['posted', 'partially_paid', 'paid'])->count() === 1) {
             $bonus = (string) (int) setting('loyalty.referral_points', 200);
             if ((float) $bonus > 0 && ($tx = $this->record($referrer, 'referral', $bonus, ['invoice_id' => $invoice->id, 'reference' => 'referral:'.$customer->id,
@@ -143,6 +147,9 @@ class LoyaltyService
 
         return DB::transaction(function () use ($invoice, $points) {
             $customer = Customer::query()->whereKey($invoice->customer_id)->lockForUpdate()->firstOrFail();
+            if ($customer->isWalkIn()) {
+                throw new BusinessException(__('The walk-in customer cannot use loyalty points.'));
+            }
             if ($points > (float) $customer->loyalty_points) {
                 throw new BusinessException(__('The customer has only :n points.', ['n' => (int) $customer->loyalty_points]));
             }
@@ -203,8 +210,11 @@ class LoyaltyService
         return $n;
     }
 
-    public static function referralCode(Customer $c): string
+    public static function referralCode(Customer $c): ?string
     {
+        if ($c->isWalkIn()) {
+            return null;
+        }
         if (! $c->referral_code) {
             do {
                 $code = 'R'.strtoupper(substr(base_convert((string) random_int(100000000, 999999999), 10, 36), 0, 6));

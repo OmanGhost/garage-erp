@@ -4,7 +4,7 @@
     $hasLoyalty = $co?->moduleEnabled('loyalty');
     $hasMembership = $co?->moduleEnabled('memberships');
 @endphp
-@if($hasLoyalty || $hasMembership)
+@if(($hasLoyalty || $hasMembership) && ! $c->isWalkIn())
     @php
         $memberships = $hasMembership ? $c->memberships()->with('plan')->latest('id')->limit(5)->get() : collect();
         $plans = $hasMembership ? \App\Modules\Loyalty\Models\MembershipPlan::query()->where('is_active', true)->orderBy('price')->get() : collect();

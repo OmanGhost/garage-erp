@@ -28,6 +28,7 @@ class OfferService
             ->groupBy('customer_id')->selectRaw('customer_id, MAX(issue_date) last_visit, COUNT(*) visits, SUM(total) spent');
 
         return Customer::query()->joinSub($last, 'v', 'v.customer_id', '=', 'customers.id')->where('customers.is_active', true)
+            ->where('customers.code', '!=', 'WALKIN')->where('customers.id', '!=', (int) setting('pos.walk_in_customer_id'))
             ->where('v.last_visit', '<', $cut)->orderByDesc('v.spent')->limit($limit)
             ->get(['customers.*', 'v.last_visit', 'v.visits', 'v.spent']);
     }

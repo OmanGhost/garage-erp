@@ -3,7 +3,7 @@
     $co = tenant()->company();
     $draft = in_array($inv->status, ['draft', 'held'], true);
     $due = $inv->isPosted() ? $inv->balanceDue() : '0';
-    $hasLoyalty = $co?->moduleEnabled('loyalty');
+    $hasLoyalty = $co?->moduleEnabled('loyalty') && ! $inv->customer?->isWalkIn();
     $member = $draft && $co?->moduleEnabled('memberships') ? app(\App\Modules\Loyalty\Services\MembershipService::class)->activeFor($inv->customer_id, $inv->jobCard?->vehicle_id) : null;
     $points = (float) $inv->customer?->loyalty_points;
     $pv = (float) \App\Modules\Loyalty\Services\LoyaltyService::pointValue();

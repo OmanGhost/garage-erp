@@ -113,31 +113,39 @@ class MembershipService
                 $item->update(['discount' => $c['discount'], 'tax_amount' => $c['tax'], 'line_total' => $c['net'], 'membership_id' => $m->id]);
                 $total = Money::add($total, $c['discount']);
             }
+            $invoice->forceFill(['membership_id' => $m->id])->save();   // on the header too: line flags are lost when the draft is edited
             app(InvoiceService::class)->recalc($invoice);
 
             return $total;
         });
     }
 
-    /** Called when an invoice is posted: consume the included services (balance checked again under lock). */
+    /**
+     * Called when an invoice is posted: consume the included services of the membership applied to it. Every line is
+     * evaluated (line flags do not survive a draft edit); a line counts as included when it is a covered service whose
+     * discount reaches its unit price. The balance is checked again with the membership locked.
+     */
     public function consumeOnPost(Invoice $invoice): void
     {
-        $lines = $invoice->items()->whereNotNull('membership_id')->get();
-        foreach ($lines->groupBy('membership_id') as $mid => $items) {
-            $m = Membership::query()->with('balances')->whereKey($mid)->lockForUpdate()->first();
-            if (! $m || ! $m->isActive()) {
-                throw new BusinessException(__('The membership applied to this invoice is no longer active. Remove it and apply again.'));
-            }
-            foreach ($items as $item) {
-                $balance = $item->service_id ? $m->balances->firstWhere('service_id', $item->service_id) : null;
-                $coveredQty = 0;
-                if ($balance && Money::cmp($item->discount, $item->unit_price) >= 0) {
-                    $coveredQty = (int) min(floor((float) $item->discount / max(0.001, (float) $item->unit_price) + 0.0001), (float) $item->qty);
-                    if ($coveredQty > $balance->left()) {
-                        throw new BusinessException(__('The membership has only :n included “:s” left.', ['n' => $balance->left(), 's' => $balance->service?->displayName()]));
-                    }
-                    $balance->increment('used', $coveredQty);
+        if (! $invoice->membership_id) {
+            return;
+        }
+        $m = Membership::query()->with('balances.service')->whereKey($invoice->membership_id)->lockForUpdate()->first();
+        if (! $m || ! $m->isActive() || (int) $m->customer_id !== (int) $invoice->customer_id) {
+            throw new BusinessException(__('The membership applied to this invoice is no longer active. Remove it and apply again.'));
+        }
+        foreach ($invoice->items()->get() as $item) {
+            $balance = $item->service_id ? $m->balances->firstWhere('service_id', $item->service_id) : null;
+            $coveredQty = 0;
+            if ($balance && Money::isPositive($item->unit_price) && Money::cmp($item->discount, $item->unit_price) >= 0) {
+                $coveredQty = (int) min(floor((float) $item->discount / (float) $item->unit_price + 0.0001), (float) $item->qty);
+                if ($coveredQty > $balance->left()) {
+                    throw new BusinessException(__('The membership has only :n included “:s” left.', ['n' => $balance->left(), 's' => $balance->service?->displayName()]));
                 }
+                $balance->increment('used', $coveredQty);
+                $balance->refresh();
+            }
+            if ($coveredQty || ($item->membership_id && Money::isPositive($item->discount))) {
                 $m->usages()->firstOrCreate(['invoice_item_id' => $item->id], ['invoice_id' => $invoice->id, 'service_id' => $item->service_id,
                     'qty' => $coveredQty ?: $item->qty, 'value' => $item->discount, 'kind' => $coveredQty ? 'included' : 'discount']);
             }

@@ -64,6 +64,13 @@ class MembershipLoyaltyTest extends TestCase
         $this->assertSame('25.000', $inv->discount_total);                // 20 + 5
         $this->assertSame('47.250', $inv->total);                         // 45 + 5 % VAT
 
+        // editing the draft after applying (lines are recreated without their flags) keeps the membership on the header
+        $lines = $inv->items()->get()->map(fn ($i) => ['item_type' => $i->item_type, 'part_id' => $i->part_id, 'service_id' => $i->service_id,
+            'description' => $i->description, 'qty' => $i->qty, 'unit_price' => $i->unit_price, 'discount' => $i->discount, 'tax_rate' => $i->tax_rate])->all();
+        $inv = app(InvoiceService::class)->updateDraft($inv, [], $lines);
+        $this->assertNull($inv->items()->whereNotNull('membership_id')->first());
+        $this->assertSame($m->id, $inv->fresh()->membership_id);
+
         // a second draft also gets the oil free, but only one can be posted (balance re-checked under lock)
         $inv2 = $this->invoice($c, [['item_type' => 'service', 'service_id' => $oil->id, 'description' => 'Oil', 'qty' => 1, 'unit_price' => 20, 'tax_rate' => 5]], false);
         app(MembershipService::class)->applyToInvoice($inv2);
@@ -99,6 +106,10 @@ class MembershipLoyaltyTest extends TestCase
         $this->assertSame('2.000', $inv->fresh()->paid_amount);
         $this->assertSame('100.000', (string) $c->fresh()->loyalty_points);
         $this->get('/payments/'.$pay->id)->assertOk();
+        $this->get('/m/payments')->assertOk()->assertSee($pay->number);
+        $this->get('/vouchers/payments/'.$pay->id)->assertOk();
+        $this->get('/customers/'.$c->id.'/statement')->assertOk();
+        $this->get('/dashboard')->assertOk();
 
         // cancelling the receipt gives the points back
         app(PaymentService::class)->cancel($pay, 'test');
@@ -137,6 +148,25 @@ class MembershipLoyaltyTest extends TestCase
         $other = $this->invoice($c, [['item_type' => 'service', 'description' => 'Polish', 'qty' => 1, 'unit_price' => 40, 'tax_rate' => 5]], false);
         $this->post('/invoices/'.$other->id.'/loyalty/coupon', ['code' => $coupon->code])->assertSessionHas('error');   // single use
         $this->assertLedgerBalanced();
+    }
+
+    public function test_walk_in_customer_never_earns_or_redeems(): void
+    {
+        $walkIn = Customer::query()->where('code', 'WALKIN')->firstOrFail();
+        $walkIn->update(['loyalty_points' => 500]);                       // even if points got there somehow
+        $inv = $this->invoice($walkIn, [['item_type' => 'service', 'description' => 'Cash sale', 'qty' => 1, 'unit_price' => 200, 'tax_rate' => 5]]);
+        $this->assertSame(0, LoyaltyTransaction::query()->count());
+        $this->expectException(BusinessException::class);
+        app(LoyaltyService::class)->redeem($inv, 100);
+    }
+
+    public function test_insurance_invoices_earn_nothing(): void
+    {
+        $c = $this->makeCustomer();
+        $svc = app(InvoiceService::class);
+        $inv = $svc->createDraft(['customer_id' => $c->id, 'type' => 'insurance', 'payment_terms' => 'credit'], [['item_type' => 'service', 'description' => 'Claim', 'qty' => 1, 'unit_price' => 100, 'tax_rate' => 5]]);
+        $svc->post($inv);
+        $this->assertSame(0, LoyaltyTransaction::query()->count());
     }
 
     public function test_features_follow_the_plan(): void

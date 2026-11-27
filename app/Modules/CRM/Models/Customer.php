@@ -93,6 +93,12 @@ class Customer extends TenantModel
         return \App\Support\Money::sub($this->credit_limit, $this->balance());
     }
 
+    /** The shared walk-in / cash customer of the POS (never earns, redeems or refers). */
+    public function isWalkIn(): bool
+    {
+        return $this->code === 'WALKIN' || (int) setting('pos.walk_in_customer_id') === (int) $this->id;
+    }
+
     public function referrals(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(self::class, 'referred_by_id');

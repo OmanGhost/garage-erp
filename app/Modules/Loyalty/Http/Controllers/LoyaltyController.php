@@ -54,7 +54,7 @@ class LoyaltyController extends Controller
             'cards' => GiftCard::query()->with('customer')->latest('id')->limit(15)->get(),
             'referrers' => Customer::query()->whereIn('id', Customer::query()->whereNotNull('referred_by_id')->select('referred_by_id'))
                 ->withCount(['referrals'])->orderByDesc('referrals_count')->limit(8)->get(),
-            'banks' => Options::bankAccounts(),
+            'banks' => collect(Options::bankAccounts())->except(\App\Modules\Sales\Models\CashRegister::query()->pluck('bank_account_id')->filter()->all())->all(),
             'tiers' => LoyaltyService::tiers(),
         ]);
     }

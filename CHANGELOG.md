@@ -9,6 +9,8 @@ Create a new entry with `php artisan erp:release patch|minor|major "what changed
 - Maintenance memberships: yearly plans with included services, parts / labour discounts, priority booking and roadside calls; sold with an invoice and active once posted; benefits applied on draft invoices and consumed at posting under lock; membership card (revenue recognised at sale, no deferral)
 - Loyalty & rewards: points on posted invoices with silver / gold tiers, redemption as a payment (Dr loyalty liability / Cr receivables), points back when the receipt is cancelled and taken back on returns, inactivity expiry, referral bonus, gift cards (sold to a cash / bank account, spent as payment, breakage on expiry), invoice coupons and single-use personal offers to customers who have not come back
 - New system accounts added to every existing company: loyalty points liability, gift cards outstanding, loyalty program expense; payments from points / gift cards have no bank account
+- The walk-in / cash customer never earns, redeems or refers; insurance and fleet invoices earn no points; membership benefits are kept on the invoice header so editing a draft cannot skip their consumption
+- Gift cards are issued to the main cash or a bank account (not to a POS drawer, whose session cash is counted from receipts)
 - The two new modules are switched on automatically only for plans that already include every main module
 
 ## [1.20.0] - 2026-11-27

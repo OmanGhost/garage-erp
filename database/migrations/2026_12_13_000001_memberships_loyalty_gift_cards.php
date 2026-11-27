@@ -112,6 +112,7 @@ return new class extends Migration
         });
         Schema::table('invoices', function (Blueprint $table) {
             $table->unsignedBigInteger('coupon_id')->nullable();
+            $table->unsignedBigInteger('membership_id')->nullable();
         });
         Schema::table('coupons', function (Blueprint $table) {
             $table->unsignedBigInteger('customer_id')->nullable(); // personal offer
@@ -180,7 +181,7 @@ return new class extends Migration
             $t->dropColumn(['loyalty_points', 'loyalty_tier', 'referral_code', 'referred_by_id']);
         });
         Schema::table('invoice_items', fn (Blueprint $t) => $t->dropColumn('membership_id'));
-        Schema::table('invoices', fn (Blueprint $t) => $t->dropColumn('coupon_id'));
+        Schema::table('invoices', fn (Blueprint $t) => $t->dropColumn(['coupon_id', 'membership_id']));
         Schema::table('coupons', fn (Blueprint $t) => $t->dropColumn(['customer_id', 'campaign']));
     }
 };
