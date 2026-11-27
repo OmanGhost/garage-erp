@@ -4,7 +4,7 @@
         $tasks = $jc->tasks->whereNotIn('status', ['cancelled']);
         $done = $tasks->where('status', 'done')->count();
         $pct = $tasks->count() ? round($done * 100 / $tasks->count()) : 0;
-        $current = $tasks->firstWhere('status', 'in_progress') ?? $tasks->whereIn('status', ['pending', 'paused'])->sortBy('scheduled_start')->first();
+        $current = $tasks->where('is_subcontract', false)->firstWhere('status', 'in_progress') ?? $tasks->where('is_subcontract', false)->whereIn('status', ['pending', 'paused'])->sortBy('scheduled_start')->first();
         $due = $jc->promised_at ?? $jc->estimated_completion_at;
         return compact('tasks', 'done', 'pct', 'current', 'due') + ['cls' => $jc->isLate() ? 'late' : $cls, 'who' => $who($jc)];
     };

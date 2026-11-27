@@ -123,7 +123,7 @@
                     <tbody>
                     @forelse($jc->tasks as $t)
                         <tr class="{{ $t->approval_status === 'pending' ? 'table-warning' : ($t->status === 'cancelled' ? 'text-decoration-line-through text-body-tertiary' : '') }}">
-                            <td><div class="fw-semibold">{{ $t->description }}</div><div class="small text-body-secondary">{{ $t->department?->displayName() }} @if($t->is_additional)<span class="badge text-bg-warning">{{ __('Additional') }}</span>@endif @if($t->approval_status !== 'approved'){!! status_badge($t->approval_status) !!}@endif</div>
+                            <td><div class="fw-semibold">{{ $t->description }}</div><div class="small text-body-secondary">{{ $t->department?->displayName() }} @if($t->is_additional)<span class="badge text-bg-warning">{{ __('Additional') }}</span>@endif @if($t->is_subcontract)<span class="badge text-bg-info"><i class="bi bi-buildings"></i> {{ __('Outside work') }}</span>@endif @if($t->approval_status !== 'approved'){!! status_badge($t->approval_status) !!}@endif</div>
                                 @if($t->scheduled_start && ! in_array($t->status, ['done', 'cancelled']))<div class="small {{ $t->scheduled_end->isPast() ? 'text-danger' : 'text-primary' }}"><i class="bi bi-calendar-range"></i> {{ $t->scheduled_start->format($t->scheduled_start->isToday() ? 'H:i' : 'd/m H:i') }}–{{ $t->scheduled_end->format('H:i') }}@if($t->bay) · {{ $t->bay->code }}@endif</div>@endif</td>
                             <td>
                                 @if(!$closed && $t->status !== 'done' && auth()->user()->can('job_cards.update'))
@@ -136,14 +136,14 @@
                             <td class="text-end font-monospace">{{ money($t->line_total, false) }}</td>
                             <td>{!! status_badge($t->status) !!}</td>
                             <td class="text-end text-nowrap">
-                                @if(!$closed && $t->approval_status === 'approved')
+                                @if(!$closed && $t->approval_status === 'approved' && ! $t->is_subcontract)
                                     @if(in_array($t->status, ['pending', 'paused']))<form method="post" action="{{ route('job-cards.tasks.action', [$t, 'start']) }}" class="d-inline">@csrf<button class="btn btn-sm btn-success" title="{{ __('Start') }}"><i class="bi bi-play-fill"></i></button></form>@endif
                                     @if($t->status === 'in_progress')
                                         <form method="post" action="{{ route('job-cards.tasks.action', [$t, 'pause']) }}" class="d-inline">@csrf<button class="btn btn-sm btn-warning" title="{{ __('Pause') }}"><i class="bi bi-pause-fill"></i></button></form>
                                         <form method="post" action="{{ route('job-cards.tasks.action', [$t, 'finish']) }}" class="d-inline">@csrf<button class="btn btn-sm btn-primary" title="{{ __('Finish') }}"><i class="bi bi-check-lg"></i></button></form>
                                     @endif
                                 @endif
-                                @if(!$closed && !in_array($t->status, ['done', 'cancelled']))<form method="post" action="{{ route('job-cards.tasks.action', [$t, 'cancel']) }}" class="d-inline" data-confirm="{{ __('Cancel this task?') }}">@csrf<button class="btn btn-sm btn-light text-danger"><i class="bi bi-x"></i></button></form>@endif
+                                @if(!$closed && !in_array($t->status, ['done', 'cancelled']) && ! $t->is_subcontract)<form method="post" action="{{ route('job-cards.tasks.action', [$t, 'cancel']) }}" class="d-inline" data-confirm="{{ __('Cancel this task?') }}">@csrf<button class="btn btn-sm btn-light text-danger"><i class="bi bi-x"></i></button></form>@endif
                             </td>
                         </tr>
                     @empty
@@ -164,6 +164,7 @@
                 </form>
                 @endcan
                 @endif
+                @include('workshop::partials.subcontracts')
             </div>
 
             {{-- parts --}}
@@ -287,7 +288,7 @@
             <div class="tab-pane fade" id="tab-cost"><div class="card-body">
                 @can('reports.view')
                 <div class="row g-3 text-center">
-                    @foreach([['estimated_total', __('Estimate (incl. VAT)')], ['labor_cost', __('Labour cost')], ['parts_cost', __('Parts cost')], ['total_cost', __('Total cost')], ['revenue', __('Net revenue')], ['profit', __('Profit')]] as [$k, $l])
+                    @foreach([['estimated_total', __('Estimate (incl. VAT)')], ['labor_cost', __('Labour cost')], ['parts_cost', __('Parts cost')], ...((float) $jc->subcontract_cost > 0 ? [['subcontract_cost', __('Outside work cost')]] : []), ['total_cost', __('Total cost')], ['revenue', __('Net revenue')], ['profit', __('Profit')]] as [$k, $l])
                         <div class="col-6 col-md-4"><div class="border rounded p-2"><div class="small text-body-secondary">{{ $l }}</div><div class="fs-5 fw-bold font-monospace {{ $k === 'profit' ? ((float) $jc->profit >= 0 ? 'text-success' : 'text-danger') : '' }}">{{ money($jc->{$k}, false) }}</div></div></div>
                     @endforeach
                 </div>

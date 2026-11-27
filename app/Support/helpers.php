@@ -62,9 +62,9 @@ if (! function_exists('status_badge')) {
             return '';
         }
         $map = [
-            'success' => ['approved', 'paid', 'posted', 'completed', 'delivered', 'received', 'active', 'pass', 'present', 'closed_ok', 'in_stock', 'confirmed', 'accepted', 'resolved', 'converted', 'ready_for_delivery', 'done', 'open'],
-            'warning' => ['pending', 'pending_inspection', 'awaiting_quotation', 'awaiting_customer_approval', 'awaiting_spare_parts', 'partially_paid', 'partially_received', 'partially_approved', 'submitted', 'sent', 'draft', 'held', 'on_hold', 'scheduled', 'under_review', 'late', 'trial', 'in_transit', 'requested', 'reserved'],
-            'info' => ['under_inspection', 'in_progress', 'quality_inspection', 'issued', 'checked_in', 'dismantling', 'ordered', 'invoiced'],
+            'success' => ['approved', 'paid', 'posted', 'completed', 'delivered', 'received', 'active', 'pass', 'present', 'closed_ok', 'in_stock', 'confirmed', 'accepted', 'resolved', 'converted', 'ready_for_delivery', 'done', 'open', 'back_in'],
+            'warning' => ['pending', 'pending_inspection', 'awaiting_quotation', 'awaiting_customer_approval', 'awaiting_spare_parts', 'partially_paid', 'partially_received', 'partially_approved', 'submitted', 'sent', 'draft', 'held', 'on_hold', 'scheduled', 'under_review', 'late', 'trial', 'in_transit', 'requested', 'reserved', 'sent_out', 'assigned'],
+            'info' => ['under_inspection', 'in_progress', 'quality_inspection', 'issued', 'checked_in', 'dismantling', 'ordered', 'invoiced', 'en_route', 'on_site'],
             'danger' => ['cancelled', 'rejected', 'expired', 'fail', 'absent', 'no_show', 'reversed', 'overdue', 'suspended', 'scrapped', 'damaged', 'critical', 'high'],
         ];
         $color = 'secondary';

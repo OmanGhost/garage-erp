@@ -23,6 +23,7 @@ class JobCardTask extends Model
         'scheduled_start' => 'datetime',
         'scheduled_end' => 'datetime',
         'is_additional' => 'boolean',
+        'is_subcontract' => 'boolean',
     ];
 
     protected static function booted(): void

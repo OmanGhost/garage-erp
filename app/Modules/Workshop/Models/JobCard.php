@@ -19,6 +19,7 @@ class JobCard extends TenantModel
         'approved_total' => 'decimal:3',
         'labor_cost' => 'decimal:3',
         'parts_cost' => 'decimal:3',
+        'subcontract_cost' => 'decimal:3',
         'total_cost' => 'decimal:3',
         'revenue' => 'decimal:3',
         'profit' => 'decimal:3',
@@ -112,6 +113,11 @@ class JobCard extends TenantModel
     public function invoices(): HasMany
     {
         return $this->hasMany(\App\Modules\Sales\Models\Invoice::class);
+    }
+
+    public function subcontracts(): HasMany
+    {
+        return $this->hasMany(SubcontractOrder::class);
     }
 
     public function tasks(): HasMany

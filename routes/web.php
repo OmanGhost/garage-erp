@@ -73,6 +73,8 @@ Route::middleware('throttle:portal')->group(function () {
     Route::post('/dvi/{token}/sign', [PublicController::class, 'dviSign'])->name('public.dvi.sign');
     Route::get('/dvi/{token}/photo/{attachment}', [PublicController::class, 'dviPhoto'])->name('public.dvi.photo');
     Route::get('/tv/{token}', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'tv'])->name('workshop.tv');
+    Route::get('/rsa/{token}', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'publicShow'])->name('roadside.public');
+    Route::post('/rsa/{token}/location', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'publicLocation'])->middleware('throttle:20,1')->name('roadside.public.location');
 });
 
 // online store (per company)
@@ -291,6 +293,17 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/quality/actions/{action}/{step}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'actionStep'])->middleware('module:quality')->name('quality.actions.step')->whereIn('step', ['complete', 'verify']);
         Route::get('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'audit'])->middleware('module:quality')->name('quality.audits.show');
         Route::post('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'recordAudit'])->middleware('module:quality')->name('quality.audits.record');
+        // subcontracted (outside) repairs
+        Route::get('/workshop/subcontracts', [\App\Modules\Workshop\Http\Controllers\SubcontractController::class, 'index'])->middleware('module:subcontracting')->name('subcontracts.index');
+        Route::post('/job-cards/{jobCard}/subcontracts', [\App\Modules\Workshop\Http\Controllers\SubcontractController::class, 'store'])->middleware('module:subcontracting')->name('subcontracts.store');
+        Route::post('/subcontracts/{order}/{action}', [\App\Modules\Workshop\Http\Controllers\SubcontractController::class, 'action'])->middleware('module:subcontracting')->name('subcontracts.action')->whereIn('action', ['send', 'receive', 'cancel']);
+        Route::get('/subcontracts/{order}/print', [\App\Modules\Workshop\Http\Controllers\SubcontractController::class, 'print'])->middleware('module:subcontracting')->name('subcontracts.print');
+        // roadside assistance
+        Route::get('/roadside', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'index'])->middleware('module:roadside')->name('roadside.index');
+        Route::post('/roadside', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'store'])->middleware('module:roadside')->name('roadside.store');
+        Route::post('/roadside/settings', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'saveSettings'])->middleware('module:roadside')->name('roadside.settings');
+        Route::get('/roadside/{roadside}', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'show'])->middleware('module:roadside')->name('roadside.show');
+        Route::post('/roadside/{roadside}/{action}', [\App\Modules\Workshop\Http\Controllers\RoadsideController::class, 'action'])->middleware('module:roadside')->name('roadside.action')->whereIn('action', ['assign', 'en_route', 'on_site', 'complete', 'cancel']);
         // vehicle & key tracking
         Route::get('/workshop/tracking', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'index'])->middleware('module:vehicle_tracking')->name('tracking.index');
         Route::post('/workshop/tracking/scan', [\App\Modules\Workshop\Http\Controllers\TrackingController::class, 'scan'])->middleware('module:vehicle_tracking')->name('tracking.scan');

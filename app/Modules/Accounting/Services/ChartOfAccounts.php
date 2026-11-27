@@ -58,6 +58,7 @@ class ChartOfAccounts
         ['5101', 'تكلفة قطع الغيار المباعة', 'Cost of Parts Sold', 'expense', '51', 'cogs', false, 'operating'],
         ['5102', 'تكلفة الضمان', 'Warranty Cost', 'expense', '51', 'warranty_expense', false, 'operating'],
         ['5103', 'فروق أسعار الشراء', 'Purchase Price Variance', 'expense', '51', 'price_variance', false, 'operating'],
+        ['5104', 'تكلفة الأعمال الخارجية', 'Subcontracted Work Cost', 'expense', '51', 'subcontract_cost', false, 'operating'],
         ['52', 'المصروفات التشغيلية', 'Operating Expenses', 'expense', '5', null, true, null],
         ['5201', 'الرواتب والأجور', 'Salaries & Wages', 'expense', '52', 'salaries_expense', false, 'operating'],
         ['5202', 'العمولات والحوافز', 'Commissions & Incentives', 'expense', '52', 'commission_expense', false, 'operating'],

@@ -189,7 +189,7 @@ class CapacityService
     {
         $this->planned = [];
         $this->busyCache = [];
-        $tasks = $jc->tasks()->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')
+        $tasks = $jc->tasks()->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->where('is_subcontract', false)
             ->when(! $replan, fn ($q) => $q->whereNull('scheduled_start'))->orderBy('sort')->orderBy('id')->get();
         $techs = $this->technicians()->pluck('id')->all();
         $bays = $this->bays();
@@ -249,6 +249,9 @@ class CapacityService
     /** Manual booking of one task with clash checks. */
     public function scheduleTask(JobCardTask $task, ?int $technicianId, ?int $bayId, Carbon $start): void
     {
+        if ($task->is_subcontract) {
+            throw new \App\Exceptions\BusinessException(__('Outside work is not planned on bays or technicians.'));
+        }
         $end = $start->copy()->addMinutes($task->plannedMinutes());
         $this->assertFree($technicianId, $bayId, $start, $end, $task->id);
         $task->update(['technician_id' => $technicianId ?: $task->technician_id, 'bay_id' => $bayId, 'scheduled_start' => $start, 'scheduled_end' => $end]);

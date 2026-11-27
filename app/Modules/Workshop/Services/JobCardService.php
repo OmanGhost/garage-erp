@@ -77,6 +77,10 @@ class JobCardService
             if (! $override || in_array($to, [JobCard::DELIVERED, JobCard::CANCELLED], true)) {
                 $this->guard($jc, $to);
             }
+            // the customer's part is physically out with a subcontractor: no override
+            if (in_array($to, [JobCard::READY, JobCard::DELIVERED], true) && $jc->subcontracts()->where('status', 'sent_out')->exists()) {
+                throw new BusinessException(__('Outside work is still with the subcontractor. Receive it back first.'));
+            }
 
             $jc->status = $to;
             match ($to) {
@@ -150,6 +154,9 @@ class JobCardService
                 if ($jc->invoices()->whereIn('status', ['posted', 'partially_paid', 'paid'])->exists()) {
                     throw new BusinessException(__('Invoiced job cards cannot be cancelled. Issue a credit note first.'));
                 }
+                if ($jc->subcontracts()->where('status', 'sent_out')->exists()) {
+                    throw new BusinessException(__('Outside work is still with the subcontractor. Receive it back first.'));
+                }
                 foreach ($jc->parts as $p) {
                     if (Money::isPositive($p->netQty())) {
                         throw new BusinessException(__('Return issued parts to stock before cancelling (:p).', ['p' => $p->part->label()]));
@@ -190,6 +197,7 @@ class JobCardService
             $this->cancelPart($p);
         }
         $jc->tasks()->whereNotIn('status', ['done'])->update(['status' => 'cancelled']);
+        $jc->subcontracts()->where('status', 'draft')->update(['status' => 'cancelled']);
         $jc->invoices()->whereIn('status', ['draft', 'held'])->get()->each(fn ($i) => $i->items()->delete() && $i->delete());
     }
 
@@ -249,6 +257,9 @@ class JobCardService
             if ($task->approval_status !== 'approved') {
                 throw new BusinessException(__('This additional work has not been approved by the customer yet.'));
             }
+            if ($task->is_subcontract) {
+                throw new BusinessException(__('Outside work is finished when it is received back from the subcontractor.'));
+            }
             if (! in_array($jc->status, [JobCard::APPROVED, JobCard::AWAITING_PARTS, JobCard::IN_PROGRESS, JobCard::QUALITY_INSPECTION], true)) {
                 throw new BusinessException(__('Work can only start on approved job cards.'));
             }
@@ -275,6 +286,9 @@ class JobCardService
     public function finishTask(JobCardTask $task): void
     {
         DB::transaction(function () use ($task) {
+            if ($task->is_subcontract) {
+                throw new BusinessException(__('Outside work is finished when it is received back from the subcontractor.'));
+            }
             $this->closeTimeLogs($task);
             $task->update(['status' => 'done', 'finished_at' => now()]);
             $this->refreshProgress($task->jobCard);
@@ -298,7 +312,7 @@ class JobCardService
     {
         $this->assertEditable($task->jobCard);
         $fill = array_intersect_key($data, array_flip(['technician_id', 'department_id', 'description', 'notes', 'estimated_minutes']));
-        if ($task->approval_status === 'pending' || ! $this->isApprovedStage($task->jobCard)) {
+        if (($task->approval_status === 'pending' || ! $this->isApprovedStage($task->jobCard)) && ! $task->is_subcontract) {
             $fill += array_intersect_key($data, array_flip(['qty', 'unit_price', 'discount', 'tax_rate']));
         }
         $task->fill($fill);
@@ -311,6 +325,9 @@ class JobCardService
     {
         if ($task->status === 'done') {
             throw new BusinessException(__('Finished tasks cannot be cancelled.'));
+        }
+        if ($task->is_subcontract && \App\Modules\Workshop\Models\SubcontractOrder::query()->where('job_card_task_id', $task->id)->where('status', '!=', 'cancelled')->exists()) {
+            throw new BusinessException(__('Cancel the outside work order instead.'));
         }
         $this->closeTimeLogs($task);
         $task->update(['status' => 'cancelled']);

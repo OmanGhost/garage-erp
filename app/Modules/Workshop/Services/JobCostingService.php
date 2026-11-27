@@ -7,7 +7,7 @@ use App\Support\Money;
 
 /**
  * Actual job costing & profitability: labor (technician time x hourly cost)
- * + parts (issued net of returns at cost) vs. net invoiced revenue.
+ * + parts (issued net of returns at cost) + outside (subcontracted) work vs. net invoiced revenue.
  */
 class JobCostingService
 {
@@ -32,9 +32,14 @@ class JobCostingService
             $net = Money::sub(Money::mul($p->qty, $p->unit_price), $p->discount);
             $estimated = Money::add($estimated, $net, Money::percent($net, $p->tax_rate));
         }
-        $total = Money::add($labor, $parts);
+        // outside work: actual cost once back, the quote while it is still out
+        $sub = '0';
+        foreach ($jc->subcontracts()->whereIn('status', ['sent_out', 'back_in'])->get() as $s) {
+            $sub = Money::add($sub, $s->status === 'back_in' ? (string) $s->actual_cost : (string) $s->quoted_cost);
+        }
+        $total = Money::add($labor, $parts, $sub);
         $jc->forceFill([
-            'labor_cost' => $labor, 'parts_cost' => $parts, 'total_cost' => $total,
+            'labor_cost' => $labor, 'parts_cost' => $parts, 'subcontract_cost' => $sub, 'total_cost' => $total,
             'revenue' => $revenue, 'profit' => Money::sub($revenue, $total), 'estimated_total' => $estimated,
         ])->saveQuietly();
 

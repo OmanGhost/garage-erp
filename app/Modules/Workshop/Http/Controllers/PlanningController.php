@@ -28,9 +28,9 @@ class PlanningController extends Controller
         $period = $request->query('period') === 'month' ? 'month' : 'week';
         [$pFrom, $pTo] = $period === 'month' ? [now()->startOfMonth(), now()->endOfMonth()] : [now()->startOfWeek(Carbon::SATURDAY), now()->startOfWeek(Carbon::SATURDAY)->addDays(6)];
 
-        $queue = JobCard::query()->with(['vehicle', 'customer', 'tasks' => fn ($q) => $q->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->whereNull('scheduled_start')->orderBy('sort')])
+        $queue = JobCard::query()->with(['vehicle', 'customer', 'tasks' => fn ($q) => $q->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->where('is_subcontract', false)->whereNull('scheduled_start')->orderBy('sort')])
             ->whereIn('status', array_diff(JobCard::OPEN_STATUSES, [JobCard::READY]))
-            ->whereHas('tasks', fn ($q) => $q->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->whereNull('scheduled_start'))
+            ->whereHas('tasks', fn ($q) => $q->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->where('is_subcontract', false)->whereNull('scheduled_start'))
             ->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END")->orderBy('received_at')->limit(40)->get();
 
         return view('workshop::planner', [
@@ -57,7 +57,7 @@ class PlanningController extends Controller
         $this->can('workshop_planning.update');
         $n = 0;
         $cards = JobCard::query()->whereIn('status', array_diff(JobCard::OPEN_STATUSES, [JobCard::READY]))
-            ->whereHas('tasks', fn ($q) => $q->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->whereNull('scheduled_start'))
+            ->whereHas('tasks', fn ($q) => $q->whereIn('status', ['pending', 'paused'])->where('approval_status', 'approved')->where('is_subcontract', false)->whereNull('scheduled_start'))
             ->orderByRaw("CASE priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END")->orderBy('received_at')->limit(100)->get();
         foreach ($cards as $jc) {
             $n += count($this->capacity->autoSchedule($jc));

@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.22.0] - 2026-11-27
+- Subcontracted (outside) repairs: outside work orders linked to the job card (subcontractor, work type, item sent, agreed cost, customer price, expected return, outside warranty); the customer price becomes a job card task needing the usual approval; the customer's part leaves without a stock movement; on return the task is finished, the cost enters job costing and a draft supplier invoice is prepared on the new "Subcontracted work cost" account (5104); list of work out / overdue / under warranty and a printable order
+- Outside work tasks are never auto-scheduled, cannot be started, finished or cancelled directly, and the job card cannot become ready / delivered / cancelled while the part is out (no override)
+- Roadside assistance: calls (tow, battery, tyre, fuel, lockout, jump start) matched to the customer by phone and plate, driver dispatch with timestamps (assigned, en route, on site, completed), secret customer link to share the GPS location (Google Maps), pricing = base fee + km beyond the included distance + extras, a membership roadside call covers the base fee and is consumed once on completion, the rest billed on a draft service invoice, a tow into the workshop opens a linked job card
+- New plan modules "Subcontracted repairs" and "Roadside assistance", switched on only for plans that already include every main module
+
 ## [1.21.0] - 2026-11-27
 - Maintenance memberships: yearly plans with included services, parts / labour discounts, priority booking and roadside calls; sold with an invoice and active once posted; benefits applied on draft invoices and consumed at posting under lock; membership card (revenue recognised at sale, no deferral)
 - Loyalty & rewards: points on posted invoices with silver / gold tiers, redemption as a payment (Dr loyalty liability / Cr receivables), points back when the receipt is cancelled and taken back on returns, inactivity expiry, referral bonus, gift cards (sold to a cash / bank account, spent as payment, breakage on expiry), invoice coupons and single-use personal offers to customers who have not come back

@@ -162,6 +162,9 @@ class MembershipService
     {
         DB::transaction(function () use ($m) {
             $m = Membership::query()->with('plan')->whereKey($m->id)->lockForUpdate()->firstOrFail();
+            if (! $m->isActive()) {
+                throw new BusinessException(__('The membership is no longer active.'));
+            }
             if ($m->roadsideLeft() < 1) {
                 throw new BusinessException(__('No roadside calls left in this membership.'));
             }

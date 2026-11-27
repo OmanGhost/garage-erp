@@ -22,10 +22,12 @@ class Menu
                 ['label' => __('Point of Sale'), 'icon' => 'bi-upc-scan', 'route' => 'pos.index', 'perm' => 'pos.view', 'module' => 'sales'],
                 ['label' => __('Appointments'), 'icon' => 'bi-calendar-week', 'route' => 'appointments.calendar', 'perm' => 'appointments.view', 'module' => 'appointments'],
             ]],
-            ['label' => __('Workshop'), 'module' => 'workshop', 'paths' => ['job-cards', 'inspections', 'quotations', 'gate-log', 'handover-authorizations', 'departments', 'workshop/planner', 'workshop/tracking', 'test-drives'], 'items' => [
+            ['label' => __('Workshop'), 'module' => 'workshop', 'paths' => ['job-cards', 'inspections', 'quotations', 'gate-log', 'handover-authorizations', 'departments', 'workshop/planner', 'workshop/tracking', 'test-drives', 'workshop/subcontracts', 'subcontracts', 'roadside'], 'items' => [
                 ['label' => __('Workshop planner'), 'icon' => 'bi-calendar-range', 'route' => 'workshop.planner', 'perm' => 'workshop_planning.view', 'module' => 'planning'],
                 ['label' => __('Live workshop screen'), 'icon' => 'bi-tv', 'route' => 'workshop.live', 'perm' => 'job_cards.view', 'module' => 'planning'],
                 ['label' => __('Vehicle & key tracking'), 'icon' => 'bi-key', 'route' => 'tracking.index', 'perm' => 'vehicle_tracking.view', 'module' => 'vehicle_tracking'],
+                ['label' => __('Subcontracted repairs'), 'icon' => 'bi-buildings', 'route' => 'subcontracts.index', 'perm' => 'subcontracts.view', 'module' => 'subcontracting'],
+                ['label' => __('Roadside assistance'), 'icon' => 'bi-truck-flatbed', 'route' => 'roadside.index', 'perm' => 'roadside.view', 'module' => 'roadside'],
                 ['label' => __('Yard locations'), 'icon' => 'bi-geo-alt', 'url' => self::crud('yard-locations'), 'perm' => 'yard_locations.view', 'module' => 'vehicle_tracking'],
                 ['label' => __('Job Cards'), 'icon' => 'bi-clipboard-check', 'url' => self::crud('job-cards'), 'perm' => 'job_cards.view'],
                 ['label' => __('Quotations'), 'icon' => 'bi-file-earmark-text', 'url' => self::crud('quotations'), 'perm' => 'quotations.view'],

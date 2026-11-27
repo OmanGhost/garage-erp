@@ -21,6 +21,8 @@ $resources = [
     'workshop_planning', 'yard_locations', 'vehicle_tracking', 'test_drives',
     // memberships & loyalty
     'memberships', 'membership_plans', 'loyalty', 'gift_cards',
+    // subcontracting & roadside
+    'subcontracts', 'roadside',
     // quality management
     'quality', 'quality_sops', 'nonconformities', 'capa_actions', 'quality_audits',
     // inventory
@@ -99,6 +101,10 @@ return [
             'description' => 'Interactive diagram, fault photos, measurements, customer report link with approvals, signatures, before / after.'],
         'quality' => ['label' => 'Quality management (QMS)', 'requires' => 'workshop', 'new' => true,
             'description' => 'Nonconformities, CAPA, SOPs, internal audits, comebacks and first-time-fix dashboard.'],
+        'subcontracting' => ['label' => 'Subcontracted repairs', 'requires' => 'workshop', 'new' => true,
+            'description' => 'Send work to outside specialists (machining, transmission, ECU…) linked to the job card: cost, customer price, return date and outside warranty.'],
+        'roadside' => ['label' => 'Roadside assistance', 'requires' => 'workshop', 'new' => true,
+            'description' => 'Tow, battery, tyre and fuel calls: dispatch a driver, live customer location link, distance pricing and membership-covered calls.'],
         'inventory' => ['label' => 'Spare Parts & Inventory'],
         'inventory_analytics' => ['label' => 'Inventory analytics & auto reorder', 'requires' => 'inventory', 'new' => true,
             'description' => 'ABC, stock aging, dead stock, demand forecast, automatic reordering, cycle counting, supplier price history.'],
@@ -131,13 +137,13 @@ return [
         'Super Admin' => '*',
         'Company Admin' => '*',
         'General Manager' => ['*.view', '*.print', '*.export', '*.approve', 'dashboard.*', 'reports.*', 'branches.all', 'job_cards.*'],
-        'Branch Manager' => ['dashboard.*', 'memberships.*', 'membership_plans.view', 'loyalty.*', 'gift_cards.*', 'quality.view', 'quality_sops.view', 'nonconformities.*', 'capa_actions.*', 'quality_audits.view', 'workshop_planning.*', 'vehicle_tracking.*', 'test_drives.*', 'yard_locations.view', 'reports.*', 'customers.*', 'vehicles.*', 'reception.*', 'handover_authorizations.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'appointments.*', 'invoices.*', 'payments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'purchase_orders.view', 'employees.view', 'attendance.*', 'leaves.*', 'complaints.*', 'pos.*'],
-        'Workshop Manager' => ['dashboard.view', 'quality.*', 'quality_sops.*', 'nonconformities.*', 'capa_actions.*', 'quality_audits.*', 'workshop_planning.*', 'yard_locations.*', 'vehicle_tracking.*', 'test_drives.*', 'customers.*', 'vehicles.*', 'departments.*', 'services.*', 'service_packages.*', 'workshop_bays.*', 'reception.*', 'handover_authorizations.*', 'inspection_templates.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'quality_checks.*', 'appointments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'warranty_claims.*', 'warranties.view', 'equipment.*', 'reports.view', 'commissions.view', 'insurance_claims.*', 'fleets.view'],
-        'Receptionist' => ['dashboard.view', 'memberships.view', 'memberships.create', 'loyalty.view', 'workshop_planning.view', 'vehicle_tracking.*', 'test_drives.view', 'test_drives.create', 'yard_locations.view', 'customers.view', 'customers.create', 'customers.update', 'vehicles.view', 'vehicles.create', 'vehicles.update', 'reception.*', 'handover_authorizations.*', 'job_cards.view', 'job_cards.print', 'quotations.view', 'quotations.create', 'quotations.print', 'appointments.*', 'complaints.view', 'complaints.create', 'services.view', 'parts.view'],
-        'Technician' => ['dashboard.view', 'quality_sops.view', 'capa_actions.view', 'capa_actions.update', 'workshop_planning.view', 'vehicle_tracking.view', 'vehicle_tracking.update', 'test_drives.view', 'test_drives.update', 'job_cards.view', 'job_cards.change_status', 'inspections.view', 'inspections.create', 'inspections.update', 'parts.view', 'vehicles.view', 'services.view'],
+        'Branch Manager' => ['dashboard.*', 'subcontracts.*', 'roadside.*', 'memberships.*', 'membership_plans.view', 'loyalty.*', 'gift_cards.*', 'quality.view', 'quality_sops.view', 'nonconformities.*', 'capa_actions.*', 'quality_audits.view', 'workshop_planning.*', 'vehicle_tracking.*', 'test_drives.*', 'yard_locations.view', 'reports.*', 'customers.*', 'vehicles.*', 'reception.*', 'handover_authorizations.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'appointments.*', 'invoices.*', 'payments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'purchase_orders.view', 'employees.view', 'attendance.*', 'leaves.*', 'complaints.*', 'pos.*'],
+        'Workshop Manager' => ['dashboard.view', 'subcontracts.*', 'roadside.*', 'quality.*', 'quality_sops.*', 'nonconformities.*', 'capa_actions.*', 'quality_audits.*', 'workshop_planning.*', 'yard_locations.*', 'vehicle_tracking.*', 'test_drives.*', 'customers.*', 'vehicles.*', 'departments.*', 'services.*', 'service_packages.*', 'workshop_bays.*', 'reception.*', 'handover_authorizations.*', 'inspection_templates.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'quality_checks.*', 'appointments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'warranty_claims.*', 'warranties.view', 'equipment.*', 'reports.view', 'commissions.view', 'insurance_claims.*', 'fleets.view'],
+        'Receptionist' => ['dashboard.view', 'subcontracts.view', 'roadside.view', 'roadside.create', 'roadside.update', 'memberships.view', 'memberships.create', 'loyalty.view', 'workshop_planning.view', 'vehicle_tracking.*', 'test_drives.view', 'test_drives.create', 'yard_locations.view', 'customers.view', 'customers.create', 'customers.update', 'vehicles.view', 'vehicles.create', 'vehicles.update', 'reception.*', 'handover_authorizations.*', 'job_cards.view', 'job_cards.print', 'quotations.view', 'quotations.create', 'quotations.print', 'appointments.*', 'complaints.view', 'complaints.create', 'services.view', 'parts.view'],
+        'Technician' => ['dashboard.view', 'subcontracts.view', 'roadside.view', 'roadside.update', 'quality_sops.view', 'capa_actions.view', 'capa_actions.update', 'workshop_planning.view', 'vehicle_tracking.view', 'vehicle_tracking.update', 'test_drives.view', 'test_drives.update', 'job_cards.view', 'job_cards.change_status', 'inspections.view', 'inspections.create', 'inspections.update', 'parts.view', 'vehicles.view', 'services.view'],
         'Quality Inspector' => ['dashboard.view', 'quality.*', 'quality_sops.*', 'nonconformities.*', 'capa_actions.*', 'quality_audits.*', 'inspection_templates.view', 'supplier_evaluations.view', 'job_cards.view', 'job_cards.change_status', 'quality_checks.*', 'inspections.view', 'vehicles.view'],
         'Storekeeper' => ['dashboard.view', 'parts.*', 'part_categories.*', 'brands.*', 'stock.*', 'stock_transfers.*', 'stock_counts.*', 'stock_adjustments.*', 'warehouses.view', 'goods_receipts.*', 'purchase_requests.view', 'purchase_requests.create', 'job_cards.view', 'dismantling.*', 'reports.view'],
-        'Purchasing Officer' => ['dashboard.view', 'suppliers.*', 'purchase_requests.*', 'rfqs.*', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.print', 'goods_receipts.view', 'supplier_invoices.view', 'supplier_invoices.create', 'landed_costs.*', 'purchase_returns.*', 'supplier_evaluations.*', 'parts.view', 'stock.view', 'reports.view'],
+        'Purchasing Officer' => ['dashboard.view', 'subcontracts.view', 'subcontracts.update', 'suppliers.*', 'purchase_requests.*', 'rfqs.*', 'purchase_orders.view', 'purchase_orders.create', 'purchase_orders.update', 'purchase_orders.print', 'goods_receipts.view', 'supplier_invoices.view', 'supplier_invoices.create', 'landed_costs.*', 'purchase_returns.*', 'supplier_evaluations.*', 'parts.view', 'stock.view', 'reports.view'],
         'Salesperson' => ['dashboard.view', 'memberships.view', 'memberships.create', 'loyalty.view', 'gift_cards.view', 'customers.view', 'customers.create', 'parts.view', 'stock.view', 'pos.view', 'pos.create', 'invoices.view', 'invoices.create', 'invoices.print', 'quotations.view', 'quotations.create', 'sales_orders.*', 'store_orders.view'],
         'Cashier' => ['dashboard.view', 'memberships.view', 'memberships.create', 'loyalty.view', 'gift_cards.view', 'gift_cards.create', 'pos.*', 'invoices.view', 'invoices.create', 'invoices.print', 'invoices.post', 'payments.view', 'payments.create', 'payments.print', 'customers.view', 'customers.create', 'parts.view', 'credit_notes.view', 'credit_notes.create'],
         'Accountant' => ['dashboard.view', 'accounts.*', 'journal_entries.*', 'fiscal_years.*', 'bank_accounts.*', 'expenses.*', 'fund_transfers.*', 'bank_reconciliations.*', 'fixed_assets.*', 'budgets.*', 'invoices.*', 'credit_notes.*', 'payments.*', 'supplier_invoices.*', 'customers.view', 'suppliers.view', 'reports.*', 'cost_centers.*', 'tax_rates.*', 'payroll.view', 'payroll.approve'],
@@ -147,6 +153,10 @@ return [
     ],
 
     'defaults' => [
+        // roadside assistance price = base fee by service type + rate per km beyond the included distance + extras
+        'roadside.base_tow' => '25', 'roadside.base_battery' => '10', 'roadside.base_tyre' => '10', 'roadside.base_fuel' => '8',
+        'roadside.base_lockout' => '15', 'roadside.base_jumpstart' => '8', 'roadside.base_other' => '10',
+        'roadside.km_rate' => '0.5', 'roadside.free_km' => '10',
         'inventory.valuation_method' => 'weighted_average', // weighted_average | fifo
         'inventory.allow_negative' => false,
         'inventory.auto_reorder' => false,
