@@ -49,6 +49,8 @@ class LookupController extends Controller
             'accounts' => Account::query()->where('is_group', false)->where('is_active', true)
                 ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('code', 'like', $q.'%')->orWhere('name_ar', 'like', $like)->orWhere('name_en', 'like', $like)))
                 ->orderBy('code')->limit($limit)->get()->map(fn ($a) => ['id' => $a->id, 'text' => $a->label()]),
+            'sales_orders' => \App\Modules\Sales\Models\SalesOrder::query()->whereIn('status', ['draft', 'confirmed'])->where('number', 'like', $like)
+                ->latest('id')->limit($limit)->get()->map(fn ($o) => ['id' => $o->id, 'text' => $o->number]),
             'job_cards' => JobCard::query()->with('vehicle', 'customer')
                 ->when($q, fn ($x) => $x->where(fn ($w) => $w->where('number', 'like', $like)->orWhereHas('vehicle', fn ($v) => $v->where('plate_number', 'like', $like))))
                 ->latest('id')->limit($limit)->get()->map(fn ($j) => ['id' => $j->id, 'text' => $j->number.' — '.$j->vehicle?->plate().' — '.$j->customer?->name]),

@@ -5,6 +5,10 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.20.0] - 2026-11-27
+- Advanced stock operations: stock reservations with expiry, kits (assemble / disassemble at cost), consignment stock (booked against GRNI, settled per sale into a supplier invoice, returns to consignor), core charges (refundable deposit line, refund by credit note or forfeit), drop shipping (supplier delivers to the customer, received and invoiced in one step)
+- Plans: the new features are modules (workshop planning, vehicle & key tracking, DVI, quality, inventory analytics, advanced stock operations) switched on per plan or per client; plans page redesigned with a feature comparison, descriptions and "new" badges; SaaS dashboard shows feature adoption. Existing plans keep the features they already had
+
 ## [1.19.0] - 2026-11-27
 - Part cross reference: alternatives linked to catalog parts with brand and quality (OEM, OES, aftermarket, remanufactured, used), interchange groups by shared factory numbers (spaces / dashes ignored), cross reference search with stock and prices
 - Inventory analytics: ABC classification by consumption value (saved on parts, refreshed monthly), stock aging buckets, dead stock with tied-up value, demand forecast with cover in months

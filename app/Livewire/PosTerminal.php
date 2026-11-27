@@ -154,7 +154,10 @@ class PosTerminal extends Component
 
     public function totals(): array
     {
-        return Totals::document(array_map(fn ($l) => ['qty' => $l['qty'] ?: 0, 'unit_price' => $l['unit_price'] ?: 0, 'discount' => $l['discount'] ?: 0, 'tax_rate' => $l['tax_rate']], $this->cart));
+        $items = array_map(fn ($l) => ['qty' => $l['qty'] ?: 0, 'unit_price' => $l['unit_price'] ?: 0, 'discount' => $l['discount'] ?: 0, 'tax_rate' => $l['tax_rate']], $this->cart);
+        $deposits = \App\Modules\Sales\Services\CoreChargeService::depositLines($this->cart);
+
+        return Totals::document(array_merge($items, $deposits));
     }
 
     protected function cartPayload(): array
@@ -180,7 +183,7 @@ class PosTerminal extends Component
     public function resume(int $invoiceId): void
     {
         $inv = Invoice::query()->with('items.part', 'customer')->where('status', 'held')->findOrFail($invoiceId);
-        $this->cart = $inv->items->map(fn ($i) => [
+        $this->cart = $inv->items->where('item_type', '!=', 'core')->values()->map(fn ($i) => [
             'part_id' => $i->part_id, 'sku' => $i->part?->sku, 'name' => $i->description, 'qty' => (string) $i->qty,
             'unit_price' => (string) $i->unit_price, 'discount' => (string) $i->discount, 'tax_rate' => (string) $i->tax_rate,
             'min' => (string) $i->part?->min_sale_price,

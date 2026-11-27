@@ -74,6 +74,9 @@ class InvoiceService
     {
         $vat = tenant()->company()?->vat_rate ?? config('erp.vat_rate');
         $sort = 0;
+        // core deposit lines are rebuilt from the parts every time the lines are saved
+        $items = array_values(array_filter($items, fn ($i) => ($i['item_type'] ?? null) !== 'core'));
+        $items = array_merge($items, CoreChargeService::depositLines($items));
         foreach ($items as $i) {
             $qty = Money::round($i['qty'] ?? 1);
             if (! Money::isPositive($qty)) {
@@ -87,6 +90,7 @@ class InvoiceService
             $invoice->items()->create([
                 'item_type' => $type,
                 'part_id' => $part?->id,
+                'core_part_id' => $i['core_part_id'] ?? null,
                 'service_id' => $i['service_id'] ?? null,
                 'job_card_task_id' => $i['job_card_task_id'] ?? null,
                 'job_card_part_id' => $i['job_card_part_id'] ?? null,
@@ -195,7 +199,7 @@ class InvoiceService
 
             $defaultWarehouse = $invoice->warehouse_id ?: Warehouse::query()->where('branch_id', $invoice->branch_id)->value('id') ?: Warehouse::query()->value('id');
             $directCost = $wipCost = '0';
-            $otherRevenue = '0';
+            $otherRevenue = $coreDeposits = '0';
             $partsRevenue = $serviceRevenue = $directCostByCc = []; // keyed by cost center id (0 = none)
             $jcCostCenter = $invoice->jobCard?->department?->cost_center_id;
 
@@ -222,6 +226,8 @@ class InvoiceService
                 } elseif (in_array($item->item_type, ['service', 'labor'], true)) {
                     $cc = $this->costCenterFor($invoice, $item);
                     $serviceRevenue[$cc ?? 0] = Money::add($serviceRevenue[$cc ?? 0] ?? '0', $item->line_total);
+                } elseif ($item->item_type === 'core') {
+                    $coreDeposits = Money::add($coreDeposits, $item->line_total);
                 } else {
                     $otherRevenue = Money::add($otherRevenue, $item->line_total);
                 }
@@ -237,6 +243,7 @@ class InvoiceService
             foreach ($serviceRevenue as $cc => $amount) {
                 $lines[] = ['account' => 'sales_services', 'credit' => $amount, 'cost_center_id' => $cc ?: null];
             }
+            $lines[] = ['account' => 'customer_advances', 'credit' => $coreDeposits, 'party' => $invoice->customer];
             $lines[] = ['account' => 'other_revenue', 'credit' => $otherRevenue];
             $lines[] = ['account' => 'vat_output', 'credit' => $invoice->tax_total];
             // cost of sales: parts issued to the job (WIP) on the job's department, direct stock sales per parts cost center
@@ -269,6 +276,7 @@ class InvoiceService
             }
 
             $this->warranties->createFromInvoice($invoice);
+            app(CoreChargeService::class)->fromInvoice($invoice);
             $this->commissions->fromInvoice($invoice);
             AuditLogger::log('invoice.posted', $invoice, ['number' => $invoice->number, 'total' => (string) $invoice->total]);
             DB::afterCommit(fn () => event(new InvoicePosted($invoice)));

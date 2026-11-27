@@ -35,6 +35,7 @@ class ErpDaily extends Command
                     'service_reminders' => app(ReminderService::class)->sendDue(),
                     'appointment_reminders' => app(ReminderService::class)->sendAppointmentReminders(),
                     'no_shows' => app(AppointmentService::class)->markNoShows(),
+                    'expired_reservations' => app(\App\Modules\Inventory\Services\ReservationService::class)->expire(),
                     'expired_quotations' => app(QuotationService::class)->expireOverdue(),
                     'expired_warranties' => app(WarrantyService::class)->expireOld(),
                 ];
@@ -50,10 +51,11 @@ class ErpDaily extends Command
                 // ABC classes refreshed monthly; automatic reordering when enabled
                 $analytics = app(\App\Modules\Inventory\Services\InventoryAnalyticsService::class);
                 $lastAbc = \App\Modules\Inventory\Models\Part::query()->max('abc_calculated_at');
-                if (! $lastAbc || now()->diffInDays($lastAbc, true) >= 30) {
+                $hasAnalytics = $company->moduleEnabled('inventory_analytics');
+                if ($hasAnalytics && (! $lastAbc || now()->diffInDays($lastAbc, true) >= 30)) {
                     $analytics->abc();
                 }
-                if (setting('inventory.auto_reorder') && ($wh = (int) setting('inventory.auto_reorder_warehouse'))) {
+                if ($hasAnalytics && setting('inventory.auto_reorder') && ($wh = (int) setting('inventory.auto_reorder_warehouse'))) {
                     $orders = $analytics->autoReorder($wh);
                     $r['auto_reorder_orders'] = count($orders);
                     if ($orders) {

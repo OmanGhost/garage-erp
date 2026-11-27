@@ -47,7 +47,7 @@ class InventoryController extends Controller
     public function part(Part $part)
     {
         $this->can('parts.view');
-        $part->load('brand', 'category', 'supplier', 'alternatives', 'compatibilities.make', 'compatibilities.vehicleModel', 'stockLevels.warehouse', 'stockLevels.location', 'suppliers');
+        $part->load('kitItems.component', 'brand', 'category', 'supplier', 'alternatives', 'compatibilities.make', 'compatibilities.vehicleModel', 'stockLevels.warehouse', 'stockLevels.location', 'suppliers');
         $movements = $part->movements()->with('warehouse', 'user')->latest('moved_at')->limit(50)->get();
         $batches = $part->batches()->with('warehouse')->where('qty_remaining', '>', 0)->orderBy('received_at')->get();
         $sales = DB::table('invoice_items as i')->join('invoices as v', 'v.id', '=', 'i.invoice_id')->where('v.company_id', tenant()->id())
@@ -56,7 +56,7 @@ class InventoryController extends Controller
         $forecast = app(ReorderService::class);
         $history = $forecast->monthlyConsumption($part->id);
 
-        return view('inventory::part', ['p' => $part, 'movements' => $movements, 'batches' => $batches, 'sales' => $sales,
+        return view('inventory::part', ['p' => $part, 'warehouses' => Options::warehouses(), 'movements' => $movements, 'batches' => $batches, 'sales' => $sales,
             'history' => $history, 'forecast' => $forecast->forecast($history), 'makes' => VehicleMake::query()->orderBy('name')->pluck('name', 'id'),
             'group' => app(\App\Modules\Inventory\Services\CrossReferenceService::class)->group($part),
             'prices' => app(\App\Modules\Inventory\Services\InventoryAnalyticsService::class)->priceHistory($part->id)]);

@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class QualityResource extends CrudResource
 {
-    public static ?string $module = 'workshop';
+    public static ?string $module = 'quality';
 
     protected static function staff(): array
     {

@@ -5,7 +5,7 @@
 <table class="grid" style="margin-bottom:8px">
     <tr><th>رقم الأمر / PO No.</th><td>{{ $po->number }}</td><th>التاريخ / Date</th><td>{{ $po->order_date->format('Y-m-d') }}</td></tr>
     <tr><th>المورد / Supplier</th><td>{{ $po->supplier->name }} · {{ $po->supplier->phone }}</td><th>التسليم المتوقع / Expected</th><td>{{ $po->expected_date?->format('Y-m-d') }}</td></tr>
-    <tr><th>مكان التسليم / Deliver to</th><td>{{ $po->warehouse->displayName() }}</td><th>الرقم الضريبي للمورد / VATIN</th><td>{{ $po->supplier->vat_number }}</td></tr>
+    <tr><th>مكان التسليم / Deliver to</th><td>{{ $po->drop_ship ? $po->ship_to : $po->warehouse->displayName() }}</td><th>الرقم الضريبي للمورد / VATIN</th><td>{{ $po->supplier->vat_number }}</td></tr>
 </table>
 <table class="grid">
     <tr><th>#</th><th>الصنف / Item</th><th>رقم القطعة / Part no.</th><th class="num">الكمية / Qty</th><th class="num">السعر / Unit</th><th class="num">الخصم / Disc.</th><th class="num">الضريبة / VAT</th><th class="num">الإجمالي / Total</th></tr>

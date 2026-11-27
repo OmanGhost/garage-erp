@@ -61,6 +61,7 @@ class PublicController extends Controller
         abort_unless(strlen($token) >= 40, 404);
         $i = \App\Modules\Workshop\Models\Inspection::query()->withoutGlobalScopes()->where('public_token', $token)->firstOrFail();
         $this->enterTenant($i->company_id);
+        abort_unless(tenant()->company()?->moduleEnabled('dvi'), 404);
 
         return \App\Modules\Workshop\Models\Inspection::query()->findOrFail($i->id);
     }

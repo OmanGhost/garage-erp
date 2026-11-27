@@ -68,6 +68,7 @@
             @endcan
         </div>
 
+        @if(tenant()->company()?->moduleEnabled('inventory_analytics'))
         {{-- supplier price history --}}
         <div class="card mb-3">
             <div class="card-header"><i class="bi bi-graph-up-arrow me-1"></i>{{ __('Supplier price history') }}</div>
@@ -84,6 +85,7 @@
                 </tbody>
             </table></div>
         </div>
+        @endif
     </div>
     <div class="col-xl-4">
         @if($p->imageUrl())<div class="card mb-3"><img src="{{ $p->imageUrl() }}" class="card-img-top" alt=""></div>@endif
@@ -124,4 +126,5 @@
         <x-attachments :model="$p" :title="__('Part photos')"/>
     </div>
 </div>
+@if(tenant()->company()?->moduleEnabled('inventory_ops'))@include('inventory::kit')@endif
 @endsection

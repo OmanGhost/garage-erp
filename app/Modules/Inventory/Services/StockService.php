@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 class StockService
 {
-    public const IN_TYPES = ['purchase_receipt', 'job_return', 'transfer_in', 'adjustment_in', 'dismantle_in', 'sales_return', 'opening', 'count_gain'];
-    public const OUT_TYPES = ['sale', 'job_issue', 'transfer_out', 'adjustment_out', 'damage', 'purchase_return', 'count_loss', 'scrap'];
+    public const IN_TYPES = ['purchase_receipt', 'job_return', 'transfer_in', 'adjustment_in', 'dismantle_in', 'sales_return', 'opening', 'count_gain', 'consignment_in', 'kit_assembly', 'kit_disassembly'];
+    public const OUT_TYPES = ['sale', 'job_issue', 'transfer_out', 'adjustment_out', 'damage', 'purchase_return', 'count_loss', 'scrap', 'consignment_return', 'kit_assembly', 'kit_disassembly'];
 
     public function method(): string
     {

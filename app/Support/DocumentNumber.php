@@ -16,7 +16,7 @@ class DocumentNumber
         'job_card' => 'JC', 'quotation' => 'QT', 'invoice' => 'INV', 'pos' => 'POS', 'credit_note' => 'CN',
         'payment_in' => 'RV', 'payment_out' => 'PV', 'journal' => 'JE', 'purchase_request' => 'PR', 'rfq' => 'RFQ',
         'purchase_order' => 'PO', 'goods_receipt' => 'GRN', 'supplier_invoice' => 'SI', 'landed_cost' => 'LC',
-        'purchase_return' => 'PRT', 'stock_transfer' => 'TR', 'stock_count' => 'SC', 'stock_adjustment' => 'ADJ',
+        'purchase_return' => 'PRT', 'stock_transfer' => 'TR', 'stock_reservation' => 'RSV', 'stock_count' => 'SC', 'stock_adjustment' => 'ADJ',
         'dismantled_vehicle' => 'DV', 'expense' => 'EXP', 'fund_transfer' => 'FT', 'customer' => 'C', 'supplier' => 'S',
         'employee' => 'EMP', 'insurance_claim' => 'IC', 'warranty_claim' => 'WC', 'appointment' => 'AP', 'store_order' => 'SO',
         'sales_order' => 'SLO', 'payroll' => 'PAY', 'part' => 'P', 'fixed_asset' => 'FA', 'equipment' => 'EQ', 'reception' => 'RC',

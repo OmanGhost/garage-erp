@@ -31,6 +31,8 @@ class Part extends TenantModel
         'is_active' => 'boolean',
         'is_online' => 'boolean',
         'is_service_item' => 'boolean',
+        'is_kit' => 'boolean',
+        'core_charge' => 'decimal:3',
     ];
 
     public function category(): BelongsTo
@@ -46,6 +48,16 @@ class Part extends TenantModel
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Purchasing\Models\Supplier::class, 'default_supplier_id');
+    }
+
+    public function kitItems(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Inventory\Models\PartKitItem::class, 'kit_part_id');
+    }
+
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Inventory\Models\StockReservation::class);
     }
 
     public function alternatives(): HasMany

@@ -138,7 +138,7 @@ class SalesController extends Controller
     {
         $this->can('invoices.update');
         abort_unless(in_array($invoice->status, ['draft', 'held'], true), 403);
-        $rows = $invoice->items->map(fn ($i) => ['item_type' => $i->item_type, 'part_id' => $i->part_id, 'service_id' => $i->service_id,
+        $rows = $invoice->items->where('item_type', '!=', 'core')->values()->map(fn ($i) => ['item_type' => $i->item_type, 'part_id' => $i->part_id, 'service_id' => $i->service_id,
             'description' => $i->description, 'qty' => (float) $i->qty, 'unit_price' => (float) $i->unit_price, 'discount' => (float) $i->discount,
             'tax_rate' => (float) $i->tax_rate, 'label' => $i->part?->label() ?? $i->service?->displayName() ?? ''])->all();
 
@@ -367,21 +367,27 @@ class SalesController extends Controller
     public function orderAction(SalesOrder $order, string $action)
     {
         $this->can('sales_orders.update');
-        if ($action === 'confirm' && $order->status === 'draft') {
-            $order->update(['status' => 'confirmed']);
-        } elseif ($action === 'cancel' && in_array($order->status, ['draft', 'confirmed'], true)) {
-            $order->update(['status' => 'cancelled']);
-        } elseif ($action === 'invoice' && $order->status === 'confirmed') {
-            $inv = $this->invoices->createDraft(['customer_id' => $order->customer_id, 'warehouse_id' => $order->warehouse_id, 'sales_order_id' => $order->id,
-                'payment_terms' => 'credit', 'notes' => __('From sales order').' '.$order->number],
-                $order->items->map(fn ($i) => ['item_type' => $i->part_id ? 'part' : 'service', 'part_id' => $i->part_id, 'service_id' => $i->service_id,
-                    'description' => $i->description, 'qty' => $i->qty, 'unit_price' => $i->unit_price, 'discount' => $i->discount, 'tax_rate' => $i->tax_rate])->all());
-            $order->update(['status' => 'invoiced', 'invoice_id' => $inv->id]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($order, $action) {
+            $order = SalesOrder::query()->lockForUpdate()->findOrFail($order->id);
+            if ($order->dropShipOrder()->exists()) {
+                throw new \App\Exceptions\BusinessException(__('Manage delivery through the drop-ship purchase order.'));
+            }
+            if ($action === 'confirm' && $order->status === 'draft') {
+                $order->update(['status' => 'confirmed']);
+            } elseif ($action === 'cancel' && in_array($order->status, ['draft', 'confirmed'], true)) {
+                $order->update(['status' => 'cancelled']);
+            } elseif ($action === 'invoice' && $order->status === 'confirmed') {
+                $inv = $this->invoices->createDraft(['customer_id' => $order->customer_id, 'warehouse_id' => $order->warehouse_id, 'sales_order_id' => $order->id,
+                    'payment_terms' => 'credit', 'notes' => __('From sales order').' '.$order->number],
+                    $order->items->map(fn ($i) => ['item_type' => $i->part_id ? 'part' : 'service', 'part_id' => $i->part_id, 'service_id' => $i->service_id,
+                        'description' => $i->description, 'qty' => $i->qty, 'unit_price' => $i->unit_price, 'discount' => $i->discount, 'tax_rate' => $i->tax_rate])->all());
+                $order->update(['status' => 'invoiced', 'invoice_id' => $inv->id]);
 
-            return redirect()->route('invoices.show', $inv)->with('success', __('Invoice draft created.'));
-        }
+                return redirect()->route('invoices.show', $inv)->with('success', __('Invoice draft created.'));
+            }
 
-        return back()->with('success', __('Order updated.'));
+            return back()->with('success', __('Order updated.'));
+        });
     }
 
     // ----------------------------------------------------------- store orders

@@ -240,7 +240,7 @@
                     <div class="col-md-4"><select name="technician_id" class="form-select form-select-sm">@foreach($technicians as $id => $n)<option value="{{ $id }}" @selected($id === auth()->id())>{{ $n }}</option>@endforeach</select></div>
                     <div class="col-md-3"><button class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-search"></i> {{ __('Start inspection') }}</button></div>
                 </form>
-                @if($jc->inspections->where('stage', 'before')->where('status', 'completed')->isNotEmpty())
+                @if(tenant()->company()?->moduleEnabled('dvi') && $jc->inspections->where('stage', 'before')->where('status', 'completed')->isNotEmpty())
                     <div class="d-flex flex-wrap gap-2 mb-4">
                         @if($jc->inspections->where('stage', 'after')->isEmpty())
                             <form method="post" action="{{ route('inspections.start', $jc) }}">@csrf<input type="hidden" name="stage" value="after"><button class="btn btn-sm btn-outline-success"><i class="bi bi-clipboard2-check"></i> {{ __('Start after-repair inspection') }}</button></form>
@@ -249,7 +249,7 @@
                 @endif
                 @endcan
                 @endif
-                @if($jc->inspections->where('stage', 'after')->isNotEmpty() && $jc->inspections->where('stage', 'before')->isNotEmpty())
+                @if(tenant()->company()?->moduleEnabled('dvi') && $jc->inspections->where('stage', 'after')->isNotEmpty() && $jc->inspections->where('stage', 'before')->isNotEmpty())
                     <a href="{{ route('inspections.compare', $jc) }}" class="btn btn-sm btn-outline-secondary mb-4"><i class="bi bi-layout-split"></i> {{ __('Compare before / after repair') }}</a>
                 @endif
                 <h6>{{ __('Quotations') }}</h6>
@@ -310,11 +310,16 @@
     </div>
 
     <div class="col-xl-4">
-        @if(! $closed)
+        @php
+            $modPlan = tenant()->company()?->moduleEnabled('planning');
+            $modTrack = tenant()->company()?->moduleEnabled('vehicle_tracking');
+        @endphp
+        @if(! $closed && ($modPlan || $modTrack))
         <div class="card mb-3">
             <div class="card-header d-flex align-items-center"><i class="bi bi-calendar-range me-1"></i>{{ __('Planning & tracking') }}
                 @can('workshop_planning.view')<a href="{{ route('workshop.planner') }}" class="ms-auto small">{{ __('Planner') }}</a>@endcan</div>
             <div class="card-body small">
+                @if($modPlan)
                 @php $eta = $jc->estimated_completion_at ?? app(\App\Modules\Workshop\Services\CapacityService::class)->forecast($jc); @endphp
                 <div class="d-flex mb-1"><span class="text-body-secondary">{{ __('Estimated completion') }}</span><b class="ms-auto {{ $eta && $jc->promised_at && $eta->gt($jc->promised_at) ? 'text-danger' : '' }}">{{ $eta?->format('Y-m-d H:i') ?? '—' }}</b></div>
                 @if($eta && $jc->promised_at && $eta->gt($jc->promised_at))<div class="text-danger mb-1"><i class="bi bi-exclamation-triangle"></i> {{ __('Later than the promised delivery time.') }}</div>@endif
@@ -325,7 +330,9 @@
                         <form method="post" action="{{ route('workshop.planner.auto', $jc) }}" class="d-grid mb-2">@csrf<input type="hidden" name="replan" value="1"><button class="btn btn-sm btn-outline-primary"><i class="bi bi-arrow-repeat"></i> {{ __('Re-plan remaining tasks') }}</button></form>
                     @endif
                 @endcan
-                <hr class="my-2">
+                @endif
+                @if($modPlan && $modTrack)<hr class="my-2">@endif
+                @if($modTrack)
                 <div class="d-flex mb-1"><span class="text-body-secondary"><i class="bi bi-geo-alt"></i> {{ __('Location') }}</span><span class="ms-auto">{{ $jc->yardLocation?->displayName() ?? '—' }}</span></div>
                 <div class="d-flex mb-2"><span class="text-body-secondary"><i class="bi bi-key"></i> {{ __('Key') }}</span><span class="ms-auto">@if($jc->keyHolder)<span class="text-warning">{{ $jc->keyHolder->name }}</span>@elseif($jc->key_hook){{ __('Hook') }} {{ $jc->key_hook }}@else — @endif</span></div>
                 <div class="d-flex flex-wrap gap-1">
@@ -333,6 +340,7 @@
                     <a href="{{ route('tracking.key-tag', $jc) }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"><i class="bi bi-qr-code"></i> {{ __('Key tag') }}</a>@endcan
                     @can('test_drives.view')<a href="{{ route('tracking.card', $jc) }}#test-drive" class="btn btn-sm btn-outline-secondary"><i class="bi bi-signpost-2"></i> {{ __('Test drive') }}</a>@endcan
                 </div>
+                @endif
             </div>
         </div>
         @endif

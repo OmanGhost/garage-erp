@@ -14,7 +14,14 @@ class Warehouse extends TenantModel
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_consignment' => 'boolean',
+        'is_virtual' => 'boolean',
     ];
+
+    public function consignor(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Purchasing\Models\Supplier::class, 'consignor_supplier_id');
+    }
 
     public function branch(): BelongsTo
     {

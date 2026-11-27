@@ -35,6 +35,11 @@ class SalesOrder extends TenantModel
         return $this->hasMany(\App\Modules\Sales\Models\SalesOrderItem::class);
     }
 
+    public function dropShipOrder(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Modules\Purchasing\Models\PurchaseOrder::class)->where('drop_ship', true)->whereNotIn('status', ['cancelled', 'rejected']);
+    }
+
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Sales\Models\Invoice::class);

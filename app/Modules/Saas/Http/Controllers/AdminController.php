@@ -31,7 +31,12 @@ class AdminController extends Controller
         $companies = Company::query()->with('plan')->withCount(['users', 'branches'])->latest()->limit(10)->get();
         $mrr = Money::sum(Subscription::query()->whereIn('status', ['active'])->get()->map(fn ($s) => $s->billing_cycle === 'yearly' ? Money::div($s->amount, 12) : $s->amount));
 
+        $active = Company::query()->with('plan')->where('is_active', true)->get();
+        $adoption = collect(config('erp.modules'))->filter(fn ($m) => ! empty($m['new']))
+            ->map(fn ($m, $k) => ['label' => $m['label'], 'n' => $active->filter(fn ($c) => $c->moduleEnabled($k))->count()]);
+
         return view('saas::dashboard', [
+            'adoption' => $adoption, 'activeCount' => $active->count(),
             'companies' => $companies, 'plans' => Plan::query()->orderBy('sort')->get(), 'mrr' => $mrr,
             'stats' => [
                 // KPIs over all clients (the table shows the latest 10 only)
@@ -75,7 +80,7 @@ class AdminController extends Controller
         ]);
         $company->fill(collect($data)->except(['modules', 'override_modules', 'is_active'])->all());
         $company->is_active = $request->boolean('is_active');
-        $company->enabled_modules = $request->boolean('override_modules') ? array_values($data['modules'] ?? []) : null;
+        $company->enabled_modules = $request->boolean('override_modules') ? self::normalizeModules($data['modules'] ?? []) : null;
         $company->save();
         AuditLogger::log('saas.tenant_updated', $company, $data);
 
@@ -112,7 +117,17 @@ class AdminController extends Controller
 
     public function plans()
     {
-        return view('saas::plans', ['plans' => Plan::query()->orderBy('sort')->get()]);
+        return view('saas::plans', ['plans' => Plan::query()->orderBy('sort')->get(),
+            'clients' => Company::query()->selectRaw('plan_id, COUNT(*) n')->groupBy('plan_id')->pluck('n', 'plan_id')]);
+    }
+
+    /** Core modules always on; a feature whose parent module is off is dropped. */
+    public static function normalizeModules(array $selected): array
+    {
+        $defs = config('erp.modules');
+        $mods = array_values(array_unique(array_merge($selected, array_keys(array_filter($defs, fn ($m) => ! empty($m['core']))))));
+
+        return array_values(array_filter($mods, fn ($k) => isset($defs[$k]) && (empty($defs[$k]['requires']) || in_array($defs[$k]['requires'], $mods, true))));
     }
 
     public function savePlan(Request $request)
@@ -127,7 +142,7 @@ class AdminController extends Controller
         ]);
         $data['allow_custom_domain'] = $request->boolean('allow_custom_domain');
         $plan = ! empty($data['id']) ? Plan::query()->findOrFail($data['id']) : new Plan;
-        $plan->fill(collect($data)->except('id')->all() + ['is_active' => $request->boolean('is_active'), 'modules' => array_values($data['modules'] ?? [])])->save();
+        $plan->fill(collect($data)->except(['id', 'modules'])->all() + ['is_active' => $request->boolean('is_active'), 'modules' => self::normalizeModules($data['modules'] ?? [])])->save();
 
         return back()->with('success', __('Plan saved.'));
     }

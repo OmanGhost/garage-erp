@@ -31,7 +31,7 @@ class LiveController extends Controller
         abort_if(strlen($token) < 32, 404);
         $company = Company::query()->where('settings->workshop_tv_token', $token)->where('is_active', true)->firstOrFail();
         tenant()->set($company->id, $company->branches()->value('id'));
-        abort_unless($company->moduleEnabled('workshop'), 404);
+        abort_unless($company->moduleEnabled('planning'), 404);
 
         return $this->render($request, true, route('workshop.tv', $token));
     }

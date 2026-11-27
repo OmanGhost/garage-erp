@@ -473,7 +473,7 @@ class JobCardService
             $result === 'pass'
                 ? $this->changeStatus($jc->fresh(), JobCard::READY, __('Quality inspection passed'))
                 : $this->changeStatus($jc->fresh(), JobCard::IN_PROGRESS, __('Quality inspection failed: rework').($notes ? ' - '.$notes : ''));
-            if ($result === 'fail') {
+            if ($result === 'fail' && tenant()->company()?->moduleEnabled('quality')) {
                 app(\App\Modules\Quality\Services\QualityService::class)->fromFailedQc($qc);
             }
 

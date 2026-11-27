@@ -321,7 +321,7 @@ class YardLocationResource extends CrudResource
     public static string $model = \App\Modules\Workshop\Models\YardLocation::class;
     public static string $slug = 'yard-locations';
     public static string $permission = 'yard_locations';
-    public static ?string $module = 'workshop';
+    public static ?string $module = 'vehicle_tracking';
     public static string $icon = 'bi-geo-alt';
     public static array $with = ['bay', 'branch'];
     public static string $defaultSort = 'code';

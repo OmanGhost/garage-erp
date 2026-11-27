@@ -2,10 +2,11 @@
 @section('title', __('Sales return'))
 @section('content')
 <x-page-header :title="__('Sales return / credit note for').' '.$inv->number" icon="bi-arrow-return-left" :breadcrumbs="[__('Invoices') => route('crud.index', 'invoices'), $inv->number => route('invoices.show', $inv), __('Return')]"/>
+@if($inv->items->contains('item_type', 'core'))<p><a href="{{ route('inventory.cores') }}">{{ __('Refund deposits through Core returns.') }}</a></p>@endif
 <form method="post" action="{{ route('credit-notes.store', $inv) }}" class="card">@csrf <x-idem/>
     <div class="table-responsive"><table class="table table-erp mb-0 align-middle">
         <thead><tr><th>{{ __('Item') }}</th><th>{{ __('Invoiced') }}</th><th>{{ __('Already returned') }}</th><th>{{ __('Return qty') }}</th><th class="text-end">{{ __('Price charged') }}</th><th class="text-end">{{ __('Refund (incl. VAT)') }}</th></tr></thead>
-        <tbody>@foreach($inv->items as $it)
+        <tbody>@foreach($inv->items->where('item_type', '!=', 'core') as $it)
             @php
                 $max = (float) $it->qty - (float) $it->returned_qty;
                 // price actually charged per unit = (qty x list price - line discount) / qty

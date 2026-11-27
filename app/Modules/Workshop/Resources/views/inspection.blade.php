@@ -11,14 +11,15 @@
     $resColor = ['ok' => 'success', 'attention' => 'warning', 'urgent' => 'danger', 'na' => 'secondary'];
     $sevLight = fn ($s) => $Z::light($s);
     $approvedTotal = $inspection->findings->where('customer_decision', 'approved')->sum(fn ($f) => (float) $f->estimated_price * (float) $f->qty);
-    $dviLink = session('dvi_link') ?? $inspection->publicUrl();
+    $dvi = (bool) tenant()->company()?->moduleEnabled('dvi');
+    $dviLink = $dvi ? (session('dvi_link') ?? $inspection->publicUrl()) : null;
 @endphp
 <x-page-header :title="__('Digital vehicle inspection')" icon="bi-clipboard2-pulse" :breadcrumbs="[__('Job Cards') => route('crud.index', 'job-cards'), $jc->number => route('job-cards.show', $jc), __('Inspection')]"
     :subtitle="e($jc->vehicle->label()).' · '.e($jc->customer->name).' · '.($inspection->stage === 'after' ? __('After repair') : __('Before repair')).' · '.status_badge($inspection->status)">
     <a href="{{ route('inspections.print', $inspection) }}" target="_blank" rel="noopener" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> {{ __('Print report') }}</a>
-    @can('inspections.update')
+    @if($dvi)@can('inspections.update')
         <form method="post" action="{{ route('inspections.send', $inspection) }}">@csrf<button class="btn btn-outline-primary"><i class="bi bi-send"></i> {{ $inspection->sent_at ? __('Send again') : __('Send report to customer') }}</button></form>
-    @endcan
+    @endcan @endif
     @if($open)
         @can('inspections.update')<form method="post" action="{{ route('inspections.complete', $inspection) }}" data-confirm="{{ __('Complete the inspection?') }}">@csrf <x-idem/><button class="btn btn-success"><i class="bi bi-check2-all"></i> {{ __('Complete inspection') }}</button></form>@endcan
     @endif
@@ -47,10 +48,10 @@
             <div class="r"><span class="fs-4">{{ $counts['red'] }}</span><div class="small fw-normal">{{ __('Urgent') }}</div></div>
         </div>
 
-        @if($canEdit)<form id="suggestForm" method="post" action="{{ route('inspections.suggest', $inspection) }}">@csrf</form>@endif
+        @if($canEdit && $dvi)<form id="suggestForm" method="post" action="{{ route('inspections.suggest', $inspection) }}">@csrf</form>@endif
         <form method="post" action="{{ route('inspections.update', $inspection) }}" enctype="multipart/form-data" class="card mb-3">@csrf @method('put')
             <div class="card-header d-flex align-items-center"><i class="bi bi-list-check me-1"></i>{{ __('Checklist & measurements') }} @if($inspection->template)<span class="text-body-secondary small ms-1">— {{ $inspection->template->name }}</span>@endif
-                @if($canEdit)<button form="suggestForm" class="btn btn-sm btn-outline-primary ms-auto" title="{{ __('Add the services linked to yellow / red items as findings') }}"><i class="bi bi-magic"></i> {{ __('Suggest services') }}</button>@endif</div>
+                @if($canEdit && $dvi)<button form="suggestForm" class="btn btn-sm btn-outline-primary ms-auto" title="{{ __('Add the services linked to yellow / red items as findings') }}"><i class="bi bi-magic"></i> {{ __('Suggest services') }}</button>@endif</div>
             <div class="table-responsive"><table class="table table-sm align-middle mb-0">
                 @forelse($inspection->results->groupBy('section') as $section => $rows)
                     <tr class="table-light"><th colspan="4">{{ $section }}</th></tr>
@@ -158,6 +159,7 @@
             @endif
         </div>
 
+        @if($dvi)
         {{-- signatures --}}
         <div class="card mb-3">
             <div class="card-header"><i class="bi bi-pen me-1"></i>{{ __('Signatures') }}</div>
@@ -178,6 +180,7 @@
             </div>
         </div>
 
+        @endif
         @if(!empty($suggestions))
         <div class="card mb-3 border-info">
             <div class="card-header"><i class="bi bi-stars me-1 text-info"></i>{{ __('AI assistant — suggestions from history') }}</div>

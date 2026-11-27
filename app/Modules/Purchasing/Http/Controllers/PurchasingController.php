@@ -184,6 +184,7 @@ class PurchasingController extends Controller
 
     public function editOrder(PurchaseOrder $po)
     {
+        abort_if($po->drop_ship, 409, __('Manage delivery through the drop-ship purchase order.'));
         $this->can('purchase_orders.update');
         abort_unless(in_array($po->status, ['draft', 'pending_approval'], true), 403);
         $rows = $po->items->map(fn ($i) => ['item_type' => 'part', 'part_id' => $i->part_id, 'description' => $i->description, 'qty' => (float) $i->qty,
@@ -194,6 +195,7 @@ class PurchasingController extends Controller
 
     public function updateOrder(Request $request, PurchaseOrder $po)
     {
+        abort_if($po->drop_ship, 409, __('Manage delivery through the drop-ship purchase order.'));
         $this->can('purchase_orders.update');
         $data = $request->validate(['supplier_id' => ['required', 'integer', Rule::exists('suppliers', 'id')->where('company_id', tenant()->id())],
             'warehouse_id' => ['required', 'integer'], 'expected_date' => ['nullable', 'date'], 'notes' => ['nullable', 'string'], 'terms' => ['nullable', 'string']] + $this->itemRules());
@@ -216,6 +218,7 @@ class PurchasingController extends Controller
 
     public function receiveForm(PurchaseOrder $po)
     {
+        abort_if($po->drop_ship, 409, __('Manage delivery through the drop-ship purchase order.'));
         $this->can('goods_receipts.create');
         abort_unless(in_array($po->status, ['approved', 'partially_received'], true), 403, __('Only approved purchase orders can be received.'));
 
@@ -224,6 +227,7 @@ class PurchasingController extends Controller
 
     public function receive(Request $request, PurchaseOrder $po)
     {
+        abort_if($po->drop_ship, 409, __('Manage delivery through the drop-ship purchase order.'));
         $this->can('goods_receipts.create');
         $data = $request->validate(['lines' => ['required', 'array'], 'lines.*.qty' => ['nullable', 'numeric', 'min:0'], 'lines.*.unit_cost' => ['nullable', 'numeric', 'min:0'],
             'lines.*.batch_number' => ['nullable', 'string', 'max:60'], 'lines.*.serials' => ['nullable', 'string', 'max:5000'], 'lines.*.expiry_date' => ['nullable', 'date'],

@@ -2,11 +2,23 @@
 @section('title', $o->number)
 @section('content')
 <x-page-header :title="__('Sales order').' '.$o->number" icon="bi-bag-check" :breadcrumbs="[__('Sales Orders') => route('crud.index', 'sales-orders'), $o->number]" :subtitle="e($o->customer->name).' · '.status_badge($o->status)">
+    @if($o->dropShipOrder)
+        @can('purchase_orders.view')<a class="btn btn-outline-primary" href="{{ route('purchase-orders.show', $o->dropShipOrder) }}">{{ $o->dropShipOrder->number }}</a>@endcan
+    @else
     @can('sales_orders.update')
         @if($o->status === 'draft')<form method="post" action="{{ route('sales-orders.action', [$o, 'confirm']) }}">@csrf <x-idem/><button class="btn btn-primary">{{ __('Confirm') }}</button></form>@endif
         @if($o->status === 'confirmed')<form method="post" action="{{ route('sales-orders.action', [$o, 'invoice']) }}">@csrf <x-idem/><button class="btn btn-success">{{ __('Create invoice') }}</button></form>@endif
         @if(in_array($o->status, ['draft', 'confirmed']))<form method="post" action="{{ route('sales-orders.action', [$o, 'cancel']) }}" data-confirm="{{ __('Cancel order?') }}">@csrf <x-idem/><button class="btn btn-outline-danger">{{ __('Cancel') }}</button></form>@endif
+        @if(in_array($o->status, ['draft', 'confirmed']) && $o->items->whereNotNull('part_id')->isNotEmpty())
+            @can('purchase_orders.create')
+            <form method="post" action="{{ route('sales-orders.drop-ship', $o) }}" class="d-flex gap-2">@csrf <x-idem/>
+                <x-lookup name="supplier_id" type="suppliers" :placeholder="__('Supplier')" required/>
+                <button class="btn btn-outline-primary">{{ __('Create drop-ship PO') }}</button>
+            </form>
+            @endcan
+        @endif
     @endcan
+    @endif
     @if($o->invoice)<a href="{{ route('invoices.show', $o->invoice) }}" class="btn btn-outline-secondary">{{ $o->invoice->displayNumber() }}</a>@endif
 </x-page-header>
 <div class="card"><div class="table-responsive"><table class="table table-erp mb-0">

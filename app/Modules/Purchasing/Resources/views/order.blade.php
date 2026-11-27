@@ -6,7 +6,14 @@
     <a href="{{ route('purchase-orders.print', $po) }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> {{ __('Print') }}</a>
     @if($po->status === 'draft')@can('purchase_orders.update')<form method="post" action="{{ route('purchase-orders.action', [$po, 'submit']) }}">@csrf <x-idem/><button class="btn btn-outline-primary">{{ __('Submit for approval') }}</button></form>@endcan @endif
     @if(in_array($po->status, ['draft', 'pending_approval']))@can('purchase_orders.approve')<form method="post" action="{{ route('purchase-orders.action', [$po, 'approve']) }}">@csrf <x-idem/><button class="btn btn-success"><i class="bi bi-check2"></i> {{ __('Approve') }}</button></form>@endcan @endif
-    @if(in_array($po->status, ['approved', 'partially_received']))@can('goods_receipts.create')<a href="{{ route('purchase-orders.receive', $po) }}" class="btn btn-primary"><i class="bi bi-box-seam"></i> {{ __('Receive goods') }}</a>@endcan @endif
+    @if($po->drop_ship && $po->status === 'approved')
+        @can('goods_receipts.create') @can('invoices.create')
+        <form method="post" action="{{ route('purchase-orders.delivered', $po) }}">@csrf <x-idem/>
+            <button class="btn btn-primary">{{ __('Confirm customer delivery') }}</button>
+        </form>
+        @endcan @endcan
+    @endif
+    @if(! $po->drop_ship && in_array($po->status, ['approved', 'partially_received']))@can('goods_receipts.create')<a href="{{ route('purchase-orders.receive', $po) }}" class="btn btn-primary"><i class="bi bi-box-seam"></i> {{ __('Receive goods') }}</a>@endcan @endif
     @if($po->status === 'partially_received')@can('purchase_orders.update')<form method="post" action="{{ route('purchase-orders.action', [$po, 'close']) }}" data-confirm="{{ __('Close the order (no more receipts)?') }}">@csrf <x-idem/><button class="btn btn-outline-secondary">{{ __('Close') }}</button></form>@endcan @endif
     @if(in_array($po->status, ['draft', 'pending_approval', 'approved']) && $po->receipts->isEmpty())@can('purchase_orders.delete')<form method="post" action="{{ route('purchase-orders.action', [$po, 'cancel']) }}" data-confirm="{{ __('Cancel this order?') }}">@csrf <x-idem/><button class="btn btn-outline-danger">{{ __('Cancel') }}</button></form>@endcan @endif
 </x-page-header>
@@ -24,6 +31,7 @@
             <div><b>{{ __('Order date') }}:</b> {{ $po->order_date->format('Y-m-d') }} · <b>{{ __('Expected') }}:</b> {{ $po->expected_date?->format('Y-m-d') ?? '—' }}</div>
             <div><b>{{ __('Created by') }}:</b> {{ $po->creator?->name }}</div>
             @if($po->approver)<div><b>{{ __('Approved by') }}:</b> {{ $po->approver->name }} · {{ $po->approved_at?->format('Y-m-d H:i') }}</div>@endif
+            @if($po->drop_ship)<div><b>{{ __('Ship to') }}</b> {{ $po->ship_to }}</div>@endif
             @if($po->notes)<div class="mt-1">{{ $po->notes }}</div>@endif
         </div></div>
         <div class="card mb-3"><div class="card-header">{{ __('Goods receipts') }}</div><ul class="list-group list-group-flush small">

@@ -63,6 +63,7 @@ class PartResource extends CrudResource
             Field::money('sale_price')->label(__('Retail price'))->required()->index()->col(3),
             Field::money('wholesale_price')->label(__('Wholesale price'))->col(3),
             Field::money('workshop_price')->label(__('Workshop price'))->col(3),
+            Field::money('core_charge')->label(__('Refundable core deposit'))->default(0)->rules(['min:0'])->col(3),
             Field::money('min_sale_price')->label(__('Minimum sale price'))->col(3),
             Field::decimal('profit_margin')->label(__('Profit margin %'))->col(3)->help(__('Used to suggest the retail price when empty.')),
             Field::decimal('tax_rate')->label(__('VAT %'))->default(5)->col(3),
@@ -196,6 +197,8 @@ class WarehouseResource extends CrudResource
             Field::text('name_en')->label(__('Name (English)'))->index()->col(4),
             Field::select('branch_id', fn () => Options::branches())->label(__('Branch'))->relation('branch', 'displayName')->required()->index()->filterable(),
             Field::select('type', ['main', 'workshop', 'showroom', 'scrap', 'transit', 'online'])->default('main')->index(),
+            Field::checkbox('is_consignment')->label(__('Consignment stock'))->col(4),
+            Field::lookup('consignor_supplier_id', 'suppliers', 'consignor')->label(__('Consignor'))->col(4),
             Field::text('value')->label(__('Stock value'))->hideOnForm()->display(fn ($w) => e(money(app(\App\Modules\Inventory\Services\StockService::class)->valuation($w->id))))->index(false),
             Field::checkbox('is_active')->label(__('Active'))->default(true)->index(),
         ];
@@ -203,6 +206,12 @@ class WarehouseResource extends CrudResource
 
     public function saving(Model $m, array $data, bool $creating): void
     {
+        if ($m->is_consignment && ! \App\Modules\Purchasing\Models\Supplier::query()->whereKey($m->consignor_supplier_id)->exists()) {
+            throw new \App\Exceptions\BusinessException(__('Choose a consignor for this warehouse.'));
+        }
+        if (! $creating && $m->isDirty(['consignor_supplier_id', 'is_consignment']) && $m->stockLevels()->where('qty_on_hand', '!=', 0)->exists()) {
+            throw new \App\Exceptions\BusinessException(__('Empty the warehouse before changing its consignor.'));
+        }
         $max = tenant()->company()?->plan?->max_warehouses;
         if ($creating && $max && Warehouse::query()->count() >= $max) {
             throw new \App\Exceptions\BusinessException(__('Your subscription plan allows up to :n warehouses.', ['n' => $max]));

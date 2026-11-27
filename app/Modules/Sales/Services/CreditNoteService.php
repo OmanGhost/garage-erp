@@ -23,13 +23,13 @@ class CreditNoteService
     public function __construct(protected StockService $stock, protected PostingService $posting, protected PaymentService $payments) {}
 
     /** @param array<int,mixed> $quantities [invoice_item_id => qty] */
-    public function create(Invoice $invoice, array $quantities, bool $restock = true, ?string $reason = null, ?int $warehouseId = null): CreditNote
+    public function create(Invoice $invoice, array $quantities, bool $restock = true, ?string $reason = null, ?int $warehouseId = null, bool $coreReturn = false): CreditNote
     {
         if (! $invoice->isPosted()) {
             throw new BusinessException(__('Credit notes can only be issued for posted invoices.'));
         }
 
-        return DB::transaction(function () use ($invoice, $quantities, $restock, $reason, $warehouseId) {
+        return DB::transaction(function () use ($invoice, $quantities, $restock, $reason, $warehouseId, $coreReturn) {
             $cn = CreditNote::create([
                 'invoice_id' => $invoice->id, 'customer_id' => $invoice->customer_id, 'branch_id' => $invoice->branch_id,
                 'date' => now()->toDateString(), 'reason' => $reason, 'restock' => $restock,
@@ -41,6 +41,9 @@ class CreditNoteService
                     continue;
                 }
                 $item = InvoiceItem::query()->where('invoice_id', $invoice->id)->findOrFail($itemId);
+                if ($item->item_type === 'core' && ! $coreReturn) {
+                    throw new BusinessException(__('Refund deposits through Core returns.'));
+                }
                 $max = Money::sub($item->qty, $item->returned_qty);
                 if (Money::cmp($qty, $max) > 0) {
                     throw new BusinessException(__('Return quantity for :d exceeds the remaining invoiced quantity (:q).', ['d' => $item->description, 'q' => qty($max)]));
@@ -81,7 +84,7 @@ class CreditNoteService
                 return $cn;
             }
             $cn->load('items.invoiceItem.part', 'invoice.jobCard.department', 'customer');
-            $other = $cost = '0';
+            $other = $coreDeposits = $cost = '0';
             $parts = $services = $costByCc = []; // reversed on the same cost centers as the original invoice lines
             $invoices = app(InvoiceService::class);
             foreach ($cn->items as $ci) {
@@ -95,6 +98,7 @@ class CreditNoteService
                 match ($ii->item_type) {
                     'part' => $parts[$cc] = Money::add($parts[$cc] ?? '0', $ci->line_total),
                     'service', 'labor' => $services[$cc] = Money::add($services[$cc] ?? '0', $ci->line_total),
+                    'core' => $coreDeposits = Money::add($coreDeposits, $ci->line_total),
                     default => $other = Money::add($other, $ci->line_total),
                 };
                 if ($cn->restock && $ci->part_id && ! $ii->part?->is_service_item) {
@@ -116,6 +120,7 @@ class CreditNoteService
                     array_map(fn ($cc, $amt) => ['account' => 'sales_parts', 'debit' => $amt, 'cost_center_id' => $cc ?: null], array_keys($parts), $parts),
                     array_map(fn ($cc, $amt) => ['account' => 'sales_services', 'debit' => $amt, 'cost_center_id' => $cc ?: null], array_keys($services), $services),
                     [
+                        ['account' => 'customer_advances', 'debit' => $coreDeposits, 'party' => $cn->customer],
                         ['account' => 'other_revenue', 'debit' => $other],
                         ['account' => 'vat_output', 'debit' => $cn->tax_total],
                         ['account' => 'ar', 'credit' => $cn->total, 'party' => $cn->customer, 'description' => $cn->number],
