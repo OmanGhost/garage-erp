@@ -20,15 +20,34 @@
         @can('pos.close_session')<button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#closeModal"><i class="bi bi-lock"></i> {{ __('Close session') }}</button>@endcan
     </x-page-header>
     <livewire:pos-terminal :session="$session" />
-    <div class="modal fade" id="closeModal" tabindex="-1"><div class="modal-dialog"><form method="post" action="{{ route('pos.close') }}" class="modal-content">@csrf <x-idem/>
+    <div class="modal fade" id="closeModal" tabindex="-1" aria-labelledby="closeModalTitle" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <form method="post" action="{{ route('pos.close') }}" class="modal-content" x-data="{ counted: '', expected: {{ (float) $summary['expected'] }},
+            init() { this.$el.closest('.modal').addEventListener('show.bs.modal', () => this.refresh()) },
+            refresh() { fetch(@js(route('pos.sessions.summary', $session)), { headers: { 'Accept': 'text/html' } }).then(r => r.ok ? r.text() : null).then(h => {
+                if (! h) return; this.$refs.sum.innerHTML = h; const x = this.$refs.sum.querySelector('[data-expected]'); if (x) this.expected = parseFloat(x.dataset.expected) }) },
+            get diff() { return this.counted === '' ? null : Math.round(((parseFloat(this.counted) || 0) - this.expected) * 1000) / 1000 } }">@csrf <x-idem/>
         <input type="hidden" name="session_id" value="{{ $session->id }}">
-        <div class="modal-header"><h5 class="modal-title">{{ __('Close cash session') }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header"><h5 class="modal-title" id="closeModalTitle">{{ __('Close cash session') }} · {{ $session->number }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button></div>
         <div class="modal-body">
-            <p class="small text-body-secondary">{{ __('Count the cash in the drawer. Any shortage or overage is recorded automatically in the accounts.') }}</p>
-            <label class="form-label">{{ __('Counted cash') }}</label><input type="number" name="counted_cash" step="0.001" min="0" class="form-control font-monospace mb-2" required>
-            <label class="form-label">{{ __('Notes') }}</label><input name="notes" class="form-control">
+            <div x-ref="sum">@include('sales::partials.close-summary', ['sm' => $summary])</div>
+
+            {{-- 3. the count --}}
+            <label class="form-label fw-semibold" for="countedCash">{{ __('Counted cash') }}</label>
+            <input type="number" name="counted_cash" id="countedCash" step="0.001" min="0" class="form-control form-control-lg font-monospace mb-2" required x-model="counted">
+            <div class="alert py-2 mb-2" x-show="diff !== null" x-cloak
+                 :class="diff === 0 ? 'alert-success' : (diff < 0 ? 'alert-danger' : 'alert-warning')">
+                <span x-show="diff === 0"><i class="bi bi-check-circle"></i> {{ __('The drawer matches the expected cash.') }}</span>
+                <span x-show="diff < 0"><i class="bi bi-exclamation-triangle"></i> {{ __('Shortage') }}: <b class="font-monospace" x-text="Math.abs(diff).toFixed(3)"></b></span>
+                <span x-show="diff > 0"><i class="bi bi-exclamation-circle"></i> {{ __('Overage') }}: <b class="font-monospace" x-text="diff.toFixed(3)"></b></span>
+            </div>
+            <div x-show="diff !== null && diff !== 0" x-cloak>
+                <label class="form-label fw-semibold" for="diffReason">{{ __('Reason for the difference') }} <span class="text-danger">*</span></label>
+                <textarea name="difference_reason" id="diffReason" rows="2" maxlength="500" class="form-control mb-1" :required="diff !== null && diff !== 0" placeholder="{{ __('e.g. change given twice, unrecorded expense…') }}">{{ old('difference_reason') }}</textarea>
+                <div class="form-text mb-2">{{ __('The shortage or overage is recorded in the accounts with this reason.') }}</div>
+            </div>
+            <label class="form-label" for="closeNotes">{{ __('Notes') }}</label><input name="notes" id="closeNotes" class="form-control" maxlength="500">
         </div>
-        <div class="modal-footer"><button class="btn btn-danger">{{ __('Close session') }}</button></div>
+        <div class="modal-footer"><button class="btn btn-danger"><i class="bi bi-lock"></i> {{ __('Close session') }}</button></div>
     </form></div></div>
 @endif
 @endsection

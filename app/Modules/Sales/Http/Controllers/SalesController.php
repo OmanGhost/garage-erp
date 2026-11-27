@@ -46,7 +46,8 @@ class SalesController extends Controller
         $this->can('pos.view');
         $session = app(PosService::class)->currentSession();
 
-        return view('sales::pos', ['session' => $session, 'registers' => CashRegister::query()->where('is_active', true)->get()]);
+        return view('sales::pos', ['session' => $session, 'registers' => CashRegister::query()->where('is_active', true)->get(),
+            'summary' => $session ? app(PosService::class)->summary($session->loadMissing('register')) : null]);
     }
 
     public function openSession(Request $request)
@@ -61,11 +62,21 @@ class SalesController extends Controller
     public function closeSession(Request $request)
     {
         $this->can('pos.close_session');
-        $data = $request->validate(['session_id' => ['required', 'integer'], 'counted_cash' => ['required', 'numeric', 'min:0'], 'notes' => ['nullable', 'string', 'max:500']]);
+        $data = $request->validate(['session_id' => ['required', 'integer'], 'counted_cash' => ['required', 'numeric', 'min:0'], 'notes' => ['nullable', 'string', 'max:500'],
+            'difference_reason' => ['nullable', 'string', 'max:500']]);
         $s = PosSession::query()->where('user_id', auth()->id())->findOrFail($data['session_id']);
-        $s = app(PosService::class)->closeSession($s, $data['counted_cash'], $data['notes'] ?? null);
+        $s = app(PosService::class)->closeSession($s, $data['counted_cash'], $data['notes'] ?? null, $data['difference_reason'] ?? null);
 
         return redirect()->route('pos.sessions.show', $s)->with('success', __('Cash session closed.'));
+    }
+
+    /** Fresh closing summary for the close-session dialog (sales made since the page loaded are included). */
+    public function closeSummary(PosSession $session)
+    {
+        $this->can('pos.close_session');
+        abort_unless($session->status === 'open' && (int) $session->user_id === (int) auth()->id(), 404);
+
+        return view('sales::partials.close-summary', ['sm' => app(PosService::class)->summary($session->load('register'))]);
     }
 
     public function session(PosSession $session)
@@ -76,7 +87,7 @@ class SalesController extends Controller
         $byMethod = Payment::query()->where('pos_session_id', $session->id)->where('status', 'posted')
             ->selectRaw("method, direction, SUM(amount) total")->groupBy('method', 'direction')->get();
 
-        return view('sales::pos-session', ['s' => $session, 'invoices' => $invoices, 'byMethod' => $byMethod,
+        return view('sales::pos-session', ['s' => $session, 'invoices' => $invoices, 'byMethod' => $byMethod, 'summary' => app(PosService::class)->summary($session),
             'expected' => $session->status === 'open' ? app(PosService::class)->expectedCash($session) : $session->expected_cash]);
     }
 

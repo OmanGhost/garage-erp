@@ -483,6 +483,7 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/pos/open', [SalesController::class, 'openSession'])->name('pos.open');
         Route::post('/pos/close', [SalesController::class, 'closeSession'])->name('pos.close');
         Route::get('/pos/sessions/{session}', [SalesController::class, 'session'])->name('pos.sessions.show');
+        Route::get('/pos/sessions/{session}/close-summary', [SalesController::class, 'closeSummary'])->name('pos.sessions.summary');
         Route::get('/invoices/create', [SalesController::class, 'createInvoice'])->name('invoices.create');
         Route::post('/invoices', [SalesController::class, 'storeInvoice'])->name('invoices.store');
         Route::get('/invoices/{invoice}', [SalesController::class, 'invoice'])->name('invoices.show');

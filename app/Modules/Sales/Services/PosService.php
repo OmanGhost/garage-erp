@@ -161,9 +161,46 @@ class PosService
         return Money::sub(Money::add($session->opening_cash, $in), $out);
     }
 
-    public function closeSession(PosSession $session, mixed $countedCash, ?string $notes = null): PosSession
+    /**
+     * What the session took, for the closing count: sales, receipts and refunds per payment method (and whether
+     * they sit in the drawer), and the cash that should be in the drawer.
+     *
+     * @return array{invoices: int, sales: string, methods: array<int, array{method: string, in: string, out: string, net: string, drawer: bool}>, opening: string, cash_in: string, cash_out: string, expected: string, other_total: string}
+     */
+    public function summary(PosSession $session): array
     {
-        return DB::transaction(function () use ($session, $countedCash, $notes) {
+        $cashBox = $session->register->bank_account_id;
+        $invoices = Invoice::query()->where('pos_session_id', $session->id)->whereNotIn('status', ['draft', 'held', 'cancelled'])->get(['id', 'total']);
+        $rows = Payment::query()->where('pos_session_id', $session->id)->where('status', 'posted')
+            ->selectRaw('method, direction, bank_account_id, SUM(amount) total')->groupBy('method', 'direction', 'bank_account_id')->get();
+        $methods = [];
+        $cashIn = '0';
+        $cashOut = '0';
+        $other = '0';
+        foreach ($rows as $r) {
+            $drawer = $cashBox && (int) $r->bank_account_id === (int) $cashBox;
+            $key = $r->method.($drawer ? ':drawer' : '');
+            $methods[$key] ??= ['method' => (string) $r->method, 'in' => '0', 'out' => '0', 'net' => '0', 'drawer' => $drawer];
+            $amount = Money::round($r->total);
+            if ($r->direction === 'out') {
+                $methods[$key]['out'] = Money::add($methods[$key]['out'], $amount);
+                $drawer ? $cashOut = Money::add($cashOut, $amount) : $other = Money::sub($other, $amount);
+            } else {
+                $methods[$key]['in'] = Money::add($methods[$key]['in'], $amount);
+                $drawer ? $cashIn = Money::add($cashIn, $amount) : $other = Money::add($other, $amount);
+            }
+            $methods[$key]['net'] = Money::sub($methods[$key]['in'], $methods[$key]['out']);
+        }
+        $methods = collect($methods)->sortByDesc(fn ($m) => [$m['drawer'], (float) $m['in']])->values()->all();
+
+        return ['invoices' => $invoices->count(), 'sales' => Money::sum($invoices->pluck('total')), 'methods' => $methods,
+            'opening' => Money::round($session->opening_cash), 'cash_in' => $cashIn, 'cash_out' => $cashOut,
+            'expected' => Money::sub(Money::add($session->opening_cash, $cashIn), $cashOut), 'other_total' => $other];
+    }
+
+    public function closeSession(PosSession $session, mixed $countedCash, ?string $notes = null, ?string $differenceReason = null): PosSession
+    {
+        return DB::transaction(function () use ($session, $countedCash, $notes, $differenceReason) {
             $session = PosSession::query()->whereKey($session->id)->lockForUpdate()->firstOrFail();
             if ($session->status !== 'open') {
                 throw new BusinessException(__('Session already closed.'));
@@ -174,7 +211,12 @@ class PosService
             $expected = $this->expectedCash($session);
             $counted = Money::round($countedCash);
             $diff = Money::sub($counted, $expected);
-            $session->fill(['closed_at' => now(), 'expected_cash' => $expected, 'counted_cash' => $counted, 'difference' => $diff, 'status' => 'closed', 'notes' => $notes])->save();
+            $differenceReason = trim((string) $differenceReason);
+            if (! Money::isZero($diff) && $differenceReason === '') {
+                throw new BusinessException(__('The counted cash differs from the expected :e by :d. State the reason for the difference before closing.', ['e' => money($expected), 'd' => money($diff)]));
+            }
+            $session->fill(['closed_at' => now(), 'expected_cash' => $expected, 'counted_cash' => $counted, 'difference' => $diff, 'status' => 'closed', 'notes' => $notes,
+                'difference_reason' => Money::isZero($diff) ? null : $differenceReason])->save();
 
             if (! Money::isZero($diff)) {
                 $cashAccount = $session->register->bankAccount->account_id;
@@ -189,7 +231,7 @@ class PosService
                 ]);
                 $session->forceFill(['journal_entry_id' => $je->id])->save();
             }
-            AuditLogger::log('pos.session_closed', $session, ['expected' => $expected, 'counted' => $counted, 'difference' => $diff]);
+            AuditLogger::log('pos.session_closed', $session, ['expected' => $expected, 'counted' => $counted, 'difference' => $diff, 'reason' => $session->difference_reason]);
 
             return $session;
         });

@@ -212,7 +212,19 @@ class SalesAccountingTest extends TestCase
 
         // expected drawer: 20 float + 6 cash kept; counted 25 => 1.000 short
         $this->assertMoney(26, $pos->expectedCash($session->fresh()));
-        $pos->closeSession($session->fresh(), 25);
+        $summary = $pos->summary($session->fresh());
+        $this->assertMoney(26, $summary['expected']);
+        $this->assertMoney(6, $summary['cash_in']);
+        $this->assertMoney(15, collect($summary['methods'])->firstWhere('method', 'card')['in']);
+        $this->assertSame(1, $summary['invoices']);
+        try {
+            $pos->closeSession($session->fresh(), 25);                    // a difference needs a reason
+            $this->fail('closed with an unexplained shortage');
+        } catch (BusinessException) {
+        }
+        $this->assertSame('open', $session->fresh()->status);
+        $closed = $pos->closeSession($session->fresh(), 25, null, 'Change given twice');
+        $this->assertSame('Change given twice', $closed->difference_reason);
         $this->assertMoney(1, $this->balance('cash_short'));
         $this->assertLedgerBalanced();
 
@@ -220,5 +232,29 @@ class SalesAccountingTest extends TestCase
         $session2 = $pos->openSession($register, 0);
         $this->expectException(BusinessException::class);
         $pos->checkout($session2, ['customer_id' => $walkIn, 'items' => [['part_id' => $part->id, 'qty' => 1]]], []);
+    }
+
+    public function test_closing_screen_shows_the_breakdown_and_requires_a_reason_for_differences(): void
+    {
+        $part = $this->makePart(['sale_price' => 10]);
+        $register = CashRegister::query()->firstOrFail();
+        app(StockService::class)->receive($part, $register->warehouse_id, 5, 4, ['type' => 'opening']);
+        $pos = app(PosService::class);
+        $session = $pos->openSession($register, 50);
+        $this->get('/pos')->assertOk()->assertSee(__('Expected cash in the drawer'))->assertSee(__('Reason for the difference'));
+
+        // a sale made after the page loaded appears in the refreshed summary
+        $pos->checkout($session, ['customer_id' => (int) setting('pos.walk_in_customer_id'), 'items' => [['part_id' => $part->id, 'qty' => 1]]],
+            [['method' => 'card', 'amount' => 5], ['method' => 'cash', 'amount' => 5.5]]);
+        $this->get('/pos/sessions/'.$session->id.'/close-summary')->assertOk()->assertSee('data-expected="55.5"', false)->assertSee(status_label('card'));
+
+        $this->post('/pos/close', ['session_id' => $session->id, 'counted_cash' => 55])->assertSessionHas('error');
+        $this->assertSame('open', $session->fresh()->status);
+        $this->post('/pos/close', ['session_id' => $session->id, 'counted_cash' => 55, 'difference_reason' => 'Coin missing'])->assertRedirect();
+        $s = $session->fresh();
+        $this->assertSame('closed', $s->status);
+        $this->assertSame('Coin missing', $s->difference_reason);
+        $this->get('/pos/sessions/'.$s->id)->assertOk()->assertSee('Coin missing');
+        $this->get('/pos/sessions/'.$s->id.'/close-summary')->assertNotFound();
     }
 }

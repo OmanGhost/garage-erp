@@ -5,6 +5,11 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.22.1] - 2026-11-27
+- Cash session closing: detailed breakdown and mandatory reason for differences
+- The close-session dialog shows invoices and total sales, receipts / refunds / net per payment method (cash drawer vs. card, transfer, points, gift cards) and the expected cash (opening + cash received − cash refunded); the summary is refreshed each time the dialog opens
+- The difference is shown live while counting (matches / shortage / overage); a session with a difference cannot be closed without a reason, enforced on the server; the reason is stored, shown on the session report and in the audit log
+
 ## [1.22.0] - 2026-11-27
 - Subcontracted (outside) repairs: outside work orders linked to the job card (subcontractor, work type, item sent, agreed cost, customer price, expected return, outside warranty); the customer price becomes a job card task needing the usual approval; the customer's part leaves without a stock movement; on return the task is finished, the cost enters job costing and a draft supplier invoice is prepared on the new "Subcontracted work cost" account (5104); list of work out / overdue / under warranty and a printable order
 - Outside work tasks are never auto-scheduled, cannot be started, finished or cancelled directly, and the job card cannot become ready / delivered / cancelled while the part is out (no override)

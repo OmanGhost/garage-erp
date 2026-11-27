@@ -15,6 +15,8 @@
                 <dt class="col-6">{{ __('Expected cash') }}</dt><dd class="col-6 font-monospace">{{ money($expected) }}</dd>
                 <dt class="col-6">{{ __('Counted cash') }}</dt><dd class="col-6 font-monospace">{{ $s->counted_cash !== null ? money($s->counted_cash) : '—' }}</dd>
                 <dt class="col-6">{{ __('Over / short') }}</dt><dd class="col-6 font-monospace {{ (float) $s->difference < 0 ? 'text-danger' : 'text-success' }}">{{ money($s->difference) }}</dd>
+                @if($s->difference_reason)<dt class="col-6">{{ __('Reason for the difference') }}</dt><dd class="col-6">{{ $s->difference_reason }}</dd>@endif
+                @if($s->notes)<dt class="col-6">{{ __('Notes') }}</dt><dd class="col-6">{{ $s->notes }}</dd>@endif
             </dl>
             <hr>
             <h6>{{ __('By payment method') }}</h6>

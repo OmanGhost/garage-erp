@@ -3723,5 +3723,19 @@
     "Tow, battery, tyre and fuel calls: dispatch a driver, live customer location link, distance pricing and membership-covered calls.": "بلاغات السحب والبطارية والإطارات والوقود: تعيين سائق، رابط موقع العميل، تسعير بالمسافة ومكالمات مغطاة بالعضوية.",
     "Outside work is not planned on bays or technicians.": "العمل الخارجي لا يُجدول على المنصات أو الفنيين.",
     "Cancel the outside work order instead.": "ألغِ أمر العمل الخارجي بدلاً من ذلك.",
-    "The membership is no longer active.": "العضوية لم تعد سارية."
+    "The membership is no longer active.": "العضوية لم تعد سارية.",
+    "Not in the drawer": "خارج الدرج",
+    "Receipts by payment method": "المقبوضات حسب طريقة الدفع",
+    "Cash drawer": "درج النقد",
+    "No payments in this session.": "لا توجد مدفوعات في هذه الجلسة.",
+    "Expected cash in the drawer": "النقد المفترض في الدرج",
+    "Cash received": "النقد المستلم",
+    "Cash refunded / paid out": "النقد المردود / المصروف",
+    "The drawer matches the expected cash.": "الدرج مطابق للنقد المتوقع.",
+    "Shortage": "عجز",
+    "Overage": "زيادة",
+    "Reason for the difference": "سبب الفرق",
+    "e.g. change given twice, unrecorded expense…": "مثال: باقي أُعطي مرتين، مصروف غير مسجّل…",
+    "The shortage or overage is recorded in the accounts with this reason.": "يُسجَّل العجز أو الزيادة في الحسابات مع هذا السبب.",
+    "The counted cash differs from the expected :e by :d. State the reason for the difference before closing.": "النقد المعدود يختلف عن المتوقع :e بمقدار :d. اذكر سبب الفرق قبل الإغلاق."
 }
