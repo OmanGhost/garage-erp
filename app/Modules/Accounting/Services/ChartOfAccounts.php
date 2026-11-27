@@ -38,6 +38,8 @@ class ChartOfAccounts
         ['2120', 'رواتب مستحقة', 'Salaries Payable', 'liability', '21', 'salaries_payable', false, 'operating'],
         ['2130', 'دفعات مقدمة من العملاء', 'Customer Advances', 'liability', '21', 'customer_advances', false, 'operating'],
         ['2140', 'قروض قصيرة الأجل', 'Short-term Loans', 'liability', '21', null, false, 'financing'],
+        ['2150', 'التزامات نقاط الولاء', 'Loyalty Points Liability', 'liability', '21', 'loyalty_liability', false, 'operating'],
+        ['2160', 'بطاقات الهدايا المستحقة', 'Gift Cards Outstanding', 'liability', '21', 'gift_card_liability', false, 'operating'],
         ['3', 'حقوق الملكية', 'Equity', 'equity', null, null, true, null],
         ['3101', 'رأس المال', 'Capital', 'equity', '3', 'capital', false, 'financing'],
         ['3201', 'الأرباح المحتجزة', 'Retained Earnings', 'equity', '3', 'retained_earnings', false, 'financing'],
@@ -68,6 +70,7 @@ class ChartOfAccounts
         ['5209', 'مصروفات عامة وإدارية', 'General & Administrative', 'expense', '52', 'general_expense', false, 'operating'],
         ['5210', 'صيانة المعدات', 'Equipment Maintenance', 'expense', '52', 'equipment_maintenance', false, 'operating'],
         ['5211', 'خسائر بيع أصول', 'Loss on Asset Disposal', 'expense', '52', 'asset_disposal_loss', false, 'investing'],
+        ['5212', 'مصروف برنامج الولاء', 'Loyalty Program Expense', 'expense', '52', 'loyalty_expense', false, 'operating'],
         ['5212', 'مصروفات الشحن والنقل', 'Freight & Transport', 'expense', '52', null, false, 'operating'],
         ['5213', 'التسويق والإعلان', 'Marketing & Advertising', 'expense', '52', null, false, 'operating'],
     ];

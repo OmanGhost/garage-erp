@@ -277,6 +277,13 @@ class InvoiceService
 
             $this->warranties->createFromInvoice($invoice);
             app(CoreChargeService::class)->fromInvoice($invoice);
+            if (\App\Modules\Loyalty\Services\MembershipService::enabled()) {
+                $memberships = app(\App\Modules\Loyalty\Services\MembershipService::class);
+                $memberships->consumeOnPost($invoice);
+                $memberships->activateFromInvoice($invoice);
+            }
+            app(\App\Modules\Loyalty\Services\OfferService::class)->consumeCoupon($invoice);
+            app(\App\Modules\Loyalty\Services\LoyaltyService::class)->earn($invoice);
             $this->commissions->fromInvoice($invoice);
             AuditLogger::log('invoice.posted', $invoice, ['number' => $invoice->number, 'total' => (string) $invoice->total]);
             DB::afterCommit(fn () => event(new InvoicePosted($invoice)));

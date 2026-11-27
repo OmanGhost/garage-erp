@@ -62,6 +62,14 @@ class ErpDaily extends Command
                         Notification::send($managers->filter(fn ($u) => $u->can('purchase_orders.view')), new SystemMessage(__(':n draft purchase orders created.', ['n' => count($orders)]), '', route('crud.index', 'purchase-orders'), 'info'));
                     }
                 }
+                // memberships, loyalty points and gift cards that ran out
+                if ($company->moduleEnabled('memberships')) {
+                    $r['expired_memberships'] = app(\App\Modules\Loyalty\Services\MembershipService::class)->expire();
+                }
+                if ($company->moduleEnabled('loyalty')) {
+                    $r['expired_points'] = app(\App\Modules\Loyalty\Services\LoyaltyService::class)->expire();
+                    $r['expired_gift_cards'] = app(\App\Modules\Loyalty\Services\GiftCardService::class)->expire();
+                }
                 $docs = Employee::query()->where('status', 'active')->where(fn ($q) => $q->whereBetween('id_expiry', [now(), now()->addDays(30)])
                     ->orWhereBetween('visa_expiry', [now(), now()->addDays(30)])->orWhereBetween('passport_expiry', [now(), now()->addDays(30)]))->count();
                 if ($docs) {

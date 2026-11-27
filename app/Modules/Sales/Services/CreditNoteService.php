@@ -147,6 +147,7 @@ class CreditNoteService
                 }
             }
             AuditLogger::log('credit_note.posted', $cn, ['total' => (string) $cn->total]);
+            app(\App\Modules\Loyalty\Services\LoyaltyService::class)->reverseForCreditNote($cn);
 
             return $cn;
         });

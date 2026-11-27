@@ -49,10 +49,14 @@ class Menu
                 ['label' => __('Inspection Checklists'), 'icon' => 'bi-list-check', 'url' => self::crud('inspection-templates'), 'perm' => 'inspection_templates.view'],
                 ['label' => __('Supplier evaluations'), 'icon' => 'bi-star-half', 'url' => self::crud('supplier-evaluations'), 'perm' => 'supplier_evaluations.view'],
             ]],
-            ['label' => __('Customers & Vehicles'), 'paths' => ['customers', 'vehicles', 'complaints', 'reminders'], 'items' => [
+            ['label' => __('Customers & Vehicles'), 'paths' => ['customers', 'vehicles', 'complaints', 'reminders', 'loyalty', 'memberships', 'gift-cards'], 'items' => [
                 ['label' => __('Customers'), 'icon' => 'bi-people', 'url' => self::crud('customers'), 'perm' => 'customers.view'],
                 ['label' => __('Vehicles'), 'icon' => 'bi-car-front', 'url' => self::crud('vehicles'), 'perm' => 'vehicles.view'],
                 ['label' => __('Customer Groups'), 'icon' => 'bi-collection', 'url' => self::crud('customer-groups'), 'perm' => 'customer_groups.view'],
+                ['label' => __('Loyalty & rewards'), 'icon' => 'bi-stars', 'route' => 'loyalty.dashboard', 'perm' => 'loyalty.view', 'module' => 'loyalty'],
+                ['label' => __('Memberships'), 'icon' => 'bi-person-vcard', 'url' => self::crud('memberships'), 'perm' => 'memberships.view', 'module' => 'memberships'],
+                ['label' => __('Membership plans'), 'icon' => 'bi-patch-check', 'url' => self::crud('membership-plans'), 'perm' => 'membership_plans.view', 'module' => 'memberships'],
+                ['label' => __('Gift cards'), 'icon' => 'bi-gift', 'url' => self::crud('gift-cards'), 'perm' => 'gift_cards.view', 'module' => 'loyalty'],
                 ['label' => __('Complaints'), 'icon' => 'bi-chat-left-dots', 'url' => self::crud('complaints'), 'perm' => 'complaints.view'],
                 ['label' => __('Service Reminders'), 'icon' => 'bi-bell', 'url' => route('reminders.index'), 'perm' => 'service_reminders.view'],
                 ['label' => __('Vehicle Makes'), 'icon' => 'bi-tags', 'url' => self::crud('vehicle-makes'), 'perm' => 'vehicle_makes.view'],

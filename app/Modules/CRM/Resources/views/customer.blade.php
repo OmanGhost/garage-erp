@@ -44,6 +44,7 @@
         </div>
     </div>
     <div class="col-xl-4">
+        @include('loyalty::partials.customer-panel')
         <div class="card mb-3"><div class="card-body small">
             <div><b>{{ __('Email') }}:</b> {{ $c->email ?? '—' }}</div>
             <div><b>{{ __('Address') }}:</b> {{ $c->address }} {{ $c->city }}</div>

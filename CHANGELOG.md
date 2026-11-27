@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.21.0] - 2026-11-27
+- Maintenance memberships: yearly plans with included services, parts / labour discounts, priority booking and roadside calls; sold with an invoice and active once posted; benefits applied on draft invoices and consumed at posting under lock; membership card (revenue recognised at sale, no deferral)
+- Loyalty & rewards: points on posted invoices with silver / gold tiers, redemption as a payment (Dr loyalty liability / Cr receivables), points back when the receipt is cancelled and taken back on returns, inactivity expiry, referral bonus, gift cards (sold to a cash / bank account, spent as payment, breakage on expiry), invoice coupons and single-use personal offers to customers who have not come back
+- New system accounts added to every existing company: loyalty points liability, gift cards outstanding, loyalty program expense; payments from points / gift cards have no bank account
+- The two new modules are switched on automatically only for plans that already include every main module
+
 ## [1.20.0] - 2026-11-27
 - Advanced stock operations: stock reservations with expiry, kits (assemble / disassemble at cost), consignment stock (booked against GRNI, settled per sale into a supplier invoice, returns to consignor), core charges (refundable deposit line, refund by credit note or forfeit), drop shipping (supplier delivers to the customer, received and invoiced in one step)
 - Plans: the new features are modules (workshop planning, vehicle & key tracking, DVI, quality, inventory analytics, advanced stock operations) switched on per plan or per client; plans page redesigned with a feature comparison, descriptions and "new" badges; SaaS dashboard shows feature adoption. Existing plans keep the features they already had

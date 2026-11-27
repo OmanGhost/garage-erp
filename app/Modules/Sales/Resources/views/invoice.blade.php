@@ -157,6 +157,7 @@
             @endif
         </div></div>
 
+        @include('loyalty::partials.invoice-panel')
         <div class="card mb-3"><div class="card-header"><i class="bi bi-info-circle me-1"></i>{{ __('Details') }}</div><div class="card-body doc-meta">
             <div><span>{{ __('Price level') }}</span>{{ status_label($inv->price_level) }}</div>
             <div><span>{{ __('Salesperson') }}</span>{{ $inv->salesperson?->name ?? '—' }}</div>

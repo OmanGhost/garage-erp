@@ -18,7 +18,7 @@
             <dt class="col-5">{{ __('Amount') }}</dt><dd class="col-7 fs-5 fw-bold font-monospace">{{ money($p->amount) }}</dd>
             <dt class="col-5">{{ __('Date') }}</dt><dd class="col-7">{{ $p->date->format('Y-m-d') }}</dd>
             <dt class="col-5">{{ __('Method') }}</dt><dd class="col-7">{{ status_label($p->method) }}</dd>
-            <dt class="col-5">{{ __('Cash / bank') }}</dt><dd class="col-7">{{ $p->bankAccount->name }}</dd>
+            <dt class="col-5">{{ __('Cash / bank') }}</dt><dd class="col-7">{{ $p->bankAccount?->name ?? status_label($p->method) }}</dd>
             <dt class="col-5">{{ __('Reference') }}</dt><dd class="col-7">{{ $p->reference }} {{ $p->cheque_number }}</dd>
             <dt class="col-5">{{ __('By') }}</dt><dd class="col-7">{{ $p->creator?->name }}</dd>
             @if($p->journal)<dt class="col-5">{{ __('Journal') }}</dt><dd class="col-7"><a href="{{ route('journal.show', $p->journal) }}">{{ $p->journal->number }}</a></dd>@endif

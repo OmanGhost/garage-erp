@@ -56,6 +56,7 @@ class CustomerResource extends CrudResource
             Field::decimal('discount_percent')->label(__('Special discount %'))->default(0)->col(4)->rules(['min:0', 'max:100']),
             Field::text('balance')->label(__('Balance'))->hideOnForm()->display(fn ($c) => '<span class="font-monospace">'.e(money($c->balance())).'</span>')->index(false),
             Field::number('vehicles_count')->label(__('Vehicles'))->hideOnForm()->hideOnShow()->index(false),
+            Field::lookup('referred_by_id', 'customers', 'referrer')->label(__('Referred by (customer)'))->col(4),
             Field::select('preferred_channel', ['sms' => 'SMS', 'whatsapp' => 'WhatsApp', 'mail' => __('Email')])->label(__('Preferred channel'))->default('sms')->col(4)->section(__('Communication')),
             Field::checkbox('marketing_opt_in')->label(__('Accepts reminders & offers'))->default(true)->col(4),
             Field::checkbox('is_active')->label(__('Active'))->default(true)->filterable()->col(4),

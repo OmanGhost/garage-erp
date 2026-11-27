@@ -67,6 +67,8 @@ class AppServiceProvider extends ServiceProvider
             'inspection' => \App\Modules\Workshop\Models\Inspection::class,
             'inspection_finding' => \App\Modules\Workshop\Models\InspectionFinding::class,
             'quality_sop' => \App\Modules\Quality\Models\QualitySop::class,
+            'gift_card' => \App\Modules\Loyalty\Models\GiftCard::class,
+            'membership' => \App\Modules\Loyalty\Models\Membership::class,
             'nonconformity' => \App\Modules\Quality\Models\Nonconformity::class,
             'quality_audit' => \App\Modules\Quality\Models\QualityAudit::class,
             'quotation' => \App\Modules\Workshop\Models\Quotation::class,

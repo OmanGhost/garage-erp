@@ -270,6 +270,17 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         // live screen
         Route::get('/workshop/live', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'index'])->middleware('module:planning')->name('workshop.live');
         Route::post('/workshop/live/token', [\App\Modules\Workshop\Http\Controllers\LiveController::class, 'rotateToken'])->middleware('module:planning')->name('workshop.live.token');
+        // memberships & loyalty
+        Route::get('/loyalty', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'dashboard'])->middleware('module:loyalty')->name('loyalty.dashboard');
+        Route::post('/loyalty/settings', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'saveSettings'])->middleware('module:loyalty')->name('loyalty.settings');
+        Route::post('/loyalty/offers', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'sendOffer'])->middleware('module:loyalty')->name('loyalty.offers');
+        Route::post('/loyalty/gift-cards', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'issueGiftCard'])->middleware('module:loyalty')->name('gift-cards.store');
+        Route::get('/gift-cards/{card}/print', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'printGiftCard'])->middleware('module:loyalty')->name('gift-cards.print');
+        Route::post('/customers/{customer}/points', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'adjustPoints'])->middleware('module:loyalty')->name('loyalty.adjust');
+        Route::post('/customers/{customer}/memberships', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'sellMembership'])->middleware('module:memberships')->name('memberships.sell');
+        Route::get('/memberships/{membership}', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'membership'])->middleware('module:memberships')->name('memberships.show');
+        Route::get('/memberships/{membership}/card', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'printMembership'])->middleware('module:memberships')->name('memberships.card');
+        Route::post('/invoices/{invoice}/loyalty/{action}', [\App\Modules\Loyalty\Http\Controllers\LoyaltyController::class, 'invoiceAction'])->name('invoices.loyalty')->whereIn('action', ['membership', 'coupon', 'points', 'gift-card']);
         // quality management
         Route::get('/quality', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'dashboard'])->middleware('module:quality')->name('quality.dashboard');
         Route::post('/quality/job-cards/{jobCard}/ncr', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'ncrFromJob'])->middleware('module:quality')->name('quality.ncr.from-job');

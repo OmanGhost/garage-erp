@@ -67,6 +67,37 @@ class PaymentService
         });
     }
 
+    /**
+     * Settle an invoice without money changing hands: from loyalty points or a gift card. Booked
+     * Dr <liability> / Cr receivables and allocated like any receipt (no bank account).
+     */
+    public function settleFromLiability(Invoice $invoice, mixed $amount, string $method, string $liabilityKey, ?string $reference = null): Payment
+    {
+        $amount = Money::round($amount);
+        if (! Money::isPositive($amount)) {
+            throw new BusinessException(__('Amount must be greater than zero.'));
+        }
+
+        return DB::transaction(function () use ($invoice, $amount, $method, $liabilityKey, $reference) {
+            $customer = $invoice->customer;
+            $payment = Payment::create([
+                'number' => DocumentNumber::next('payment_in'), 'direction' => 'in', 'party_type' => 'customer', 'party_id' => $customer->id,
+                'method' => $method, 'bank_account_id' => null, 'amount' => $amount, 'date' => now()->toDateString(), 'reference' => $reference,
+                'status' => 'posted', 'branch_id' => $invoice->branch_id, 'created_by' => auth()->id(),
+            ]);
+            $this->allocateToInvoices($payment, $customer, $amount, [$invoice->id => $amount]);
+            $je = $this->posting->post([
+                'date' => $payment->date->toDateString(), 'description' => __('Receipt').' '.$payment->number.' - '.status_label($method),
+                'source' => $payment, 'branch_id' => $payment->branch_id,
+                'lines' => [['account' => $liabilityKey, 'debit' => $amount], ['account' => 'ar', 'credit' => $amount, 'party' => $customer, 'description' => $payment->number]],
+            ]);
+            $payment->forceFill(['journal_entry_id' => $je->id])->save();
+            AuditLogger::log('payment.received', $payment, ['amount' => $amount, 'method' => $method]);
+
+            return $payment;
+        });
+    }
+
     protected function allocateToInvoices(Payment $payment, Customer $customer, string $amount, ?array $allocations): void
     {
         $left = $amount;
@@ -222,6 +253,12 @@ class PaymentService
             $payment->status = 'cancelled';
             $payment->save();
             AuditLogger::log('payment.cancelled', $payment, ['reason' => $reason]);
+            // points / gift card balance come back when their payment is cancelled
+            if ($payment->method === 'loyalty') {
+                app(\App\Modules\Loyalty\Services\LoyaltyService::class)->refundPayment($payment);
+            } elseif ($payment->method === 'gift_card') {
+                app(\App\Modules\Loyalty\Services\GiftCardService::class)->refundPayment($payment);
+            }
         });
     }
 }

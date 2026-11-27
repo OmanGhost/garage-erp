@@ -14,6 +14,7 @@ class Customer extends TenantModel
     use SoftDeletes, HasAttachments;
 
     protected $casts = [
+        'loyalty_points' => 'decimal:3',
         'credit_limit' => 'decimal:3',
         'discount_percent' => 'decimal:3',
         'birth_date' => 'date',
@@ -90,5 +91,20 @@ class Customer extends TenantModel
     public function availableCredit(): string
     {
         return \App\Support\Money::sub($this->credit_limit, $this->balance());
+    }
+
+    public function referrals(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(self::class, 'referred_by_id');
+    }
+
+    public function referrer(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(self::class, 'referred_by_id');
+    }
+
+    public function memberships(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Modules\Loyalty\Models\Membership::class);
     }
 }
