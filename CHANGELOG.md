@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.24.1] - 2026-11-28
+- Redesigned point of sale with a part inquiry panel
+- POS search bar (F2) with a "Part inquiry" button, type filter (all / new / used) and "available here only"; results as detailed rows with image, numbers, brand, type, stock here (green / elsewhere / none), price, details and add buttons; parts already in the cart are marked
+- Part inquiry panel: price for the level, available here / in all warehouses, sales per month and stock alerts (other warehouse, out of stock with expected supplier date, low stock); identification and warranty; all price levels and what this customer paid last time; cost, margin and last supplier for users who may see reports; stock by warehouse with location and reservations; quantities on order; interchangeable alternatives with stock and an add button; vehicle fitment; sales of 30 / 90 days, last sale and days of cover
+- Cart redesign: retail / wholesale buttons, customer chip, warning below the minimum price, click a line to open its inquiry; the inquiry opens the genuine part first when several share an OEM number
+
 ## [1.24.0] - 2026-11-28
 - Redesigned public website with features, solutions, customers, contact, legal and documentation pages
 - Features catalogue (20 features in 6 groups) with a page per feature: what it does, why it matters, plans that include it and related features; mega menu in the header

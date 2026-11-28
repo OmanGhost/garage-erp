@@ -17,7 +17,8 @@ use Livewire\Component;
 
 /**
  * Fast POS: barcode / name search, retail & wholesale pricing, discounts,
- * hold & resume, split payments, credit sales, 80mm / A4 receipts.
+ * hold & resume, split payments, credit sales, 80mm / A4 receipts — and a part inquiry panel (prices, stock per
+ * warehouse, on order, alternatives, fitment, sales speed, cost for authorised users) to help the salesperson decide.
  */
 class PosTerminal extends Component
 {
@@ -32,6 +33,9 @@ class PosTerminal extends Component
     public ?int $lastInvoiceId = null;
     public string $lastChange = '0';
     public string $notes = '';
+    public ?int $inquiryId = null;
+    public bool $stockOnly = false;
+    public string $typeFilter = '';          // '' | new | used
 
     public function mount(PosSession $session): void
     {
@@ -119,6 +123,62 @@ class PosTerminal extends Component
             'qty' => '1', 'unit_price' => $part->priceFor($this->priceLevel), 'discount' => '0',
             'tax_rate' => (string) $part->tax_rate, 'min' => (string) $part->min_sale_price,
         ];
+    }
+
+    /** Open the inquiry panel for a part. */
+    public function inquire(int $partId): void
+    {
+        $this->inquiryId = Part::query()->whereKey($partId)->value('id');
+    }
+
+    public function clearFilters(): void
+    {
+        $this->stockOnly = false;
+        $this->typeFilter = '';
+    }
+
+    public function closeInquiry(): void
+    {
+        $this->inquiryId = null;
+    }
+
+    /** The "Part inquiry" button: the exact match of the search, or its first result. */
+    public function inquireSearch(): void
+    {
+        $term = trim($this->search);
+        if (mb_strlen($term) < 2) {
+            $this->dispatch('erp-toast', message: __('Type a part name, number or barcode first.'), type: 'info');
+
+            return;
+        }
+        // exact barcode / SKU, then the OEM number (genuine before alternatives), then the first search result
+        $part = Part::query()->where(fn ($q) => $q->where('barcode', $term)->orWhere('sku', $term))->first()
+            ?? Part::query()->where('oem_number', $term)->orderByRaw("CASE part_type WHEN 'genuine' THEN 0 WHEN 'oem' THEN 1 WHEN 'aftermarket' THEN 2 ELSE 3 END")->orderBy('id')->first()
+            ?? $this->searchQuery($term)->first();
+        if (! $part) {
+            $this->dispatch('erp-toast', message: __('No part found for :c', ['c' => $term]), type: 'warning');
+
+            return;
+        }
+        $this->inquiryId = $part->id;
+    }
+
+    /** Add from the inquiry panel and keep it open. */
+    public function addFromInquiry(int $partId): void
+    {
+        $this->add($partId);
+        $this->dispatch('erp-toast', message: __('Added to the cart.'), type: 'success');
+    }
+
+    protected function searchQuery(string $term)
+    {
+        $wh = $this->session()->register->warehouse_id;
+
+        return \App\Modules\Inventory\Services\PartSearch::query(['q' => $term])->where('is_active', true)
+            ->when($this->typeFilter === 'new', fn ($q) => $q->whereNotIn('part_type', ['used', 'refurbished', 'damaged', 'scrap']))
+            ->when($this->typeFilter === 'used', fn ($q) => $q->whereIn('part_type', ['used', 'refurbished']))
+            ->when($this->stockOnly, fn ($q) => $q->whereHas('stockLevels', fn ($s) => $s->whereColumn('qty_on_hand', '>', 'qty_reserved')
+                ->when($wh, fn ($w) => $w->where('warehouse_id', $wh))));
     }
 
     public function remove(int $index): void
@@ -237,7 +297,7 @@ class PosTerminal extends Component
         $term = trim($this->search);
         $results = collect();
         if (mb_strlen($term) >= 2) {
-            $results = \App\Modules\Inventory\Services\PartSearch::query(['q' => $term])->where('is_active', true)->limit(24)->get();
+            $results = $this->searchQuery($term)->limit(30)->get();
         }
         $stock = $results->isNotEmpty() && $session->register->warehouse_id
             ? StockLevel::query()->where('warehouse_id', $session->register->warehouse_id)->whereIn('part_id', $results->pluck('id'))->get()->keyBy('part_id')
@@ -249,6 +309,11 @@ class PosTerminal extends Component
             'session' => $session, 'results' => $results, 'stock' => $stock, 'totals' => $totals,
             'paid' => $paid, 'change' => Money::max(0, Money::sub($paid, $totals['total'])), 'due' => Money::max(0, Money::sub($totals['total'], $paid)),
             'held' => Invoice::query()->with('customer')->where('status', 'held')->where('pos_session_id', $session->id)->latest()->get(),
+            'inquiry' => $this->inquiryId && ($part = Part::query()->find($this->inquiryId))
+                ? app(\App\Modules\Inventory\Services\PartInquiry::class)->for($part, $session->register->warehouse_id, $this->customerId, $this->priceLevel,
+                    (bool) auth()->user()?->can('reports.view'))
+                : null,
+            'inCart' => collect($this->cart)->pluck('qty', 'part_id')->all(),
         ]);
     }
 }
