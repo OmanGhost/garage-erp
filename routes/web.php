@@ -293,6 +293,12 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/quality/actions/{action}/{step}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'actionStep'])->middleware('module:quality')->name('quality.actions.step')->whereIn('step', ['complete', 'verify']);
         Route::get('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'audit'])->middleware('module:quality')->name('quality.audits.show');
         Route::post('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'recordAudit'])->middleware('module:quality')->name('quality.audits.record');
+        // fraud & loss prevention
+        Route::get('/loss-prevention', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'index'])->middleware('module:loss_prevention')->name('loss-prevention.index');
+        Route::post('/loss-prevention/settings', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'saveSettings'])->middleware('module:loss_prevention')->name('loss-prevention.settings');
+        Route::post('/loss-prevention/verify-audit', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'verifyAudit'])->middleware(['module:loss_prevention', 'throttle:6,1'])->name('loss-prevention.verify');
+        Route::get('/loss-prevention/{alert}', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'show'])->middleware('module:loss_prevention')->name('loss-prevention.show');
+        Route::post('/loss-prevention/{alert}/review', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'review'])->middleware('module:loss_prevention')->name('loss-prevention.review');
         // subcontracted (outside) repairs
         Route::get('/workshop/subcontracts', [\App\Modules\Workshop\Http\Controllers\SubcontractController::class, 'index'])->middleware('module:subcontracting')->name('subcontracts.index');
         Route::post('/job-cards/{jobCard}/subcontracts', [\App\Modules\Workshop\Http\Controllers\SubcontractController::class, 'store'])->middleware('module:subcontracting')->name('subcontracts.store');

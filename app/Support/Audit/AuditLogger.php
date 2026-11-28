@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Log;
  */
 class AuditLogger
 {
+    protected static ?bool $sealable = null;
+
     protected const EXCLUDE = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes', 'updated_at', 'created_at', 'credentials', 'secret'];
 
     public static function model(string $event, Model $model): void
@@ -55,7 +57,7 @@ class AuditLogger
     protected static function write(string $event, ?Model $model, ?array $old, ?array $new): void
     {
         $req = app()->runningInConsole() && ! app()->runningUnitTests() ? null : request();
-        DB::table('audit_logs')->insert([
+        $row = [
             'company_id' => $model?->getAttribute('company_id') ?? tenant()->id(),
             'user_id' => auth()->id(),
             'event' => $event,
@@ -64,10 +66,61 @@ class AuditLogger
             'old_values' => $old ? json_encode(self::scalarize($old), JSON_UNESCAPED_UNICODE) : null,
             'new_values' => $new ? json_encode(self::scalarize($new), JSON_UNESCAPED_UNICODE) : null,
             'ip_address' => $req?->ip(),
-            'user_agent' => $req ? substr((string) $req->userAgent(), 0, 255) : null,
-            'url' => $req ? substr($req->fullUrl(), 0, 500) : null,
-            'created_at' => now(),
-        ]);
+            'user_agent' => $req ? mb_substr((string) $req->userAgent(), 0, 255) : null,
+            'url' => $req ? mb_substr($req->fullUrl(), 0, 500) : null,
+            'created_at' => now()->format('Y-m-d H:i:s'),
+        ];
+        if (self::$sealable = self::$sealable ?: \Illuminate\Support\Facades\Schema::hasColumn('audit_logs', 'seal')) {
+            $row['seal'] = self::seal($row);
+        }
+        DB::table('audit_logs')->insert($row);
+
+        // internal fraud & loss prevention rules look at sensitive events
+        \App\Modules\LossPrevention\Services\LossPreventionMonitor::observe($event, $model, $old, $new);
+    }
+
+    /** Fields covered by the seal, in a fixed order. */
+    public const SEALED = ['company_id', 'user_id', 'event', 'auditable_type', 'auditable_id', 'old_values', 'new_values', 'ip_address', 'user_agent', 'url', 'created_at'];
+
+    /** HMAC of an audit row (as stored) with the application key: any later change to the row breaks it. */
+    public static function seal(array|object $row): string
+    {
+        $row = (array) $row;
+        $parts = [];
+        foreach (self::SEALED as $f) {
+            $v = $row[$f] ?? null;
+            if ($f === 'created_at' && $v !== null) {
+                $v = \Illuminate\Support\Carbon::parse($v)->format('Y-m-d H:i:s');
+            }
+            $parts[] = $v === null ? "\0" : (string) $v;
+        }
+
+        return hash_hmac('sha256', implode("\x1f", $parts), (string) config('app.key'));
+    }
+
+    /**
+     * Check the seals of a company's audit log.
+     *
+     * @return array{checked: int, sealed: int, unsealed: int, tampered: array<int, int>}
+     */
+    public static function verify(?int $companyId, ?\DateTimeInterface $since = null): array
+    {
+        $out = ['checked' => 0, 'sealed' => 0, 'unsealed' => 0, 'tampered' => []];
+        DB::table('audit_logs')->where('company_id', $companyId)->when($since, fn ($q) => $q->where('created_at', '>=', $since))
+            ->orderBy('id')->chunkById(1000, function ($rows) use (&$out) {
+            foreach ($rows as $r) {
+                $out['checked']++;
+                if ($r->seal === null) {
+                    $out['unsealed']++;        // written before sealing existed
+                } elseif (hash_equals($r->seal, self::seal($r))) {
+                    $out['sealed']++;
+                } else {
+                    $out['tampered'][] = (int) $r->id;
+                }
+            }
+        });
+
+        return $out;
     }
 
     protected static function scalarize(array $values): array

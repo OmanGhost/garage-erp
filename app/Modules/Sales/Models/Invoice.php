@@ -35,6 +35,11 @@ class Invoice extends TenantModel
         return $this->belongsTo(\App\Modules\CRM\Models\Customer::class);
     }
 
+    public function membership(): BelongsTo
+    {
+        return $this->belongsTo(\App\Modules\Loyalty\Models\Membership::class);
+    }
+
     public function jobCard(): BelongsTo
     {
         return $this->belongsTo(\App\Modules\Workshop\Models\JobCard::class);

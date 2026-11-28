@@ -70,6 +70,16 @@ class ErpDaily extends Command
                     $r['expired_points'] = app(\App\Modules\Loyalty\Services\LoyaltyService::class)->expire();
                     $r['expired_gift_cards'] = app(\App\Modules\Loyalty\Services\GiftCardService::class)->expire();
                 }
+                // fraud & loss prevention: daily digest of the low alerts (medium / high ones are sent at once)
+                if ($company->moduleEnabled('loss_prevention')) {
+                    $new = \App\Modules\LossPrevention\Models\FraudAlert::query()->where('status', 'unreviewed')->where('severity', 'low')
+                        ->where('last_seen_at', '>=', now()->subDay())->count();
+                    $r['fraud_alerts'] = $new;
+                    $reviewers = \App\Modules\LossPrevention\Services\LossPreventionMonitor::reviewers();
+                    if ($new && $reviewers->isNotEmpty()) {
+                        Notification::send($reviewers, new SystemMessage(__(':n suspicious operations to review', ['n' => $new]), '', route('loss-prevention.index'), 'warning'));
+                    }
+                }
                 $docs = Employee::query()->where('status', 'active')->where(fn ($q) => $q->whereBetween('id_expiry', [now(), now()->addDays(30)])
                     ->orWhereBetween('visa_expiry', [now(), now()->addDays(30)])->orWhereBetween('passport_expiry', [now(), now()->addDays(30)]))->count();
                 if ($docs) {

@@ -12,6 +12,13 @@ class AuditLog extends Model
 
     public const UPDATED_AT = null;
 
+    /** The audit trail is append-only: rows are written by AuditLogger and never changed or removed by the application. */
+    protected static function booted(): void
+    {
+        static::updating(fn () => throw new \App\Exceptions\BusinessException(__('Audit log records cannot be changed.')));
+        static::deleting(fn () => throw new \App\Exceptions\BusinessException(__('Audit log records cannot be deleted.')));
+    }
+
     protected $casts = [
         'old_values' => 'array',
         'new_values' => 'array',

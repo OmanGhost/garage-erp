@@ -154,7 +154,7 @@ class Menu
                 ['label' => __('Reports Center'), 'icon' => 'bi-bar-chart-line', 'route' => 'reports.index', 'perm' => 'reports.view'],
                 ['label' => __('AI Assistant'), 'icon' => 'bi-stars', 'route' => 'ai.index', 'perm' => 'reports.view'],
             ]],
-            ['label' => __('Administration'), 'paths' => ['settings', 'roles', 'users', 'integrations', 'backups', 'billing', 'api-tokens'], 'items' => [
+            ['label' => __('Administration'), 'paths' => ['settings', 'roles', 'users', 'integrations', 'backups', 'billing', 'api-tokens', 'loss-prevention'], 'items' => [
                 ['label' => __('Company Settings'), 'icon' => 'bi-gear', 'route' => 'settings.edit', 'perm' => 'settings.view'],
                 ['label' => __('Branches'), 'icon' => 'bi-geo-alt', 'url' => self::crud('branches'), 'perm' => 'branches.view'],
                 ['label' => __('Users'), 'icon' => 'bi-person-gear', 'url' => self::crud('users'), 'perm' => 'users.view'],
@@ -167,6 +167,7 @@ class Menu
                 ['label' => __('Integrations'), 'icon' => 'bi-plug', 'route' => 'integrations.index', 'perm' => 'integrations.view', 'module' => 'integrations'],
                 ['label' => __('Webhooks'), 'icon' => 'bi-broadcast', 'url' => self::crud('webhooks'), 'perm' => 'webhooks.view', 'module' => 'integrations'],
                 ['label' => __('API Tokens'), 'icon' => 'bi-key', 'route' => 'api-tokens.index', 'perm' => 'integrations.view', 'module' => 'integrations'],
+                ['label' => __('Fraud & loss prevention'), 'icon' => 'bi-incognito', 'route' => 'loss-prevention.index', 'perm' => 'fraud_alerts.view', 'module' => 'loss_prevention'],
                 ['label' => __('Audit Log'), 'icon' => 'bi-shield-exclamation', 'url' => self::crud('audit-logs'), 'perm' => 'audit_logs.view'],
                 ['label' => __('Login History'), 'icon' => 'bi-door-closed', 'url' => self::crud('login-histories'), 'perm' => 'audit_logs.view'],
                 ['label' => __('Backups'), 'icon' => 'bi-hdd-stack', 'route' => 'backups.index', 'perm' => 'backups.view',

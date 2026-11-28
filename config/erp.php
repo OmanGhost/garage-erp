@@ -23,6 +23,8 @@ $resources = [
     'memberships', 'membership_plans', 'loyalty', 'gift_cards',
     // subcontracting & roadside
     'subcontracts', 'roadside',
+    // internal fraud & loss prevention
+    'fraud_alerts',
     // quality management
     'quality', 'quality_sops', 'nonconformities', 'capa_actions', 'quality_audits',
     // inventory
@@ -105,6 +107,8 @@ return [
             'description' => 'Send work to outside specialists (machining, transmission, ECU…) linked to the job card: cost, customer price, return date and outside warranty.'],
         'roadside' => ['label' => 'Roadside assistance', 'requires' => 'workshop', 'new' => true,
             'description' => 'Tow, battery, tyre and fuel calls: dispatch a driver, live customer location link, distance pricing and membership-covered calls.'],
+        'loss_prevention' => ['label' => 'Fraud & loss prevention', 'new' => true,
+            'description' => 'Watches unusual discounts, sales below cost, cancelled receipts, price cuts, stock write-offs, cash shortages and after-hours work; alerts managers and seals the audit log.'],
         'inventory' => ['label' => 'Spare Parts & Inventory'],
         'inventory_analytics' => ['label' => 'Inventory analytics & auto reorder', 'requires' => 'inventory', 'new' => true,
             'description' => 'ABC, stock aging, dead stock, demand forecast, automatic reordering, cycle counting, supplier price history.'],
@@ -136,7 +140,7 @@ return [
     'roles' => [
         'Super Admin' => '*',
         'Company Admin' => '*',
-        'General Manager' => ['*.view', '*.print', '*.export', '*.approve', 'dashboard.*', 'reports.*', 'branches.all', 'job_cards.*'],
+        'General Manager' => ['fraud_alerts.*', '*.view', '*.print', '*.export', '*.approve', 'dashboard.*', 'reports.*', 'branches.all', 'job_cards.*'],
         'Branch Manager' => ['dashboard.*', 'subcontracts.*', 'roadside.*', 'memberships.*', 'membership_plans.view', 'loyalty.*', 'gift_cards.*', 'quality.view', 'quality_sops.view', 'nonconformities.*', 'capa_actions.*', 'quality_audits.view', 'workshop_planning.*', 'vehicle_tracking.*', 'test_drives.*', 'yard_locations.view', 'reports.*', 'customers.*', 'vehicles.*', 'reception.*', 'handover_authorizations.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'appointments.*', 'invoices.*', 'payments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'purchase_orders.view', 'employees.view', 'attendance.*', 'leaves.*', 'complaints.*', 'pos.*'],
         'Workshop Manager' => ['dashboard.view', 'subcontracts.*', 'roadside.*', 'quality.*', 'quality_sops.*', 'nonconformities.*', 'capa_actions.*', 'quality_audits.*', 'workshop_planning.*', 'yard_locations.*', 'vehicle_tracking.*', 'test_drives.*', 'customers.*', 'vehicles.*', 'departments.*', 'services.*', 'service_packages.*', 'workshop_bays.*', 'reception.*', 'handover_authorizations.*', 'inspection_templates.*', 'inspections.*', 'quotations.*', 'job_cards.*', 'quality_checks.*', 'appointments.*', 'parts.view', 'stock.view', 'purchase_requests.*', 'warranty_claims.*', 'warranties.view', 'equipment.*', 'reports.view', 'commissions.view', 'insurance_claims.*', 'fleets.view'],
         'Receptionist' => ['dashboard.view', 'subcontracts.view', 'roadside.view', 'roadside.create', 'roadside.update', 'memberships.view', 'memberships.create', 'loyalty.view', 'workshop_planning.view', 'vehicle_tracking.*', 'test_drives.view', 'test_drives.create', 'yard_locations.view', 'customers.view', 'customers.create', 'customers.update', 'vehicles.view', 'vehicles.create', 'vehicles.update', 'reception.*', 'handover_authorizations.*', 'job_cards.view', 'job_cards.print', 'quotations.view', 'quotations.create', 'quotations.print', 'appointments.*', 'complaints.view', 'complaints.create', 'services.view', 'parts.view'],
@@ -153,6 +157,10 @@ return [
     ],
 
     'defaults' => [
+        // fraud & loss prevention thresholds
+        'fraud.max_discount_percent' => '15', 'fraud.price_override_percent' => '10', 'fraud.price_drop_percent' => '20', 'fraud.large_amount' => '100',
+        'fraud.write_off_min' => '20', 'fraud.adjustments_per_week' => '3', 'fraud.part_adjustments_30d' => '3', 'fraud.cash_difference_min' => '1',
+        'fraud.after_hours_grace_minutes' => '30',
         // roadside assistance price = base fee by service type + rate per km beyond the included distance + extras
         'roadside.base_tow' => '25', 'roadside.base_battery' => '10', 'roadside.base_tyre' => '10', 'roadside.base_fuel' => '8',
         'roadside.base_lockout' => '15', 'roadside.base_jumpstart' => '8', 'roadside.base_other' => '10',

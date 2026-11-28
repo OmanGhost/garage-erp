@@ -5,6 +5,13 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.23.0] - 2026-11-28
+- Internal fraud & loss prevention: rules for unusual manual discounts (membership, coupon and standing customer / group discounts excluded; insurance and fleet invoices skipped), sales below the cost booked at posting, prices typed below the price list, selling-price cuts, cancelled receipts, returns, deleted held POS sales, stock write-offs without a document, repeated adjustments per user and per part, issued parts not invoiced at delivery, cash shortages / overages (repeat shortages escalate) and after-hours work by staff
+- Alerts are checked after the transaction commits (a rolled-back action raises nothing, a failing rule never breaks the operation), grouped by fingerprint with an occurrence counter; medium / high alerts notify reviewers at once, low ones in the daily digest; thresholds editable on the dashboard
+- Review with mandatory notes ("justified" / "confirmed misconduct"); nobody can review an alert about their own action; no delete
+- Audit log sealed: every new row carries an HMAC of its content, the application refuses to update or delete audit rows, and "Verify audit log" reports rows changed directly in the database (older rows show as written before sealing; deleted rows and direct database access are outside what the application can detect or prevent; rotating APP_KEY invalidates the seals)
+- New plan module "Fraud & loss prevention", switched on only for plans that already include every main module
+
 ## [1.22.1] - 2026-11-27
 - Cash session closing: detailed breakdown and mandatory reason for differences
 - The close-session dialog shows invoices and total sales, receipts / refunds / net per payment method (cash drawer vs. card, transfer, points, gift cards) and the expected cash (opening + cash received − cash refunded); the summary is refreshed each time the dialog opens
