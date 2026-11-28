@@ -78,4 +78,9 @@ class Employee extends TenantModel
     {
         return \App\Support\Money::add($this->basic_salary, $this->housing_allowance, $this->transport_allowance, $this->other_allowances);
     }
+
+    public function photoUrl(): ?string
+    {
+        return $this->photo_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($this->photo_path) : null;
+    }
 }

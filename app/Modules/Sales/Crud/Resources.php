@@ -160,6 +160,8 @@ class PaymentResource extends CrudResource
             Field::text('reference')->index()->searchable(),
             Field::select('status', ['posted', 'cancelled'])->index()->filterable(),
             Field::money('amount')->index(),
+            Field::money('fee_amount')->label(__('Card commission'))->hideOnForm()->display(fn ($p) => (float) $p->fee_amount > 0 ? '<span class="font-monospace text-danger">-'.e(money($p->fee_amount, false)).'</span>' : '—'),
+            Field::money('net_amount')->label(__('Net to the bank'))->hideOnForm()->display(fn ($p) => '<span class="font-monospace">'.e(money($p->net_amount ?? $p->amount, false)).'</span>'),
         ];
     }
 

@@ -42,8 +42,11 @@ class EmployeeResource extends HrResource
         $expiry = fn ($col) => fn ($e) => $e->{$col} ? '<span class="'.($e->{$col}->isPast() ? 'text-danger fw-bold' : ($e->{$col}->lt(now()->addDays(30)) ? 'text-warning fw-bold' : '')).'">'.$e->{$col}->format('Y-m-d').'</span>' : '—';
 
         return [
+            Field::image('photo_path')->label(__('Photo'))->col(12)->section(__('Personal information'))->index()
+                ->display(fn ($e) => $e->photoUrl() ? '<img src="'.e($e->photoUrl()).'" alt="" class="rounded-circle border" style="width:40px;height:40px;object-fit:cover">'
+                    : '<span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-body-tertiary border text-body-secondary" style="width:40px;height:40px"><i class="bi bi-person"></i></span>'),
             Field::text('code')->hideOnForm()->index()->searchable(),
-            Field::text('name')->label(__('Name (Arabic)'))->required()->index()->searchable()->col(6)->section(__('Personal information')),
+            Field::text('name')->label(__('Name (Arabic)'))->required()->index()->searchable()->col(6),
             Field::text('name_en')->label(__('Name (English)'))->searchable()->col(6),
             Field::text('nationality')->col(3)->rules(['size:2'])->help('OM, IN, PK...'),
             Field::select('gender', ['male' => __('Male'), 'female' => __('Female')])->col(3),

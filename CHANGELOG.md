@@ -5,6 +5,11 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.25.3] - 2026-11-28
+- Employee photo; card commission per terminal with a maximum per transaction
+- Employee photo upload (images only), shown as an avatar in the employee list
+- Card commission on each card terminal / bank account: percentage (e.g. 1.20 %) and maximum per transaction (e.g. 10.000 OMR); every card receipt books the net to the bank account (matching the bank deposit), the commission to Bank charges and the full amount to the customer; fee and net kept on the receipt, shown in the receipts list and the POS session-close summary; cancelling the receipt reverses the commission
+
 ## [1.25.2] - 2026-11-28
 - Fixed editing users (role could not be changed); role change requests with approval and printable decision
 - Fix: saving any edit of a user failed with a server error (the password rule object broke the "optional on edit" filter), so roles could not be changed; the edit form now shows the current role

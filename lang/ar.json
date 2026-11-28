@@ -3959,5 +3959,15 @@
     "Reason for the rejection (required)": "سبب الرفض (إلزامي)",
     "Can be decided by": "يمكن أن يبت فيه",
     "Changing the role of an existing user needs a role change request approved by a branch manager or higher.": "تغيير صلاحية مستخدم قائم يتطلب طلب تغيير صلاحية يوافق عليه مدير الفرع أو من هو أعلى.",
-    "Request role change": "طلب تغيير الصلاحية"
+    "Request role change": "طلب تغيير الصلاحية",
+    "Card commission (%)": "عمولة البطاقات (%)",
+    "Percentage the bank deducts from every card payment received into this account, e.g. 1.20": "النسبة التي يخصمها البنك من كل دفعة بالبطاقة تُستلم في هذا الحساب، مثل 1.20",
+    "Card payments": "مدفوعات البطاقات",
+    "Maximum commission per transaction": "الحد الأقصى للعمولة لكل عملية",
+    "Leave empty for no maximum, e.g. 10.000": "اتركه فارغاً بلا حد أقصى، مثل 10.000",
+    "Card commission": "عمولة البطاقة",
+    "Net to the bank": "الصافي للبنك",
+    "Photo": "الصورة",
+    "Bank commission": "عمولة البنك",
+    "To the bank": "الصافي للبنك"
 }

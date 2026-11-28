@@ -36,6 +36,7 @@ class PaymentService
 
         return DB::transaction(function () use ($customer, $amount, $bankAccountId, $method, $allocations, $opt) {
             $bank = BankAccount::query()->findOrFail($bankAccountId);
+            $fee = $bank->cardFee($amount, $method);
             $payment = Payment::create([
                 'number' => DocumentNumber::next('payment_in'),
                 'direction' => 'in', 'party_type' => 'customer', 'party_id' => $customer->id,
@@ -45,6 +46,7 @@ class PaymentService
                 'notes' => $opt['notes'] ?? null, 'status' => 'posted', 'pos_session_id' => $opt['pos_session_id'] ?? null,
                 'gateway' => $opt['gateway'] ?? null, 'gateway_reference' => $opt['gateway_reference'] ?? null,
                 'branch_id' => $opt['branch_id'] ?? null, 'created_by' => auth()->id(),
+                'fee_amount' => $fee, 'net_amount' => Money::sub($amount, $fee),
             ]);
 
             $this->allocateToInvoices($payment, $customer, $amount, $allocations);
@@ -55,7 +57,9 @@ class PaymentService
                 'source' => $payment,
                 'branch_id' => $payment->branch_id,
                 'lines' => [
-                    ['account' => $bank->account_id, 'debit' => $amount],
+                    // the bank credits the net amount; its card commission is an expense
+                    ['account' => $bank->account_id, 'debit' => Money::sub($amount, $fee)],
+                    ['account' => 'bank_charges', 'debit' => $fee, 'description' => __('Card commission').' '.$payment->number],
                     ['account' => 'ar', 'credit' => $amount, 'party' => $customer, 'description' => $payment->number],
                 ],
             ]);

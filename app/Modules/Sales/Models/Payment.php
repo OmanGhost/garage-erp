@@ -20,6 +20,8 @@ class Payment extends TenantModel
 
     protected $casts = [
         'amount' => 'decimal:3',
+        'fee_amount' => 'decimal:3',
+        'net_amount' => 'decimal:3',
         'date' => 'date',
         'cheque_date' => 'date',
     ];

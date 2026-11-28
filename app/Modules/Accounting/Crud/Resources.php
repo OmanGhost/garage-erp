@@ -128,6 +128,10 @@ class BankAccountResource extends AccountingResource
             Field::text('bank_name')->label(__('Bank name'))->col(4),
             Field::text('account_number')->label(__('Account number'))->col(4),
             Field::text('iban')->label('IBAN')->col(4),
+            Field::make('card_fee_percent', 'decimal')->label(__('Card commission (%)'))->col(4)->default(0)->rules(['nullable', 'numeric', 'min:0', 'max:20'])
+                ->help(__('Percentage the bank deducts from every card payment received into this account, e.g. 1.20'))->section(__('Card payments')),
+            Field::money('card_fee_max')->label(__('Maximum commission per transaction'))->col(4)->rules(['nullable', 'numeric', 'min:0'])
+                ->help(__('Leave empty for no maximum, e.g. 10.000')),
             Field::text('balance')->label(__('Balance'))->hideOnForm()->display(fn ($b) => '<span class="font-monospace fw-bold">'.e(money(Ledger::accountBalance($b->account_id))).'</span>')->index(false),
             Field::checkbox('is_active')->label(__('Active'))->default(true)->index(),
         ];

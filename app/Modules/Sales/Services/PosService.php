@@ -178,7 +178,7 @@ class PosService
         $cashBox = $session->register->bank_account_id;
         $invoices = Invoice::query()->where('pos_session_id', $session->id)->whereNotIn('status', ['draft', 'held', 'cancelled'])->get(['id', 'total']);
         $rows = Payment::query()->where('pos_session_id', $session->id)->where('status', 'posted')
-            ->selectRaw('method, direction, bank_account_id, SUM(amount) total')->groupBy('method', 'direction', 'bank_account_id')->get();
+            ->selectRaw('method, direction, bank_account_id, SUM(amount) total, SUM(fee_amount) fees')->groupBy('method', 'direction', 'bank_account_id')->get();
         $methods = [];
         $cashIn = '0';
         $cashOut = '0';
@@ -186,7 +186,8 @@ class PosService
         foreach ($rows as $r) {
             $drawer = $cashBox && (int) $r->bank_account_id === (int) $cashBox;
             $key = $r->method.($drawer ? ':drawer' : '');
-            $methods[$key] ??= ['method' => (string) $r->method, 'in' => '0', 'out' => '0', 'net' => '0', 'drawer' => $drawer];
+            $methods[$key] ??= ['method' => (string) $r->method, 'in' => '0', 'out' => '0', 'net' => '0', 'drawer' => $drawer, 'fee' => '0'];
+            $methods[$key]['fee'] = Money::add($methods[$key]['fee'], Money::round($r->fees ?? 0));
             $amount = Money::round($r->total);
             if ($r->direction === 'out') {
                 $methods[$key]['out'] = Money::add($methods[$key]['out'], $amount);
@@ -200,6 +201,7 @@ class PosService
         $methods = collect($methods)->sortByDesc(fn ($m) => [$m['drawer'], (float) $m['in']])->values()->all();
 
         return ['invoices' => $invoices->count(), 'sales' => Money::sum($invoices->pluck('total')), 'methods' => $methods,
+            'fees' => Money::sum(array_column($methods, 'fee')),
             'opening' => Money::round($session->opening_cash), 'cash_in' => $cashIn, 'cash_out' => $cashOut,
             'expected' => Money::sub(Money::add($session->opening_cash, $cashIn), $cashOut), 'other_total' => $other];
     }
