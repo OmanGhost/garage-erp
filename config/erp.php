@@ -191,5 +191,8 @@ return [
         'purchasing.approval_limit' => '500.000',
         'hr.overtime_rate' => '1.25',
         'hr.working_minutes_per_day' => 480,
+        'hr.self_attendance' => true,        // check-in / check-out button in the top bar
+        'hr.late_grace_minutes' => 10,
+        'hr.financing_profit_rate' => 5,     // default profit % of internal financing
     ],
 ];

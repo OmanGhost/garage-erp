@@ -67,7 +67,7 @@ class HrController extends Controller
     {
         $this->can('loans.create');
 
-        return view('hr::loan-form', ['banks' => Options::bankAccounts()]);
+        return view('hr::loan-form', ['banks' => Options::bankAccounts(), 'defaultRate' => setting('hr.financing_profit_rate', 5)]);
     }
 
     public function storeLoan(Request $request)
@@ -75,12 +75,39 @@ class HrController extends Controller
         $this->can('loans.create');
         $data = $request->validate([
             'employee_id' => ['required', 'integer', Rule::exists('employees', 'id')->where('company_id', tenant()->id())],
-            'amount' => ['required', 'numeric', 'gt:0'], 'installment' => ['required', 'numeric', 'gt:0', 'lte:amount'],
+            'loan_type' => ['required', 'in:advance,financing'],
+            'amount' => ['required', 'numeric', 'gt:0', 'max:1000000'],
+            'profit_rate' => ['required_if:loan_type,financing', 'nullable', 'numeric', 'min:0', 'max:100'],
+            'installments_count' => ['required_if:loan_type,financing', 'nullable', 'integer', 'min:1', 'max:120'],
+            'installment' => ['required_if:loan_type,advance', 'nullable', 'numeric', 'gt:0', 'lte:amount'],
+            'first_month' => ['required', 'date_format:Y-m'],
             'bank_account_id' => ['required', 'integer', Rule::exists('bank_accounts', 'id')->where('company_id', tenant()->id())], 'notes' => ['nullable', 'string', 'max:250'],
         ]);
-        $this->payroll->giveLoan(Employee::query()->findOrFail($data['employee_id']), $data['amount'], $data['installment'], $data['bank_account_id'], $data['notes'] ?? null);
+        $data['first_month'] .= '-01';
+        $loan = app(\App\Modules\HR\Services\LoanService::class)->give(Employee::query()->findOrFail($data['employee_id']), $data, (int) $data['bank_account_id']);
 
-        return redirect()->route('crud.index', 'employee-loans')->with('success', __('Advance recorded and paid.'));
+        return redirect()->route('hr.loans.show', $loan)->with('success', __('Advance recorded and paid.'))
+            ->with('print_voucher', route('vouchers.loan', $loan))->with('print_label', __('Print voucher'));
+    }
+
+    public function showLoan(\App\Modules\HR\Models\EmployeeLoan $loan, \App\Modules\HR\Services\LoanService $loans)
+    {
+        $this->can('loans.view');
+        $loan->load('employee');
+
+        return view('hr::loan', ['loan' => $loan, 'schedule' => $loans->schedule($loan),
+            'payments' => $loan->payments()->with('payroll')->get(), 'pendingPayroll' => $loans->pendingPayrollDeduction($loan->employee_id),
+            'banks' => Options::bankAccounts()]);
+    }
+
+    public function repayLoan(Request $request, \App\Modules\HR\Models\EmployeeLoan $loan, \App\Modules\HR\Services\LoanService $loans)
+    {
+        $this->can('loans.update');
+        $d = $request->validate(['settle' => ['nullable', 'boolean'], 'amount' => ['exclude_if:settle,1', 'required', 'numeric', 'gt:0'],
+            'bank_account_id' => ['required', 'integer', Rule::exists('bank_accounts', 'id')->where('company_id', tenant()->id())], 'notes' => ['nullable', 'string', 'max:250']]);
+        $loans->repay($loan, $d['amount'] ?? 0, (int) $d['bank_account_id'], $request->boolean('settle'), $d['notes'] ?? null);
+
+        return back()->with('success', $request->boolean('settle') ? __('The loan is settled.') : __('Payment recorded.'));
     }
 
     public function createPayroll()

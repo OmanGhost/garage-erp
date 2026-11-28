@@ -311,6 +311,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/quality/actions/{action}/{step}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'actionStep'])->middleware('module:quality')->name('quality.actions.step')->whereIn('step', ['complete', 'verify']);
         Route::get('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'audit'])->middleware('module:quality')->name('quality.audits.show');
         Route::post('/quality/audits/{audit}', [\App\Modules\Quality\Http\Controllers\QualityController::class, 'recordAudit'])->middleware('module:quality')->name('quality.audits.record');
+        // one-click attendance (any user linked to an active employee)
+        Route::post('/attendance/punch', \App\Modules\HR\Http\Controllers\AttendancePunchController::class)->middleware('throttle:20,1')->name('attendance.punch');
         // fraud & loss prevention
         Route::get('/loss-prevention', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'index'])->middleware('module:loss_prevention')->name('loss-prevention.index');
         Route::post('/loss-prevention/settings', [\App\Modules\LossPrevention\Http\Controllers\LossPreventionController::class, 'saveSettings'])->middleware('module:loss_prevention')->name('loss-prevention.settings');
@@ -575,6 +577,8 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
         Route::post('/leaves/{leave}/{decision}', [HrController::class, 'decideLeave'])->name('leaves.decide')->whereIn('decision', ['approve', 'reject']);
         Route::get('/loans/create', [HrController::class, 'createLoan'])->name('loans.create');
         Route::post('/loans', [HrController::class, 'storeLoan'])->name('loans.store');
+        Route::get('/loans/{loan}', [HrController::class, 'showLoan'])->name('loans.show');
+        Route::post('/loans/{loan}/repay', [HrController::class, 'repayLoan'])->name('loans.repay');
         Route::get('/payroll/create', [HrController::class, 'createPayroll'])->name('payroll.create');
         Route::post('/payroll', [HrController::class, 'generatePayroll'])->name('payroll.store');
         Route::get('/payroll/{payroll}', [HrController::class, 'payroll'])->name('payroll.show');

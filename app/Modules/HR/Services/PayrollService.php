@@ -23,7 +23,8 @@ use Illuminate\Support\Facades\DB;
  * Attendance, leave and monthly payroll:
  *   gross = basic + allowances + overtime + commissions + bonuses
  *   net   = gross - deductions - loan installments - unpaid absence
- *   post: Dr Salaries expense / Dr Commission expense   Cr Salaries payable, Cr Employee advances (loans)
+ *   post: Dr Salaries expense / Dr Commission expense   Cr Salaries payable, Cr Employee advances (loan principal),
+ *         Cr Financing income (profit share of internal financing installments)
  *   pay:  Dr Salaries payable  Cr Bank
  */
 class PayrollService
@@ -96,7 +97,8 @@ class PayrollService
                 $commissions = $e->user_id ? Money::sum(Commission::query()->where('user_id', $e->user_id)->where('status', 'pending')->whereNull('payroll_id')
                     ->where('earned_at', '<=', $end)->pluck('amount')) : '0';
                 $loanDed = '0';
-                foreach (EmployeeLoan::query()->where('employee_id', $e->id)->where('status', 'active')->get() as $loan) {
+                foreach (EmployeeLoan::query()->where('employee_id', $e->id)->where('status', 'active')
+                    ->where(fn ($q) => $q->whereNull('first_month')->orWhereDate('first_month', '<=', $month->toDateString()))->get() as $loan) {
                     $loanDed = Money::add($loanDed, Money::min($loan->installment, $loan->remaining));
                 }
                 $absenceDed = Money::mul($dailyRate, $absent);
@@ -137,15 +139,35 @@ class PayrollService
             $items = $p->items()->with('employee')->get();
             $salaries = Money::sum($items->map(fn ($i) => Money::sub(Money::sub($i->gross, $i->commissions), Money::add($i->deductions, $i->absence_deduction))));
             $commissions = Money::sum($items->pluck('commissions'));
-            $loans = Money::sum($items->pluck('loan_deduction'));
             $net = Money::sum($items->pluck('net'));
             $end = $p->period_month->copy()->endOfMonth();
+            // allocate each employee's deduction over their loans (oldest first) and split it into principal / profit
+            $loanService = app(LoanService::class);
+            $allocations = [];
+            $principalTotal = $profitTotal = '0';
+            foreach ($items as $i) {
+                $left = $i->loan_deduction;
+                foreach (EmployeeLoan::query()->where('employee_id', $i->employee_id)->where('status', 'active')->orderBy('date')->orderBy('id')->lockForUpdate()->get() as $loan) {
+                    if (! Money::isPositive($left)) {
+                        break;
+                    }
+                    $take = Money::min($left, Money::min($loan->installment, $loan->remaining));
+                    $s = $loanService->split($loan, $take);
+                    $allocations[] = [$loan, $take];
+                    $principalTotal = Money::add($principalTotal, $s['principal']);
+                    $profitTotal = Money::add($profitTotal, $s['profit']);
+                    $left = Money::sub($left, $take);
+                }
+                // anything deducted beyond the open loans (a loan settled by hand meanwhile) stays as an advance credit
+                $principalTotal = Money::add($principalTotal, Money::max('0', $left));
+            }
             $je = $this->posting->post([
                 'date' => $end->toDateString(), 'description' => __('Payroll').' '.$p->period_month->format('Y-m'), 'source' => $p,
                 'lines' => [
                     ['account' => 'salaries_expense', 'debit' => $salaries],
                     ['account' => 'commission_expense', 'debit' => $commissions],
-                    ['account' => 'employee_advances', 'credit' => $loans],
+                    ['account' => 'employee_advances', 'credit' => $principalTotal],
+                    ['account' => 'financing_income', 'credit' => $profitTotal],
                     ['account' => 'salaries_payable', 'credit' => $net],
                 ],
             ]);
@@ -156,16 +178,9 @@ class PayrollService
                 }
                 EmployeeAdjustment::query()->where('employee_id', $i->employee_id)->whereNull('payroll_id')
                     ->whereBetween('date', [$p->period_month->toDateString(), $end->toDateString()])->update(['payroll_id' => $p->id]);
-                $left = $i->loan_deduction;
-                foreach (EmployeeLoan::query()->where('employee_id', $i->employee_id)->where('status', 'active')->orderBy('date')->get() as $loan) {
-                    if (! Money::isPositive($left)) {
-                        break;
-                    }
-                    $take = Money::min($left, Money::min($loan->installment, $loan->remaining));
-                    $remaining = Money::sub($loan->remaining, $take);
-                    $loan->update(['remaining' => $remaining, 'status' => Money::isPositive($remaining) ? 'active' : 'settled']);
-                    $left = Money::sub($left, $take);
-                }
+            }
+            foreach ($allocations as [$loan, $take]) {
+                $loanService->collect($loan, $take, 'payroll', $p->id, $je->id, $end->toDateString());
             }
             $p->forceFill(['status' => 'posted', 'posted_at' => now(), 'journal_entry_id' => $je->id])->save();
             AuditLogger::log('payroll.posted', $p, ['net' => $net]);
@@ -189,20 +204,11 @@ class PayrollService
     }
 
     /** Give a salary advance (loan): Dr Employee advances, Cr Cash. */
+    /** Plain salary advance (kept for existing callers); see LoanService for internal financing. */
     public function giveLoan(Employee $e, mixed $amount, mixed $installment, int $bankAccountId, ?string $notes = null): EmployeeLoan
     {
-        return DB::transaction(function () use ($e, $amount, $installment, $bankAccountId, $notes) {
-            $loan = EmployeeLoan::create(['employee_id' => $e->id, 'date' => now()->toDateString(), 'amount' => $amount,
-                'installment' => $installment, 'remaining' => $amount, 'status' => 'active', 'notes' => $notes]);
-            $je = $this->posting->post([
-                'date' => now()->toDateString(), 'description' => __('Salary advance').' - '.$e->name, 'source' => $loan,
-                'lines' => [['account' => 'employee_advances', 'debit' => $amount, 'party' => $e],
-                    ['account' => BankAccount::query()->findOrFail($bankAccountId)->account_id, 'credit' => $amount]],
-            ]);
-            $loan->update(['journal_entry_id' => $je->id]);
-
-            return $loan;
-        });
+        return app(LoanService::class)->give($e, ['loan_type' => 'advance', 'amount' => $amount, 'installment' => $installment, 'notes' => $notes,
+            'first_month' => now()->startOfMonth()->toDateString()], $bankAccountId);
     }
 
     /** Technician productivity: billed vs. attended hours. */

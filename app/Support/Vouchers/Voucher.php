@@ -193,8 +193,18 @@ final class Voucher
         $v->party = (string) $l->employee?->name;
         $v->partyExtra = $l->employee?->code ? 'الرقم الوظيفي / Employee no. '.$l->employee->code : null;
         $v->amount = (string) $l->amount;
-        $v->purpose = 'سلفة على الراتب تسدد بأقساط شهرية قدرها '.money($l->installment, false).' ر.ع';
-        $v->purposeEn = 'Salary advance, monthly installment '.money($l->installment);
+        if ($l->loan_type === 'financing') {
+            $rate = rtrim(rtrim((string) $l->profit_rate, '0'), '.');
+            $v->titleAr = 'سند صرف تمويل موظف';
+            $v->titleEn = 'Employee Financing Voucher';
+            $v->purpose = 'تمويل داخلي بمبلغ '.money($l->amount, false).' ر.ع وربح '.$rate.'% ('.money($l->profit_amount, false).' ر.ع)، إجمالي المستحق '
+                .money($l->total_payable, false).' ر.ع يسدد على '.$l->installments_count.' قسطاً شهرياً قدره '.money($l->installment, false).' ر.ع ابتداءً من '.$l->first_month?->format('m/Y');
+            $v->purposeEn = 'Internal financing '.money($l->amount).' + '.$rate.'% profit ('.money($l->profit_amount).') = '.money($l->total_payable)
+                .', '.$l->installments_count.' monthly installments of '.money($l->installment).' from '.$l->first_month?->format('m/Y');
+        } else {
+            $v->purpose = 'سلفة على الراتب تسدد بأقساط شهرية قدرها '.money($l->installment, false).' ر.ع'.($l->first_month ? ' ابتداءً من '.$l->first_month->format('m/Y') : '');
+            $v->purposeEn = 'Salary advance, monthly installment '.money($l->installment).($l->first_month ? ' from '.$l->first_month->format('m/Y') : '');
+        }
         $v->method = 'cash';
         $v->account = self::paidFrom($l->journal_entry_id ? JournalEntry::query()->find($l->journal_entry_id) : null);
         $v->notes = $l->notes;

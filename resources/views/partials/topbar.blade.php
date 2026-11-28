@@ -31,6 +31,8 @@
             </div>
         @endif
 
+        @include('partials.attendance-punch')
+
         <div class="dropdown">
             <button class="btn btn-icon" data-bs-toggle="dropdown" title="{{ __('Quick actions') }}"><i class="bi bi-lightning-charge fs-5"></i></button>
             <ul class="dropdown-menu dropdown-menu-end shadow">

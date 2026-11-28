@@ -46,4 +46,5 @@ return [
     'cash_overage' => 'Cash overage',
     'after_hours' => 'After-hours work',
     'replied' => 'Replied',
+    'advance' => 'Advance',
 ];

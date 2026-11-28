@@ -291,15 +291,18 @@ class EmployeeLoanResource extends HrResource
         return [
             Field::lookup('employee_id', 'employees', 'employee')->label(__('Employee'))->required()->index(),
             Field::date('date')->index(),
-            Field::money('amount')->required()->index(),
+            Field::select('loan_type', ['advance', 'financing'])->label(__('Type'))->index()->filterable(),
+            Field::money('amount')->label(__('Principal'))->required()->index(),
+            Field::money('total_payable')->label(__('Total payable'))->index(),
             Field::money('installment')->label(__('Monthly installment'))->required()->index(),
-            Field::money('remaining')->index(),
+            Field::money('remaining')->label(__('Outstanding'))->index(),
             Field::select('status', ['active', 'settled'])->index()->filterable(),
             Field::text('notes'),
         ];
     }
 
     public function createUrl(): ?string { return route('hr.loans.create'); }
+    public function showUrl(Model $m): ?string { return route('hr.loans.show', $m); }
     public function rowActions(Model $m): array { return [['label' => __('Print voucher'), 'url' => route('vouchers.loan', $m), 'icon' => 'bi-printer', 'blank' => true]]; }
     public function editUrl(Model $m): ?string { return null; }
     public function deleteBlocker(Model $m): ?string { return __('Loans are financial records and cannot be deleted.'); }

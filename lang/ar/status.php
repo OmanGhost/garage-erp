@@ -340,4 +340,5 @@ return [
     'cash_overage' => 'زيادة في الصندوق',
     'after_hours' => 'عمل خارج الدوام',
     'replied' => 'تم الرد',
+    'advance' => 'سلفة',
 ];

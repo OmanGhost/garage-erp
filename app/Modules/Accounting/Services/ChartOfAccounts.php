@@ -53,6 +53,7 @@ class ChartOfAccounts
         ['4105', 'زيادة الصندوق', 'Cash Over', 'revenue', '4', 'cash_over', false, 'operating'],
         ['4106', 'أرباح تسويات المخزون', 'Inventory Adjustment Gain', 'revenue', '4', 'inventory_gain', false, 'operating'],
         ['4107', 'أرباح بيع أصول', 'Gain on Asset Disposal', 'revenue', '4', 'asset_disposal_gain', false, 'investing'],
+        ['4108', 'إيرادات تمويل الموظفين', 'Employee Financing Income', 'revenue', '4', 'financing_income', false, 'operating'],
         ['5', 'المصروفات', 'Expenses', 'expense', null, null, true, null],
         ['51', 'تكلفة المبيعات', 'Cost of Sales', 'expense', '5', null, true, null],
         ['5101', 'تكلفة قطع الغيار المباعة', 'Cost of Parts Sold', 'expense', '51', 'cogs', false, 'operating'],

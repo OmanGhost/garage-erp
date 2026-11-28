@@ -5,6 +5,14 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.25.0] - 2026-11-28
+- Employee internal financing with installment schedule, and one-click attendance
+- Loans: two types — salary advance, and internal financing with a profit rate on the principal (total payable split into equal monthly installments rounded up so the last one is never extra); first deduction month; live repayment plan in the form; terms recalculated on the server
+- Loan page: installment schedule (due, received, left, balance after, paid / partly paid / overdue / upcoming), payments received (payroll, by hand, early settlement) split into principal and profit, outstanding principal and profit, record a payment or settle early (refused while an unposted payroll already holds the deduction); voucher prints the financing terms
+- Accounting: disbursement Dr employee advances (principal only) / Cr bank; every collection is split cumulatively into principal (Cr employee advances) and profit (Cr new "Employee financing income" account 4108, added to every company); payroll posting allocates loan deductions first and records a payment row per loan; payroll deducts only from the first installment month
+- Existing loans keep working: total payable = amount, first month = the month given, the part already repaid shown as an opening payment
+- One-click attendance in the top bar for users linked to an active employee: the server decides clock-in or clock-out from the state, records time, IP and source, computes lateness from the branch opening time + grace (status "late"), worked and overtime minutes; refuses a second click within two minutes and a second clock-out the same day; night shifts close the open attendance of the previous day
+
 ## [1.24.1] - 2026-11-28
 - Redesigned point of sale with a part inquiry panel
 - POS search bar (F2) with a "Part inquiry" button, type filter (all / new / used) and "available here only"; results as detailed rows with image, numbers, brand, type, stock here (green / elsewhere / none), price, details and add buttons; parts already in the cart are marked
