@@ -207,6 +207,24 @@ class PosTerminal extends Component
         $this->payments = array_values($this->payments) ?: [['method' => 'cash', 'amount' => '']];
     }
 
+    /** Use the customer's credit balance for the sale (the rest stays in cash). */
+    public function useBalance(): void
+    {
+        $customer = $this->customerId ? Customer::query()->find($this->customerId) : null;
+        $credit = $customer ? app(\App\Modules\Sales\Services\CustomerCreditService::class)->available($customer) : '0';
+        $total = $this->totals()['total'];
+        $use = Money::min($credit, $total);
+        if (! Money::isPositive($use)) {
+            $this->dispatch('erp-toast', message: __('The customer has no credit balance to use.'), type: 'info');
+
+            return;
+        }
+        $this->payments = [['method' => 'balance', 'amount' => $use]];
+        if (Money::cmp($use, $total) < 0) {
+            $this->payments[] = ['method' => 'cash', 'amount' => Money::sub($total, $use)];
+        }
+    }
+
     public function payExact(): void
     {
         $this->payments = [['method' => $this->payments[0]['method'] ?? 'cash', 'amount' => $this->totals()['total']]];
@@ -282,7 +300,7 @@ class PosTerminal extends Component
             'cart.*.qty' => ['required', 'numeric', 'gt:0'],
             'cart.*.unit_price' => ['required', 'numeric', 'min:0'],
             'cart.*.discount' => ['nullable', 'numeric', 'min:0'],
-            'payments.*.method' => ['required', 'in:cash,card,bank_transfer,wallet,cheque'],
+            'payments.*.method' => ['required', 'in:cash,card,bank_transfer,wallet,cheque,balance'],
             'payments.*.amount' => ['nullable', 'numeric', 'min:0'],
         ]);
         try {
@@ -323,6 +341,8 @@ class PosTerminal extends Component
                     (bool) auth()->user()?->can('reports.view'))
                 : null,
             'inCart' => collect($this->cart)->pluck('qty', 'part_id')->all(),
+            'customerCredit' => ($c = $this->customerId ? Customer::query()->find($this->customerId) : null)
+                ? app(\App\Modules\Sales\Services\CustomerCreditService::class)->available($c) : '0',
         ]);
     }
 }

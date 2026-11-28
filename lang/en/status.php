@@ -47,4 +47,5 @@ return [
     'after_hours' => 'After-hours work',
     'replied' => 'Replied',
     'advance' => 'Advance',
+    'balance' => 'Customer balance',
 ];

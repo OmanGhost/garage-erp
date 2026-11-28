@@ -6,11 +6,13 @@
     @can('customers.update')<a href="{{ route('crud.edit', ['customers', $c->id]) }}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> {{ __('Edit') }}</a>@endcan
     <a href="{{ route('customers.statement', $c) }}" target="_blank" class="btn btn-outline-secondary"><i class="bi bi-file-text"></i> {{ __('Statement') }}</a>
     @can('reception.create')<a href="{{ route('reception.create', ['customer_id' => $c->id]) }}" class="btn btn-primary"><i class="bi bi-box-arrow-in-down"></i> {{ __('Receive vehicle') }}</a>@endcan
-    @can('payments.create')<a href="{{ route('payments.receive', ['customer_id' => $c->id]) }}" class="btn btn-success"><i class="bi bi-wallet2"></i> {{ __('Receive payment') }}</a>@endcan
+    @can('payments.create')<a href="{{ route('payments.receive', ['customer_id' => $c->id]) }}" class="btn btn-success"><i class="bi bi-wallet2"></i> {{ __('Receive payment') }}</a>
+        @unless($c->isWalkIn())<a href="{{ route('payments.receive', ['customer_id' => $c->id, 'advance' => 1]) }}" class="btn btn-outline-success"><i class="bi bi-piggy-bank"></i> {{ __('Advance payment') }}</a>@endunless @endcan
 </x-page-header>
 
 <div class="row g-3 mb-3">
-    <div class="col-6 col-lg-3"><div class="card kpi"><div class="card-body"><div class="kpi-label">{{ __('Balance due') }}</div><div class="kpi-value {{ (float) $balance > 0 ? 'text-danger' : 'text-success' }}">{{ money($balance) }}</div></div></div></div>
+    <div class="col-6 col-lg-3"><div class="card kpi"><div class="card-body"><div class="kpi-label">{{ __('Balance due') }}</div><div class="kpi-value {{ (float) $balance > 0 ? 'text-danger' : 'text-success' }}">{{ money($balance) }}</div>
+        @if(\App\Support\Money::isPositive($credit))<div class="small text-success fw-semibold"><i class="bi bi-wallet2"></i> {{ __('Credit balance') }}: {{ money($credit) }}</div>@endif</div></div></div>
     <div class="col-6 col-lg-3"><div class="card kpi"><div class="card-body"><div class="kpi-label">{{ __('Credit limit / available') }}</div><div class="kpi-value">{{ money($c->credit_limit, false) }} / {{ money($c->availableCredit(), false) }}</div></div></div></div>
     <div class="col-6 col-lg-3"><div class="card kpi"><div class="card-body"><div class="kpi-label">{{ __('Total purchases') }}</div><div class="kpi-value">{{ money($stats['spent']) }}</div></div></div></div>
     <div class="col-6 col-lg-3"><div class="card kpi"><div class="card-body"><div class="kpi-label">{{ __('Visits / last visit') }}</div><div class="kpi-value">{{ $stats['jobs'] }} <small class="fs-6 text-body-secondary">{{ $stats['last_visit'] ? \Illuminate\Support\Carbon::parse($stats['last_visit'])->format('Y-m-d') : '' }}</small></div></div></div></div>

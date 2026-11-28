@@ -113,6 +113,7 @@
                 <div class="pos-customer">
                     <i class="bi bi-person-circle"></i>
                     <span class="fw-semibold text-truncate">{{ $customerName }}</span>
+                    @if(\App\Support\Money::isPositive($customerCredit))<span class="badge text-bg-success ms-auto" title="{{ __('Credit balance') }}"><i class="bi bi-wallet2"></i> {{ money($customerCredit, false) }}</span>@endif
                 </div>
                 <div wire:ignore x-data x-on:lookup-selected="$wire.pickCustomer($event.detail.id)">
                     <x-lookup name="pos_customer" type="customers" size="sm" :placeholder="__('Change customer (name / phone)...')"/>
@@ -159,6 +160,7 @@
                             <select class="form-select" style="max-width:130px" wire:model.live="payments.{{ $pi }}.method" aria-label="{{ __('Payment method') }}">
                                 <option value="cash">{{ __('Cash') }}</option><option value="card">{{ __('Card') }}</option>
                                 <option value="bank_transfer">{{ __('Bank transfer') }}</option><option value="wallet">{{ __('E-wallet') }}</option>
+                                @if(\App\Support\Money::isPositive($customerCredit) || ($p['method'] ?? '') === 'balance')<option value="balance">{{ __('Customer balance') }}</option>@endif
                             </select>
                             <input type="number" step="0.001" min="0" class="form-control font-monospace" wire:model.live.debounce.400ms="payments.{{ $pi }}.amount" placeholder="0.000" aria-label="{{ __('Amount') }}">
                             @if(count($payments) > 1)<button class="btn btn-outline-danger" wire:click="removePayment({{ $pi }})" aria-label="{{ __('Remove') }}"><i class="bi bi-dash"></i></button>@endif
@@ -168,6 +170,9 @@
                         <button class="btn btn-sm btn-outline-secondary flex-fill" wire:click="payExact"><i class="bi bi-check2"></i> {{ __('Exact amount') }}</button>
                         <button class="btn btn-sm btn-outline-secondary flex-fill" wire:click="addPayment"><i class="bi bi-plus"></i> {{ __('Split payment') }}</button>
                     </div>
+                    @if(\App\Support\Money::isPositive($customerCredit) && ! empty($cart))
+                        <button class="btn btn-sm btn-outline-success w-100 mt-1" wire:click="useBalance"><i class="bi bi-wallet2"></i> {{ __('Use customer balance (:a)', ['a' => money($customerCredit, false)]) }}</button>
+                    @endif
                     <div class="d-flex justify-content-between small mt-2">
                         <span>{{ __('Paid') }}: <b class="font-monospace">{{ money($paid, false) }}</b></span>
                         @if(\App\Support\Money::isPositive($due))<span class="text-warning-emphasis">{{ __('Remaining (credit)') }}: <b class="font-monospace">{{ money($due, false) }}</b></span>@endif

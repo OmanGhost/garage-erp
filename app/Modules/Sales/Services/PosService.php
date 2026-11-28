@@ -111,12 +111,20 @@ class PosService
             $change = Money::max(0, Money::sub($paid, $due));
             $remaining = $due;
             $created = [];
+            // the customer's credit balance is used first, then the money payments
+            usort($payments, fn ($a, $b) => (($b['method'] ?? '') === 'balance') <=> (($a['method'] ?? '') === 'balance'));
             foreach ($payments as $p) {
                 $amount = Money::round($p['amount'] ?? 0);
                 if (! Money::isPositive($amount) || ! Money::isPositive($remaining)) {
                     continue;
                 }
                 $apply = Money::min($amount, $remaining);
+                if (($p['method'] ?? '') === 'balance') {
+                    $created[] = app(CustomerCreditService::class)->apply($invoice->fresh(), $apply, $session->id);
+                    $remaining = Money::sub($remaining, $apply);
+
+                    continue;
+                }
                 $bankId = $p['bank_account_id'] ?? ($p['method'] === 'cash'
                     ? $register->bank_account_id
                     : BankAccount::query()->where('type', $p['method'] === 'card' ? 'card' : 'bank')->value('id') ?? $register->bank_account_id);

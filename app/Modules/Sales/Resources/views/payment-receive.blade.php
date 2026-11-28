@@ -14,7 +14,9 @@
     <div class="row g-3">
         <div class="col-lg-5">
             <div class="card"><div class="card-body row g-2">
-                <div class="col-12"><div class="fw-semibold">{{ $customer->name }}</div><div class="small text-body-secondary">{{ __('Current balance') }}: <b>{{ money($customer->balance()) }}</b></div></div>
+                <div class="col-12"><div class="fw-semibold">{{ $customer->name }}</div><div class="small text-body-secondary">{{ __('Current balance') }}: <b>{{ money($customer->balance()) }}</b>
+                    @if(\App\Support\Money::isPositive($credit)) · {{ __('Credit balance') }}: <b class="text-success">{{ money($credit) }}</b>@endif</div>
+                    @if($advance)<div class="alert alert-info small py-2 mt-2 mb-0"><i class="bi bi-piggy-bank"></i> {{ __('Advance payment: leave every invoice empty — the amount stays as the customer credit balance and can pay future invoices.') }}</div>@endif</div>
                 <div class="col-6"><label class="form-label required">{{ __('Amount') }}</label><input type="number" name="amount" step="0.001" min="0.001" class="form-control form-control-lg font-monospace" x-model="amount" required></div>
                 <div class="col-6"><label class="form-label">{{ __('Date') }}</label><input type="date" name="date" class="form-control" value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required></div>
                 <div class="col-6"><label class="form-label">{{ __('Method') }}</label><select name="method" class="form-select">@foreach(\App\Support\Options::PAYMENT_METHODS as $m)<option value="{{ $m }}">{{ status_label($m) }}</option>@endforeach</select></div>

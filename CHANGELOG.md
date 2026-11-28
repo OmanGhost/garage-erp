@@ -5,6 +5,12 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.25.4] - 2026-11-28
+- Pay invoices from the customer credit balance; advance payments
+- Customer credit balance (advance payments, over-payments, credit notes not refunded) = what open invoices still owe − the receivable balance; shown on the customer page, the receipt form and next to the customer in the POS
+- "Pay from balance" on a posted invoice and a "Customer balance" payment method / button in the POS (rest in cash); no cash moves and no journal entry (the money is already in the books), only the invoice is settled; limited to the available credit and the invoice balance; never for the walk-in customer; cancelling the balance receipt gives the credit back
+- "Advance payment" button on the customer page; the receipt prints the part paid from the credit balance
+
 ## [1.25.3] - 2026-11-28
 - Employee photo; card commission per terminal with a maximum per transaction
 - Employee photo upload (images only), shown as an avatar in the employee list

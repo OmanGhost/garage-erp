@@ -274,7 +274,8 @@ class SalesController extends Controller
         $open = $customer ? Invoice::query()->where('customer_id', $customer->id)->whereIn('status', ['posted', 'partially_paid'])->orderBy('issue_date')->get() : collect();
 
         return view('sales::payment-receive', ['customer' => $customer, 'open' => $open, 'banks' => Options::bankAccounts(),
-            'invoiceId' => $request->query('invoice_id')]);
+            'invoiceId' => $request->query('invoice_id'), 'advance' => $request->boolean('advance'),
+            'credit' => $customer ? app(\App\Modules\Sales\Services\CustomerCreditService::class)->available($customer) : '0']);
     }
 
     public function receive(Request $request)
@@ -293,6 +294,16 @@ class SalesController extends Controller
             $alloc, collect($data)->only(['date', 'reference', 'cheque_number', 'cheque_date', 'notes'])->all());
 
         return redirect()->route('payments.show', $p)->with('success', __('Receipt :n recorded.', ['n' => $p->number]));
+    }
+
+    /** Pay a posted invoice from the customer's credit balance. */
+    public function payFromBalance(Request $request, Invoice $invoice)
+    {
+        $this->can('payments.create');
+        $d = $request->validate(['amount' => ['nullable', 'numeric', 'gt:0']]);
+        $p = app(\App\Modules\Sales\Services\CustomerCreditService::class)->apply($invoice, $d['amount'] ?? null);
+
+        return back()->with('success', __(':a paid from the customer credit balance.', ['a' => money($p->amount)]));
     }
 
     public function payForm(Request $request)

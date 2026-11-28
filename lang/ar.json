@@ -3969,5 +3969,18 @@
     "Net to the bank": "الصافي للبنك",
     "Photo": "الصورة",
     "Bank commission": "عمولة البنك",
-    "To the bank": "الصافي للبنك"
+    "To the bank": "الصافي للبنك",
+    "The customer has no credit balance to use.": "لا يوجد رصيد دائن للعميل لاستخدامه.",
+    "The customer credit balance is only :a.": "رصيد العميل الدائن :a فقط.",
+    "Paid from the customer credit balance": "مدفوع من رصيد العميل الدائن",
+    "Customer credit balance": "رصيد العميل الدائن",
+    "Pay from balance": "الدفع من الرصيد",
+    "No cash moves: the amount is already with you as an advance, over-payment or credit note.": "لا يتحرك أي نقد: المبلغ لديك مسبقاً كدفعة مقدمة أو دفعة زائدة أو إشعار دائن.",
+    ":a paid from the customer credit balance.": "تم دفع :a من رصيد العميل الدائن.",
+    "Manage delivery through the drop-ship purchase order.": "أدِر التسليم من خلال أمر الشراء بالشحن المباشر.",
+    "Credit balance": "رصيد دائن",
+    "Advance payment: leave every invoice empty — the amount stays as the customer credit balance and can pay future invoices.": "دفعة مقدمة: اترك كل الفواتير فارغة — يبقى المبلغ رصيداً دائناً للعميل يُستخدم في دفع الفواتير القادمة.",
+    "Advance payment": "دفعة مقدمة",
+    "Customer balance": "رصيد العميل",
+    "Use customer balance (:a)": "استخدام رصيد العميل (:a)"
 }

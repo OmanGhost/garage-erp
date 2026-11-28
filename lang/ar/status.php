@@ -341,4 +341,5 @@ return [
     'after_hours' => 'عمل خارج الدوام',
     'replied' => 'تم الرد',
     'advance' => 'سلفة',
+    'balance' => 'رصيد العميل',
 ];

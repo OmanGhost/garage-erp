@@ -31,6 +31,7 @@ class CustomerController extends Controller
             'quotations' => $customer->quotations()->latest('id')->limit(10)->get(),
             'complaints' => $customer->complaints()->latest('id')->limit(10)->get(),
             'balance' => $customer->balance(),
+            'credit' => app(\App\Modules\Sales\Services\CustomerCreditService::class)->available($customer),
             'stats' => [
                 'jobs' => $customer->jobCards()->count(),
                 'spent' => (string) $customer->invoices()->whereIn('status', ['posted', 'partially_paid', 'paid'])->sum('total'),

@@ -31,6 +31,9 @@
     <tr><td>الضريبة / VAT</td><td class="num">{{ money($inv->tax_total, false) }}</td></tr>
     <tr><td><b>الإجمالي / TOTAL</b></td><td class="num"><b>{{ money($inv->total) }}</b></td></tr>
     <tr><td>المدفوع / Paid</td><td class="num">{{ money($inv->paid_amount, false) }}</td></tr>
+    @php $fromBalance = \App\Support\Money::sum(\App\Modules\Sales\Models\PaymentAllocation::query()->where('allocatable_type', $inv->getMorphClass())->where('allocatable_id', $inv->id)
+        ->whereHas('payment', fn ($q) => $q->where('method', 'balance')->where('status', 'posted'))->pluck('amount')); @endphp
+    @if(\App\Support\Money::isPositive($fromBalance))<tr><td>منها من رصيد العميل / From credit balance</td><td class="num">{{ money($fromBalance, false) }}</td></tr>@endif
     @if($inv->cash_tendered !== null && (float) $inv->cash_tendered > 0)
         <tr><td>المستلم نقداً / Cash received</td><td class="num">{{ money($inv->cash_tendered, false) }}</td></tr>
         <tr><td><b>الباقي للعميل / CHANGE</b></td><td class="num"><b>{{ money($inv->change_given ?? 0, false) }}</b></td></tr>
