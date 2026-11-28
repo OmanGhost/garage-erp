@@ -110,4 +110,14 @@ class User extends Authenticatable
     {
         return ['last_login_at', 'last_login_ip', 'dashboard_widgets'];
     }
+
+    /** Current role name (the user form shows it as the selected role). */
+    public function getRoleAttribute(): ?string
+    {
+        if ($this->company_id) {
+            setPermissionsTeamId($this->company_id);
+        }
+
+        return $this->roles->pluck('name')->first();
+    }
 }

@@ -247,6 +247,14 @@ Route::middleware(['auth', 'usertype:staff', 'subscription'])->group(function ()
     Route::post('/roles', [SystemController::class, 'storeRole'])->name('roles.store');
     Route::put('/roles/{role}', [SystemController::class, 'updateRole'])->name('roles.update');
     Route::get('/users/{user}/access', [SystemController::class, 'userAccess'])->name('users.access');
+    // role change requests
+    Route::get('/role-requests', [\App\Http\Controllers\RoleRequestController::class, 'index'])->name('role-requests.index');
+    Route::get('/role-requests/create', [\App\Http\Controllers\RoleRequestController::class, 'create'])->name('role-requests.create');
+    Route::post('/role-requests', [\App\Http\Controllers\RoleRequestController::class, 'store'])->name('role-requests.store');
+    Route::get('/role-requests/{roleRequest}', [\App\Http\Controllers\RoleRequestController::class, 'show'])->name('role-requests.show');
+    Route::post('/role-requests/{roleRequest}/decide', [\App\Http\Controllers\RoleRequestController::class, 'decide'])->name('role-requests.decide');
+    Route::post('/role-requests/{roleRequest}/cancel', [\App\Http\Controllers\RoleRequestController::class, 'cancel'])->name('role-requests.cancel');
+    Route::get('/role-requests/{roleRequest}/print', [\App\Http\Controllers\RoleRequestController::class, 'print'])->name('role-requests.print');
     Route::put('/users/{user}/access', [SystemController::class, 'saveUserAccess']);
     Route::get('/integrations', [SystemController::class, 'integrations'])->name('integrations.index')->middleware('module:integrations');
     Route::put('/integrations/{provider}', [SystemController::class, 'saveIntegration'])->name('integrations.save')->middleware('module:integrations');

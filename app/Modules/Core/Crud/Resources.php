@@ -100,8 +100,10 @@ class UserResource extends CrudResource
     {
         $r = parent::rules($m);
         if ($m) {
-            $r['password'] = array_values(array_diff($r['password'], ['required']));
+            $r['password'] = array_values(array_filter($r['password'], fn ($rule) => $rule !== 'required'));
             array_unshift($r['password'], 'nullable');
+            $r['role'] = array_values(array_filter($r['role'] ?? [], fn ($rule) => $rule !== 'required'));
+            array_unshift($r['role'], 'nullable');
         }
 
         return $r;
@@ -126,8 +128,14 @@ class UserResource extends CrudResource
 
     public function saved(Model $m, array $data, bool $created): void
     {
+        setPermissionsTeamId(tenant()->id());
+        if (! $created && ! empty($data['role']) && $m->roles()->pluck('name')->contains($data['role'])) {
+            return;                                   // role unchanged
+        }
+        if (! $created && ! empty($data['role']) && ! auth()->user()->hasRole('Company Admin') && ! auth()->user()->is_super_admin) {
+            throw new BusinessException(__('Changing the role of an existing user needs a role change request approved by a branch manager or higher.'));
+        }
         if (! empty($data['role'])) {
-            setPermissionsTeamId(tenant()->id());
             if ($data['role'] === 'Company Admin' && ! auth()->user()->hasRole('Company Admin') && ! auth()->user()->is_super_admin) {
                 throw new BusinessException(__('Only company administrators can grant the Company Admin role.'));
             }
@@ -143,9 +151,15 @@ class UserResource extends CrudResource
 
     public function rowActions(Model $m): array
     {
-        return auth()->user()->can('users.update') ? [
-            ['label' => __('Branch & warehouse access'), 'url' => route('users.access', $m), 'icon' => 'bi-diagram-2'],
-        ] : [];
+        $actions = [];
+        if (auth()->user()->can('users.update')) {
+            $actions[] = ['label' => __('Branch & warehouse access'), 'url' => route('users.access', $m), 'icon' => 'bi-diagram-2'];
+        }
+        if (auth()->user()->can('role_requests.create') && $m->id !== auth()->id()) {
+            $actions[] = ['label' => __('Request role change'), 'url' => route('role-requests.create', ['user' => $m->id]), 'icon' => 'bi-person-up'];
+        }
+
+        return $actions;
     }
 }
 

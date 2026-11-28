@@ -154,10 +154,11 @@ class Menu
                 ['label' => __('Reports Center'), 'icon' => 'bi-bar-chart-line', 'route' => 'reports.index', 'perm' => 'reports.view'],
                 ['label' => __('AI Assistant'), 'icon' => 'bi-stars', 'route' => 'ai.index', 'perm' => 'reports.view'],
             ]],
-            ['label' => __('Administration'), 'paths' => ['settings', 'roles', 'users', 'integrations', 'backups', 'billing', 'api-tokens', 'loss-prevention'], 'items' => [
+            ['label' => __('Administration'), 'paths' => ['settings', 'roles', 'users', 'integrations', 'backups', 'billing', 'api-tokens', 'loss-prevention', 'role-requests'], 'items' => [
                 ['label' => __('Company Settings'), 'icon' => 'bi-gear', 'route' => 'settings.edit', 'perm' => 'settings.view'],
                 ['label' => __('Branches'), 'icon' => 'bi-geo-alt', 'url' => self::crud('branches'), 'perm' => 'branches.view'],
                 ['label' => __('Users'), 'icon' => 'bi-person-gear', 'url' => self::crud('users'), 'perm' => 'users.view'],
+                ['label' => __('Role change requests'), 'icon' => 'bi-person-up', 'route' => 'role-requests.index', 'perm' => 'role_requests.view'],
                 ['label' => __('Roles & Permissions'), 'icon' => 'bi-shield-lock', 'route' => 'roles.index', 'perm' => 'roles.view'],
                 ['label' => __('Working Hours'), 'icon' => 'bi-clock', 'url' => self::crud('working-hours'), 'perm' => 'working_hours.view'],
                 ['label' => __('Holidays'), 'icon' => 'bi-calendar-heart', 'url' => self::crud('holidays'), 'perm' => 'holidays.view'],

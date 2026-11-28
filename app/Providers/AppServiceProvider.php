@@ -72,6 +72,7 @@ class AppServiceProvider extends ServiceProvider
             'subcontract_order' => \App\Modules\Workshop\Models\SubcontractOrder::class,
             'roadside_request' => \App\Modules\Workshop\Models\RoadsideRequest::class,
             'fraud_alert' => \App\Modules\LossPrevention\Models\FraudAlert::class,
+            'role_change_request' => \App\Modules\Core\Models\RoleChangeRequest::class,
             'nonconformity' => \App\Modules\Quality\Models\Nonconformity::class,
             'quality_audit' => \App\Modules\Quality\Models\QualityAudit::class,
             'quotation' => \App\Modules\Workshop\Models\Quotation::class,

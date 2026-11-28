@@ -5,6 +5,14 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.25.2] - 2026-11-28
+- Fixed editing users (role could not be changed); role change requests with approval and printable decision
+- Fix: saving any edit of a user failed with a server error (the password rule object broke the "optional on edit" filter), so roles could not be changed; the edit form now shows the current role
+- Role change requests: user, current and requested role, mandatory reason, effective date; one pending request per user; approvers notified, requester notified of the decision
+- Decided by a branch manager or higher: never by the requester or the user concerned, a branch manager only for branches they manage, Company Admin / General Manager roles only by a company administrator; rejection needs a reason; approval applies the role at once (audit log)
+- Printable A4 request with approved / rejected / pending stamp, reason, decision notes and signatures
+- Only a company administrator can still change a role directly from the user form; others are asked to submit a request
+
 ## [1.25.1] - 2026-11-28
 - POS cash payment popup with notes, change and printed cash received / change
 - Paying in cash opens a popup: amount due, amount received with Omani note buttons (100 bz, ½, 1, 5, 10, 20, 50 rial; each click adds), exact amount and quick round amounts, live change to give back or amount still due; Enter confirms and prints, then a large "change to give back" screen; split and card payments keep the normal button
