@@ -45,4 +45,5 @@ return [
     'cash_shortage' => 'Cash shortage',
     'cash_overage' => 'Cash overage',
     'after_hours' => 'After-hours work',
+    'replied' => 'Replied',
 ];

@@ -15,6 +15,10 @@
     $home = $locale === 'en' ? route('site.home.en') : route('site.home');
     $trialUrl = $locale === 'en' ? route('site.trial.en') : route('site.trial');
     $wa = preg_replace('/\D/', '', (string) $site['contact_whatsapp']);
+    $P = fn (string $page, ?string $param = null) => \App\Http\Controllers\SitePagesController::url($page, $locale, $param);
+    $cat = __('site_features');
+    $byGroup = collect($cat['items'] ?? [])->groupBy('group', true);
+    $current = $page ?? '';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ $locale === 'ar' ? 'ar-OM' : 'en' }}" dir="{{ is_rtl() ? 'rtl' : 'ltr' }}">
@@ -79,7 +83,7 @@
 <a class="visually-hidden-focusable site-skip" href="#main">{{ $locale === 'ar' ? 'تخطَّ إلى المحتوى' : 'Skip to content' }}</a>
 
 <header class="site-header" id="top">
-    <nav class="navbar navbar-expand-lg" aria-label="{{ __('Main navigation') }}">
+    <nav class="navbar navbar-expand-xl" aria-label="{{ __('Main navigation') }}">
         <div class="container">
             <a class="navbar-brand site-brand" href="{{ $home }}">
                 <img src="{{ asset('images/logo.svg') }}" alt="" width="36" height="36">
@@ -90,11 +94,38 @@
             </button>
             <div class="collapse navbar-collapse" id="siteNav">
                 <ul class="navbar-nav mx-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{ $home }}#features">{{ __('site.nav.features') }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ $home }}#modules">{{ __('site.nav.modules') }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ $home }}#oman">{{ __('site.nav.oman') }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ $home }}#pricing">{{ __('site.nav.pricing') }}</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{{ $home }}#faq">{{ __('site.nav.faq') }}</a></li>
+                    <li class="nav-item dropdown position-static">
+                        <a class="nav-link dropdown-toggle {{ $current === 'features' ? 'active' : '' }}" href="{{ $P('features') }}" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">{{ __('site_pages.nav.features') }}</a>
+                        <div class="dropdown-menu site-mega">
+                            <div class="row g-3">
+                                @foreach($cat['groups'] ?? [] as $g => $label)
+                                    @continue(! $byGroup->has($g))
+                                    <div class="col-lg-4 site-mega-col">
+                                        <h6>{{ $label }}</h6>
+                                        @foreach($byGroup[$g] as $slug => $f)
+                                            <a class="dropdown-item" href="{{ $P('feature', $slug) }}"><i class="bi {{ $f['icon'] }}"></i>{{ $f['title'] }}</a>
+                                        @endforeach
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="site-mega-foot">
+                                <span class="small text-body-secondary">{{ __('site_pages.features.lead') }}</span>
+                                <a class="btn btn-sm btn-outline-primary" href="{{ $P('features') }}">{{ __('site_pages.nav.all_features') }}</a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ $current === 'solutions' ? 'active' : '' }}" href="{{ $P('solutions') }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ __('site_pages.nav.solutions') }}</a>
+                        <div class="dropdown-menu site-menu">
+                            @foreach(__('site_pages.solutions.items') as $key => $s)
+                                <a class="dropdown-item" href="{{ $P('solutions') }}#{{ $key }}"><i class="bi {{ $s['icon'] }}"></i><span>{{ $s['title'] }}</span></a>
+                            @endforeach
+                        </div>
+                    </li>
+                    <li class="nav-item"><a class="nav-link {{ $current === 'customers' ? 'active' : '' }}" href="{{ $P('customers') }}">{{ __('site_pages.nav.customers') }}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ $home }}#pricing">{{ __('site_pages.nav.pricing') }}</a></li>
+                    <li class="nav-item"><a class="nav-link {{ $current === 'docs' ? 'active' : '' }}" href="{{ $P('docs') }}">{{ __('site_pages.nav.docs') }}</a></li>
+                    <li class="nav-item"><a class="nav-link {{ $current === 'contact' ? 'active' : '' }}" href="{{ $P('contact') }}">{{ __('site_pages.nav.contact') }}</a></li>
                 </ul>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <a class="btn btn-link site-lang" href="{{ $switchUrl }}" hreflang="{{ $other }}" lang="{{ $other }}">{{ __('site.nav.language') }}</a>
@@ -113,36 +144,49 @@
 <footer class="site-footer">
     <div class="container">
         <div class="row g-4">
-            <div class="col-lg-5">
+            <div class="col-lg-4">
                 <a class="site-brand mb-3 d-inline-flex" href="{{ $home }}"><img src="{{ asset('images/logo.svg') }}" alt="" width="32" height="32"><span>{{ $siteName }}</span></a>
                 <p class="text-secondary-light mb-3">{{ __('site.footer.about') }}</p>
+                <ul class="list-unstyled site-footer-links small">
+                    @if($site['contact_phone'])<li><i class="bi bi-telephone"></i> <a href="tel:{{ preg_replace('/[^\d+]/', '', $site['contact_phone']) }}" dir="ltr">{{ $site['contact_phone'] }}</a></li>@endif
+                    @if($site['contact_email'])<li><i class="bi bi-envelope"></i> <a href="mailto:{{ $site['contact_email'] }}">{{ $site['contact_email'] }}</a></li>@endif
+                    @if($site['contact_address_'.$locale])<li><i class="bi bi-geo-alt"></i> {{ $site['contact_address_'.$locale] }}</li>@endif
+                </ul>
                 <div class="d-flex gap-2">
                     @foreach(['social_x' => 'bi-twitter-x', 'social_instagram' => 'bi-instagram', 'social_linkedin' => 'bi-linkedin', 'social_youtube' => 'bi-youtube'] as $key => $icon)
                         @if($site[$key])<a class="site-social" href="{{ $site[$key] }}" rel="noopener me" target="_blank" aria-label="{{ ucfirst(str_replace('social_', '', $key)) }}"><i class="bi {{ $icon }}"></i></a>@endif
                     @endforeach
                 </div>
             </div>
-            <div class="col-6 col-lg-3">
-                <h2 class="site-footer-title">{{ __('site.footer.product') }}</h2>
+            <div class="col-6 col-md-4 col-lg-3">
+                <h2 class="site-footer-title">{{ __('site_pages.nav.features') }}</h2>
                 <ul class="list-unstyled site-footer-links">
-                    <li><a href="{{ $home }}#features">{{ __('site.nav.features') }}</a></li>
-                    <li><a href="{{ $home }}#pricing">{{ __('site.nav.pricing') }}</a></li>
-                    <li><a href="{{ $home }}#faq">{{ __('site.nav.faq') }}</a></li>
+                    @foreach(collect($cat['items'] ?? [])->take(7) as $slug => $f)<li><a href="{{ $P('feature', $slug) }}">{{ $f['title'] }}</a></li>@endforeach
+                    <li><a href="{{ $P('features') }}"><b>{{ __('site_pages.nav.all_features') }}</b></a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <h2 class="site-footer-title">{{ __('site_pages.nav.solutions') }}</h2>
+                <ul class="list-unstyled site-footer-links">
+                    @foreach(__('site_pages.solutions.items') as $key => $s)<li><a href="{{ $P('solutions') }}#{{ $key }}">{{ $s['title'] }}</a></li>@endforeach
+                </ul>
+            </div>
+            <div class="col-6 col-md-4 col-lg-3">
+                <h2 class="site-footer-title">{{ __('site_pages.nav.company') }}</h2>
+                <ul class="list-unstyled site-footer-links">
+                    <li><a href="{{ $P('customers') }}">{{ __('site_pages.nav.customers') }}</a></li>
+                    <li><a href="{{ $home }}#pricing">{{ __('site_pages.nav.pricing') }}</a></li>
+                    <li><a href="{{ $P('docs') }}">{{ __('site_pages.nav.docs') }}</a></li>
+                    <li><a href="{{ $P('contact') }}">{{ __('site_pages.nav.contact') }}</a></li>
                     <li><a href="{{ $trialUrl }}">{{ __('site.nav.trial') }}</a></li>
                     <li><a href="{{ route('login') }}" rel="nofollow">{{ __('site.nav.login') }}</a></li>
                 </ul>
             </div>
-            <div class="col-6 col-lg-4">
-                <h2 class="site-footer-title">{{ __('site.footer.contact') }}</h2>
-                <ul class="list-unstyled site-footer-links">
-                    @if($site['contact_phone'])<li><i class="bi bi-telephone"></i> <a href="tel:{{ preg_replace('/[^\d+]/', '', $site['contact_phone']) }}" dir="ltr">{{ $site['contact_phone'] }}</a></li>@endif
-                    @if($wa)<li><i class="bi bi-whatsapp"></i> <a href="https://wa.me/{{ $wa }}" rel="noopener" target="_blank">{{ __('site.cta.whatsapp') }}</a></li>@endif
-                    @if($site['contact_email'])<li><i class="bi bi-envelope"></i> <a href="mailto:{{ $site['contact_email'] }}">{{ $site['contact_email'] }}</a></li>@endif
-                    @if($site['contact_address_'.$locale])<li><i class="bi bi-geo-alt"></i> {{ $site['contact_address_'.$locale] }}</li>@endif
-                </ul>
-            </div>
         </div>
-        <div class="site-footer-bottom">© {{ date('Y') }} {{ $siteName }}. {{ __('site.footer.rights') }}</div>
+        <div class="site-footer-bottom site-footer-legal">
+            <span>© {{ date('Y') }} {{ $siteName }}. {{ __('site.footer.rights') }}</span>
+            <span><a href="{{ $P('terms') }}">{{ __('site_pages.nav.terms') }}</a><a href="{{ $P('privacy') }}">{{ __('site_pages.nav.privacy') }}</a></span>
+        </div>
     </div>
 </footer>
 
@@ -151,6 +195,7 @@
 @endif
 
 <script src="{{ asset('vendor/bootstrap/bootstrap.bundle.min.js') }}" defer></script>
+@stack('scripts')
 <script>
     // first referrer / landing page of the visit, and browser details for the trial form (verification)
     (function () {

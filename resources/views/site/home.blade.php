@@ -151,11 +151,14 @@
             <h2>{{ __('site.modules.title') }}</h2>
             <p>{{ __('site.modules.lead') }}</p>
         </header>
-        <ul class="site-chips">
-            @foreach($modules as $m)
-                <li><i class="bi bi-check2"></i> {{ __($m['label']) }}</li>
+        <div class="row g-3">
+            @foreach(__('site_features.items') as $slug => $f)
+                <div class="col-sm-6 col-lg-4 col-xl-3">
+                    <a class="site-mini-feature" href="{{ \App\Http\Controllers\SitePagesController::url('feature', null, $slug) }}"><i class="bi {{ $f['icon'] }}"></i><span><b>{{ $f['title'] }}</b></span></a>
+                </div>
             @endforeach
-        </ul>
+        </div>
+        <div class="text-center mt-4"><a class="btn btn-outline-primary btn-lg" href="{{ \App\Http\Controllers\SitePagesController::url('features') }}">{{ __('site_pages.nav.all_features') }}</a></div>
     </div>
 </section>
 
@@ -180,6 +183,27 @@
                     @endforeach
                 </div>
             </div>
+        </div>
+    </div>
+</section>
+
+{{-- ============================================================ solutions --}}
+<section class="site-section site-section-alt" id="solutions">
+    <div class="container">
+        <header class="site-section-head">
+            <h2>{{ __('site_pages.solutions.title') }}</h2>
+            <p>{{ __('site_pages.solutions.lead') }}</p>
+        </header>
+        <div class="row g-4">
+            @foreach(__('site_pages.solutions.items') as $key => $s)
+                <div class="col-md-6 col-lg-4">
+                    <a class="site-feature site-feature-link" href="{{ \App\Http\Controllers\SitePagesController::url('solutions') }}#{{ $key }}">
+                        <span class="site-feature-icon"><i class="bi {{ $s['icon'] }}"></i></span>
+                        <h3>{{ $s['title'] }}</h3><p>{{ $s['text'] }}</p>
+                        <span class="site-more">{{ __('site_pages.common.learn_more') }} <i class="bi {{ is_rtl() ? 'bi-arrow-left' : 'bi-arrow-right' }}"></i></span>
+                    </a>
+                </div>
+            @endforeach
         </div>
     </div>
 </section>

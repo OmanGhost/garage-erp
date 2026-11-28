@@ -3812,5 +3812,19 @@
     "Count": "العدد",
     "Shortages Last 30 Days": "مرات العجز خلال 30 يوماً",
     "Old": "القديم",
-    "Selling prices cut by :u": "تخفيض أسعار بيع بواسطة :u"
+    "Selling prices cut by :u": "تخفيض أسعار بيع بواسطة :u",
+    "New website message from :n": "رسالة جديدة من الموقع من :n",
+    "Website messages": "رسائل الموقع",
+    "Messages sent from the contact page of the website.": "الرسائل المرسلة من صفحة اتصل بنا في الموقع.",
+    "Topic": "الموضوع",
+    "No messages yet.": "لا توجد رسائل بعد.",
+    "Our customers page": "صفحة عملائنا",
+    "One customer per line": "عميل واحد في كل سطر",
+    "name | sector | city | logo URL | website | testimonial | person": "الاسم | القطاع | المدينة | رابط الشعار | الموقع | الشهادة | صاحب الشهادة",
+    "Only list real customers who agreed to be shown. When empty, the page invites visitors to start a trial.": "أضف فقط عملاء حقيقيين وافقوا على الظهور. إذا تُركت فارغة تدعو الصفحة الزوار لبدء التجربة.",
+    "Terms of use & privacy policy": "شروط الاستخدام وسياسة الخصوصية",
+    "Markdown (## heading, - list, **bold**). Leave empty to use the built-in text. Have the final text reviewed by a lawyer.": "بصيغة Markdown (## عنوان، - قائمة، **غامق**). اتركها فارغة لاستخدام النص الافتراضي. يُنصح بمراجعة النص النهائي من مختص قانوني.",
+    "Terms of use": "شروط الاستخدام",
+    "Privacy policy": "سياسة الخصوصية",
+    "Built-in text": "النص الافتراضي"
 }

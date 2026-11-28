@@ -35,7 +35,7 @@ return [
     ],
 
     'stats' => [
-        ['value' => '19', 'label' => 'integrated modules'],
+        ['value' => '30', 'label' => 'integrated modules'],
         ['value' => '13', 'label' => 'workshop workflow stages'],
         ['value' => '25+', 'label' => 'exportable reports'],
         ['value' => '16', 'label' => 'roles & custom permissions'],

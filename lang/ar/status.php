@@ -339,4 +339,5 @@ return [
     'cash_shortage' => 'عجز في الصندوق',
     'cash_overage' => 'زيادة في الصندوق',
     'after_hours' => 'عمل خارج الدوام',
+    'replied' => 'تم الرد',
 ];

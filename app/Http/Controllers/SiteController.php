@@ -145,6 +145,15 @@ class SiteController extends Controller
             ['ar' => route('site.home'), 'en' => route('site.home.en'), 'priority' => '1.0', 'freq' => 'weekly'],
             ['ar' => route('site.trial'), 'en' => route('site.trial.en'), 'priority' => '0.8', 'freq' => 'monthly'],
         ];
+        foreach (['features' => '0.9', 'solutions' => '0.8', 'customers' => '0.6', 'docs' => '0.7', 'contact' => '0.6', 'terms' => '0.3', 'privacy' => '0.3'] as $page => $prio) {
+            $pages[] = ['ar' => route('site.'.$page), 'en' => route('site.'.$page.'.en'), 'priority' => $prio, 'freq' => 'monthly'];
+        }
+        foreach (array_keys((array) trans('site_features.items', [], 'en')) as $slug) {
+            $pages[] = ['ar' => route('site.feature', $slug), 'en' => route('site.feature.en', $slug), 'priority' => '0.7', 'freq' => 'monthly'];
+        }
+        foreach (array_keys(SitePagesController::docIndex('en')) as $slug) {
+            $pages[] = ['ar' => route('site.doc', $slug), 'en' => route('site.doc.en', $slug), 'priority' => '0.5', 'freq' => 'monthly'];
+        }
 
         return response()->view('site.sitemap', compact('pages', 'lastmod'))->header('Content-Type', 'application/xml; charset=UTF-8');
     }
@@ -156,6 +165,9 @@ class SiteController extends Controller
             $lines[] = 'Allow: /$';
             $lines[] = 'Allow: /en';
             $lines[] = 'Allow: /trial';
+            foreach (['/features', '/solutions', '/customers', '/contact', '/terms', '/privacy', '/docs'] as $p) {
+                $lines[] = 'Allow: '.$p;
+            }
             $lines[] = 'Allow: /shop/';
             foreach (['/dashboard', '/admin', '/portal', '/api/', '/m/', '/login', '/forgot-password', '/reset-password', '/two-factor', '/livewire', '/storage/', '/q/', '/fa/', '/r/', '/i/', '/track/', '/pay/'] as $p) {
                 $lines[] = 'Disallow: '.$p;

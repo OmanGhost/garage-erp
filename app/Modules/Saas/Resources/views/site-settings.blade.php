@@ -104,6 +104,24 @@
             </div>
         </div>
     </div>
+    <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-people"></i> {{ __('Our customers page') }}</div>
+        <div class="card-body">
+            <label class="form-label" for="clients">{{ __('One customer per line') }}: <code dir="ltr">{{ __('name | sector | city | logo URL | website | testimonial | person') }}</code></label>
+            <textarea class="form-control font-monospace" id="clients" name="clients" rows="6" dir="auto">{{ old('clients', $s['clients']) }}</textarea>
+            <div class="form-text">{{ __('Only list real customers who agreed to be shown. When empty, the page invites visitors to start a trial.') }}</div>
+        </div>
+    </div>
+    <div class="card mb-3">
+        <div class="card-header fw-semibold"><i class="bi bi-file-earmark-text"></i> {{ __('Terms of use & privacy policy') }}</div>
+        <div class="card-body row g-3">
+            <div class="col-12 form-text mt-0">{{ __('Markdown (## heading, - list, **bold**). Leave empty to use the built-in text. Have the final text reviewed by a lawyer.') }}</div>
+            @foreach(['terms_ar' => __('Terms of use').' (AR)', 'terms_en' => __('Terms of use').' (EN)', 'privacy_ar' => __('Privacy policy').' (AR)', 'privacy_en' => __('Privacy policy').' (EN)'] as $k => $label)
+                <div class="col-md-6"><label class="form-label" for="{{ $k }}">{{ $label }}</label>
+                    <textarea class="form-control" id="{{ $k }}" name="{{ $k }}" rows="8" dir="{{ str_ends_with($k, '_ar') ? 'rtl' : 'ltr' }}" placeholder="{{ __('Built-in text') }}">{{ old($k, $s[$k]) }}</textarea></div>
+            @endforeach
+        </div>
+    </div>
     <div class="text-end"><button class="btn btn-primary px-4">{{ __('Save settings') }}</button></div>
 </form>
 

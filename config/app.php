@@ -125,5 +125,5 @@ return [
 
 
     // bump to force browsers to reload css/js after an update
-    'asset_version' => env('ASSET_VERSION', '15'),
+    'asset_version' => env('ASSET_VERSION', trim((string) @file_get_contents(dirname(__DIR__).'/VERSION')) ?: '15'),
 ];

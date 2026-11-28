@@ -11,6 +11,7 @@
 </head>
 <body class="app-body">
 @php($newTrials = \App\Modules\Saas\Models\TrialRequest::query()->where('status', 'new')->count())
+@php($newMessages = \Illuminate\Support\Facades\Schema::hasTable('contact_messages') ? \App\Modules\Saas\Models\ContactMessage::query()->where('status', 'new')->count() : 0)
 @php($newDomains = \Illuminate\Support\Facades\Schema::hasTable('domain_requests') ? \App\Modules\Saas\Models\DomainRequest::query()->where('status', 'new')->count() : 0)
 {{-- collapses behind a menu button on phones and tablets --}}
 <nav class="navbar navbar-expand-xl bg-dark" data-bs-theme="dark"><div class="container-fluid">
@@ -26,6 +27,7 @@
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.plans*') ? 'active' : '' }}" href="{{ route('admin.plans') }}"><i class="bi bi-stars"></i> {{ __('Plans') }}</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.domains.*') ? 'active' : '' }}" href="{{ route('admin.domains.index') }}"><i class="bi bi-globe2"></i> {{ __('Domains & e-mail') }} @if($newDomains)<span class="badge text-bg-warning">{{ $newDomains }}</span>@endif</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.trials.*') ? 'active' : '' }}" href="{{ route('admin.trials.index') }}"><i class="bi bi-rocket-takeoff"></i> {{ __('Trial requests') }} @if($newTrials)<span class="badge text-bg-warning">{{ $newTrials }}</span>@endif</a></li>
+            <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.messages.*') ? 'active' : '' }}" href="{{ route('admin.messages.index') }}"><i class="bi bi-envelope"></i> {{ __('Website messages') }} @if($newMessages)<span class="badge text-bg-warning">{{ $newMessages }}</span>@endif</a></li>
             <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.site.*') ? 'active' : '' }}" href="{{ route('admin.site.edit') }}"><i class="bi bi-window"></i> {{ __('Website & SEO') }}</a></li>
         </ul>
         <div class="d-flex gap-2 py-2 py-xl-0">

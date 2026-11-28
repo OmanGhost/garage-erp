@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LookupController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SiteController;
+use App\Http\Controllers\SitePagesController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\VoucherController;
 use App\Modules\Accounting\Http\Controllers\AccountingController;
@@ -41,6 +42,20 @@ Route::get('/en/trial', [SiteController::class, 'trial'])->defaults('locale', 'e
 Route::post('/trial', [SiteController::class, 'storeTrial'])->middleware('throttle:trial')->name('site.trial.store');
 Route::get('/trial/thanks', [SiteController::class, 'thanks'])->defaults('locale', 'ar')->name('site.thanks');
 Route::get('/en/trial/thanks', [SiteController::class, 'thanks'])->defaults('locale', 'en')->name('site.thanks.en');
+// website pages: Arabic at /x, English at /en/x
+foreach (['ar' => '', 'en' => '/en'] as $siteLocale => $prefix) {
+    $sfx = $siteLocale === 'en' ? '.en' : '';
+    Route::get($prefix.'/features', [SitePagesController::class, 'features'])->defaults('locale', $siteLocale)->name('site.features'.$sfx);
+    Route::get($prefix.'/features/{slug}', [SitePagesController::class, 'feature'])->defaults('locale', $siteLocale)->where('slug', '[a-z0-9-]+')->name('site.feature'.$sfx);
+    Route::get($prefix.'/solutions', [SitePagesController::class, 'solutions'])->defaults('locale', $siteLocale)->name('site.solutions'.$sfx);
+    Route::get($prefix.'/customers', [SitePagesController::class, 'customers'])->defaults('locale', $siteLocale)->name('site.customers'.$sfx);
+    Route::get($prefix.'/contact', [SitePagesController::class, 'contact'])->defaults('locale', $siteLocale)->name('site.contact'.$sfx);
+    Route::get($prefix.'/terms', [SitePagesController::class, 'legal'])->defaults('doc', 'terms')->defaults('locale', $siteLocale)->name('site.terms'.$sfx);
+    Route::get($prefix.'/privacy', [SitePagesController::class, 'legal'])->defaults('doc', 'privacy')->defaults('locale', $siteLocale)->name('site.privacy'.$sfx);
+    Route::get($prefix.'/docs', [SitePagesController::class, 'docs'])->defaults('locale', $siteLocale)->name('site.docs'.$sfx);
+    Route::get($prefix.'/docs/{slug}', [SitePagesController::class, 'doc'])->defaults('locale', $siteLocale)->where('slug', '[a-z0-9-]+')->name('site.doc'.$sfx);
+}
+Route::post('/contact', [SitePagesController::class, 'storeContact'])->middleware('throttle:trial')->name('site.contact.store');
 Route::get('/sitemap.xml', [SiteController::class, 'sitemap'])->name('site.sitemap');
 Route::get('/robots.txt', [SiteController::class, 'robots'])->name('site.robots');
 Route::post('/locale', [SystemController::class, 'switchLocale'])->name('locale.switch');
@@ -175,6 +190,9 @@ Route::prefix('admin')->middleware(['auth', 'usertype:super'])->name('admin.')->
     Route::post('/domains/smtp', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'saveSmtp'])->name('domains.smtp');
     Route::post('/domains/smtp/test', [\App\Modules\Saas\Http\Controllers\DomainController::class, 'testSmtp'])->name('domains.smtp.test');
     Route::post('/plans', [AdminController::class, 'savePlan'])->name('plans.save');
+    Route::get('/messages', [AdminController::class, 'messages'])->name('messages.index');
+    Route::get('/messages/{message}', [AdminController::class, 'showMessage'])->name('messages.show');
+    Route::put('/messages/{message}', [AdminController::class, 'updateMessage'])->name('messages.update');
     Route::get('/trials', [AdminController::class, 'trials'])->name('trials.index');
     Route::get('/trials/{trial}', [AdminController::class, 'showTrial'])->name('trials.show');
     Route::put('/trials/{trial}', [AdminController::class, 'updateTrial'])->name('trials.update');

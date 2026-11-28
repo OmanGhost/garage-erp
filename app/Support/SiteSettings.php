@@ -41,6 +41,11 @@ class SiteSettings
             'google_analytics_id' => '',
             'indexing_enabled' => '1',
             'trial_notify_email' => '',
+            // website pages: customers (one per line: name | sector | city | logo URL | website | testimonial | person),
+            // terms / privacy in Markdown (empty = the built-in default text)
+            'clients' => '',
+            'terms_ar' => '', 'terms_en' => '', 'privacy_ar' => '', 'privacy_en' => '',
+            'terms_updated_at' => '', 'privacy_updated_at' => '',
             // platform billing (header of the subscription invoices)
             'billing_name' => '',
             'billing_vat_number' => '',
@@ -79,6 +84,27 @@ class SiteSettings
         $all = self::all();
 
         return (string) ($all[$key.'_'.app()->getLocale()] ?? $all[$key.'_en'] ?? '');
+    }
+
+    /**
+     * Customers shown on the website, parsed from the "clients" setting.
+     *
+     * @return array<int, array{name: string, sector: string, city: string, logo: string, website: string, quote: string, person: string}>
+     */
+    public static function clients(): array
+    {
+        $out = [];
+        foreach (preg_split('/\R/u', (string) self::get('clients')) as $line) {
+            $p = array_map('trim', explode('|', $line));
+            if (($p[0] ?? '') === '') {
+                continue;
+            }
+            $url = fn ($v) => preg_match('#^(https?://|/)#i', (string) $v) ? (string) $v : '';
+            $out[] = ['name' => mb_substr($p[0], 0, 120), 'sector' => $p[1] ?? '', 'city' => $p[2] ?? '', 'logo' => $url($p[3] ?? ''),
+                'website' => preg_match('#^https?://#i', $p[4] ?? '') ? $p[4] : '', 'quote' => $p[5] ?? '', 'person' => $p[6] ?? ''];
+        }
+
+        return $out;
     }
 
     public static function set(array $values): void

@@ -5,6 +5,16 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.24.0] - 2026-11-28
+- Redesigned public website with features, solutions, customers, contact, legal and documentation pages
+- Features catalogue (20 features in 6 groups) with a page per feature: what it does, why it matters, plans that include it and related features; mega menu in the header
+- Solutions page by business type (independent garages, dealers, parts shops, fleets & insurers, body shops, roadside & memberships)
+- Customers page managed from the platform site settings (real customers only; invites visitors to a trial while empty)
+- Contact page: messages stored, super admins notified, copied to the sales email, honeypot and rate limit; new "Website messages" inbox in the platform admin
+- Terms of use and privacy policy with built-in drafts in Arabic and English, replaceable from site settings (Markdown, HTML stripped)
+- Documentation centre: 13 guides per language with search, sidebar, table of contents and previous / next
+- New design layer (palette, page headers, footer with legal links), header collapses below 1200 px; sitemap and robots include all new pages; CSS cache follows the release version
+
 ## [1.23.0] - 2026-11-28
 - Internal fraud & loss prevention: rules for unusual manual discounts (membership, coupon and standing customer / group discounts excluded; insurance and fleet invoices skipped), sales below the cost booked at posting, prices typed below the price list, selling-price cuts, cancelled receipts, returns, deleted held POS sales, stock write-offs without a document, repeated adjustments per user and per part, issued parts not invoiced at delivery, cash shortages / overages (repeat shortages escalate) and after-hours work by staff
 - Alerts are checked after the transaction commits (a rolled-back action raises nothing, a failing rule never breaks the operation), grouped by fingerprint with an occurrence counter; medium / high alerts notify reviewers at once, low ones in the daily digest; thresholds editable on the dashboard

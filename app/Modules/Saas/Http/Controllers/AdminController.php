@@ -243,6 +243,32 @@ class AdminController extends Controller
 
     // ------------------------------------------------- public website: SEO & contact settings
 
+    /* ---------------- website contact messages ---------------- */
+
+    public function messages(Request $request)
+    {
+        $status = in_array($request->query('status'), \App\Modules\Saas\Models\ContactMessage::STATUSES, true) ? $request->query('status') : null;
+
+        return view('saas::messages', [
+            'messages' => \App\Modules\Saas\Models\ContactMessage::query()->when($status, fn ($q) => $q->where('status', $status))->latest('id')->paginate(30)->withQueryString(),
+            'status' => $status,
+            'counts' => \App\Modules\Saas\Models\ContactMessage::query()->selectRaw('status, COUNT(*) n')->groupBy('status')->pluck('n', 'status'),
+        ]);
+    }
+
+    public function showMessage(\App\Modules\Saas\Models\ContactMessage $message)
+    {
+        return view('saas::message', ['m' => $message]);
+    }
+
+    public function updateMessage(Request $request, \App\Modules\Saas\Models\ContactMessage $message)
+    {
+        $d = $request->validate(['status' => ['required', \Illuminate\Validation\Rule::in(\App\Modules\Saas\Models\ContactMessage::STATUSES)], 'admin_notes' => ['nullable', 'string', 'max:5000']]);
+        $message->update($d);
+
+        return back()->with('success', __('Saved.'));
+    }
+
     public function siteSettings()
     {
         return view('saas::site-settings', ['s' => SiteSettings::all()]);
@@ -265,7 +291,15 @@ class AdminController extends Controller
             'bing_site_verification' => ['nullable', 'string', 'max:120', 'regex:/^[A-Za-z0-9_\-]+$/'],
             'google_analytics_id' => ['nullable', 'string', 'regex:/^G-[A-Z0-9]{4,20}$/'],
             'trial_notify_email' => ['nullable', 'email'],
+            'clients' => ['nullable', 'string', 'max:20000'],
+            'terms_ar' => ['nullable', 'string', 'max:60000'], 'terms_en' => ['nullable', 'string', 'max:60000'],
+            'privacy_ar' => ['nullable', 'string', 'max:60000'], 'privacy_en' => ['nullable', 'string', 'max:60000'],
         ]);
+        foreach (['terms', 'privacy'] as $doc) {
+            if (($data[$doc.'_ar'] ?? '') !== SiteSettings::get($doc.'_ar') || ($data[$doc.'_en'] ?? '') !== SiteSettings::get($doc.'_en')) {
+                $data[$doc.'_updated_at'] = now()->toDateString();
+            }
+        }
         if ($request->hasFile('og_image_file')) {
             $data['og_image'] = '/storage/'.$request->file('og_image_file')->store('site', 'public');
         }
