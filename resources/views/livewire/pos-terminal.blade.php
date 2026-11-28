@@ -175,7 +175,9 @@
                     </div>
                 </div>
                 <input type="text" class="form-control form-control-sm mt-2" wire:model="notes" placeholder="{{ __('Notes') }}" aria-label="{{ __('Notes') }}">
-                <button class="btn btn-success btn-lg w-100 mt-2 pos-checkout" wire:click="checkout" wire:loading.attr="disabled" @disabled(empty($cart))>
+                @php $cashOnly = count($payments) === 1 && ($payments[0]['method'] ?? '') === 'cash'; @endphp
+                <button class="btn btn-success btn-lg w-100 mt-2 pos-checkout" wire:loading.attr="disabled" @disabled(empty($cart))
+                        @if($cashOnly) x-on:click="$dispatch('pos-cash-open', { total: '{{ $totals['total'] }}' })" @else wire:click="checkout" @endif>
                     <span wire:loading.remove wire:target="checkout"><i class="bi bi-check2-circle"></i> {{ __('Complete sale') }}</span>
                     <span wire:loading wire:target="checkout"><span class="spinner-border spinner-border-sm"></span></span>
                 </button>
@@ -193,6 +195,8 @@
             </div>
         </div>
     </div>
+
+    @include('livewire.partials.pos-cash')
 
     {{-- part inquiry panel --}}
     @if($inquiry)

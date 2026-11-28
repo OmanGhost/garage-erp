@@ -50,6 +50,33 @@ class LivewireTest extends TestCase
         $this->assertLedgerBalanced();
     }
 
+    public function test_pos_cash_popup_records_cash_received_and_change_on_the_receipt(): void
+    {
+        $part = $this->makePart(['barcode' => '6281000000099', 'sale_price' => 7]);
+        $register = CashRegister::query()->firstOrFail();
+        app(StockService::class)->receive($part, $register->warehouse_id, 10, 2, ['type' => 'opening']);
+        $session = app(PosService::class)->openSession($register, 10);
+
+        // 7 + 5% = 7.350; the customer hands over 10 rials
+        $c = Livewire::test(PosTerminal::class, ['session' => $session])->call('scanned', '6281000000099')
+            ->assertSee("('pos-cash-open'", false)
+            ->call('checkoutCash', '10')->assertSet('cart', [])
+            ->assertDispatched('pos-sale-done', fn ($name, $p) => $p['change'] === '2.650' && $p['tendered'] === '10.000');
+        $inv = Invoice::query()->where('type', 'pos')->latest('id')->firstOrFail();
+        $this->assertSame(['paid', '10.000', '2.650'], [$inv->status, (string) $inv->cash_tendered, (string) $inv->change_given]);
+        $this->assertSame('7.350', (string) $inv->paid_amount);                   // only the bill is received; the change goes back
+        $this->get(route('invoices.print', [$inv, '80mm']))->assertOk()->assertSee('10.000')->assertSee('2.650')->assertSee('CHANGE');
+        $this->assertMoney(17.350, app(PosService::class)->expectedCash($session->fresh()));
+        $this->assertLedgerBalanced();
+
+        // split payments keep the normal button; card-only sales have no cash lines on the receipt
+        $c->call('scanned', '6281000000099')->call('addPayment')->assertDontSee("('pos-cash-open'", false);
+        $c->set('payments', [['method' => 'card', 'amount' => '7.350']])->call('checkout');
+        $card = Invoice::query()->where('type', 'pos')->latest('id')->firstOrFail();
+        $this->assertNull($card->cash_tendered);
+        $this->get(route('invoices.print', [$card, '80mm']))->assertDontSee('CHANGE');
+    }
+
     public function test_pos_part_inquiry_shows_stock_alternatives_and_history(): void
     {
         $register = CashRegister::query()->firstOrFail();

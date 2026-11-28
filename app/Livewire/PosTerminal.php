@@ -263,6 +263,13 @@ class PosTerminal extends Component
         }
     }
 
+    /** Cash popup: the amount handed over becomes the cash payment; the change is shown and printed. */
+    public function checkoutCash(mixed $tendered): void
+    {
+        $this->payments = [['method' => 'cash', 'amount' => is_numeric($tendered) ? Money::round($tendered) : '']];
+        $this->checkout();
+    }
+
     public function checkout(): void
     {
         if (! auth()->user()->can('pos.create')) {
@@ -285,6 +292,8 @@ class PosTerminal extends Component
             $this->lastChange = $r['change'];
             $this->clearCart();
             $this->dispatch('erp-toast', message: __('Sale completed: :n', ['n' => $r['invoice']->number]), type: 'success');
+            $this->dispatch('pos-sale-done', change: $r['change'], number: $r['invoice']->number, total: (string) $r['invoice']->total,
+                tendered: (string) ($r['invoice']->cash_tendered ?? ''), balance: $r['invoice']->balanceDue());
             $this->dispatch('pos-print', url: route('invoices.print', [$r['invoice'], '80mm']));
         } catch (BusinessException $e) {
             $this->dispatch('erp-toast', message: $e->getMessage(), type: 'danger');

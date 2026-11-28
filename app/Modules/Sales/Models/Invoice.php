@@ -16,7 +16,7 @@ class Invoice extends TenantModel
 
     protected array $lockedStatuses = ['posted', 'partially_paid', 'paid', 'cancelled'];
 
-    protected array $mutableWhenLocked = ['journal_entry_id', 'posted_at', 'posted_by', 'number', 'cost_total'];
+    protected array $mutableWhenLocked = ['journal_entry_id', 'posted_at', 'posted_by', 'number', 'cost_total', 'cash_tendered', 'change_given'];
 
     protected $casts = [
         'subtotal' => 'decimal:3',
@@ -24,6 +24,8 @@ class Invoice extends TenantModel
         'tax_total' => 'decimal:3',
         'total' => 'decimal:3',
         'paid_amount' => 'decimal:3',
+        'cash_tendered' => 'decimal:3',
+        'change_given' => 'decimal:3',
         'cost_total' => 'decimal:3',
         'issue_date' => 'date',
         'due_date' => 'date',

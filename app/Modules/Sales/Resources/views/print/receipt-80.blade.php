@@ -31,7 +31,11 @@
     <tr><td>الضريبة / VAT</td><td class="num">{{ money($inv->tax_total, false) }}</td></tr>
     <tr><td><b>الإجمالي / TOTAL</b></td><td class="num"><b>{{ money($inv->total) }}</b></td></tr>
     <tr><td>المدفوع / Paid</td><td class="num">{{ money($inv->paid_amount, false) }}</td></tr>
-    @if(\App\Support\Money::isPositive($inv->balanceDue()))<tr><td>المتبقي / Due</td><td class="num">{{ money($inv->balanceDue(), false) }}</td></tr>@endif
+    @if($inv->cash_tendered !== null && (float) $inv->cash_tendered > 0)
+        <tr><td>المستلم نقداً / Cash received</td><td class="num">{{ money($inv->cash_tendered, false) }}</td></tr>
+        <tr><td><b>الباقي للعميل / CHANGE</b></td><td class="num"><b>{{ money($inv->change_given ?? 0, false) }}</b></td></tr>
+    @endif
+    @if(\App\Support\Money::isPositive($inv->balanceDue()))<tr><td><b>المتبقي على العميل / Balance due</b></td><td class="num"><b>{{ money($inv->balanceDue(), false) }}</b></td></tr>@endif
 </table>
 <hr>
 <div class="c"><img src="{{ $qr }}" style="width:110px"><br>{{ setting('invoice.footer_ar') }}<br>{{ setting('invoice.footer_en') }}</div>

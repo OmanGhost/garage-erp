@@ -126,6 +126,12 @@ class PosService
                 $remaining = Money::sub($remaining, $apply);
             }
 
+            // cash handed over and change given back, for the receipt
+            $cashTendered = Money::sum(array_map(fn ($p) => ($p['method'] ?? '') === 'cash' ? Money::round($p['amount'] ?? 0) : '0', $payments));
+            if (Money::isPositive($cashTendered)) {
+                $invoice->forceFill(['cash_tendered' => $cashTendered, 'change_given' => $change])->save();
+            }
+
             return ['invoice' => $invoice->fresh(['items', 'customer']), 'change' => $change, 'payments' => $created];
         });
     }

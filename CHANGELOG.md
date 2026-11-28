@@ -5,6 +5,11 @@ All notable changes to Garage ERP. Versions follow [Semantic Versioning](https:/
 The current version is stored in the `VERSION` file and shown in the footer of every page.
 Create a new entry with `php artisan erp:release patch|minor|major "what changed"`.
 
+## [1.25.1] - 2026-11-28
+- POS cash payment popup with notes, change and printed cash received / change
+- Paying in cash opens a popup: amount due, amount received with Omani note buttons (100 bz, ½, 1, 5, 10, 20, 50 rial; each click adds), exact amount and quick round amounts, live change to give back or amount still due; Enter confirms and prints, then a large "change to give back" screen; split and card payments keep the normal button
+- Cash received and change are stored on the invoice and printed on the 80 mm receipt and the A4 invoice (with the balance due when not fully paid); only the bill is recorded in the drawer
+
 ## [1.25.0] - 2026-11-28
 - Employee internal financing with installment schedule, and one-click attendance
 - Loans: two types — salary advance, and internal financing with a profit rate on the principal (total payable split into equal monthly installments rounded up so the last one is never extra); first deduction month; live repayment plan in the form; terms recalculated on the server

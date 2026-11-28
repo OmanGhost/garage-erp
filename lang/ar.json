@@ -3911,5 +3911,19 @@
     "Work day completed": "اكتمل يوم العمل",
     "Clock in": "تسجيل الحضور",
     "Clock out": "تسجيل الانصراف",
-    "Clock in now": "سجّل حضورك الآن"
+    "Clock in now": "سجّل حضورك الآن",
+    "100 bz": "100 بيسة",
+    "½ rial": "½ ريال",
+    "Cash payment": "الدفع نقداً",
+    "Amount due": "المبلغ المطلوب",
+    "Amount received": "المبلغ المستلم",
+    "Notes received (each click adds)": "فئات العملة المستلمة (كل ضغطة تضيف)",
+    "Change to give back": "الباقي للعميل",
+    "Still due from the customer": "المتبقي على العميل",
+    "Enter the amount received": "أدخل المبلغ المستلم",
+    "The rest is recorded on the customer account (not allowed for the walk-in customer).": "يُسجَّل المتبقي على حساب العميل (غير مسموح للعميل النقدي).",
+    "Confirm & print": "تأكيد وطباعة",
+    "Sale completed": "تمت عملية البيع",
+    "Still due on the customer account": "متبقٍ على حساب العميل",
+    "New sale": "بيع جديد"
 }

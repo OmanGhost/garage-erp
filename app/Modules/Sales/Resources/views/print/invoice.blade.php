@@ -41,6 +41,7 @@
             <tr><td>ضريبة القيمة المضافة / VAT</td><td class="num">{{ money($inv->tax_total) }}</td></tr>
             <tr class="grand"><td>الإجمالي شامل الضريبة / Total incl. VAT</td><td class="num">{{ money($inv->total) }}</td></tr>
             @if((float) $inv->paid_amount > 0)<tr><td>المدفوع / Paid</td><td class="num">{{ money($inv->paid_amount) }}</td></tr><tr><td><b>المتبقي / Balance</b></td><td class="num"><b>{{ money($inv->balanceDue()) }}</b></td></tr>@endif
+            @if($inv->cash_tendered !== null && (float) $inv->cash_tendered > 0)<tr><td>المستلم نقداً / Cash received</td><td class="num">{{ money($inv->cash_tendered) }}</td></tr><tr><td><b>الباقي للعميل / Change</b></td><td class="num"><b>{{ money($inv->change_given ?? 0) }}</b></td></tr>@endif
         </table>
     </td>
 </tr></table>
